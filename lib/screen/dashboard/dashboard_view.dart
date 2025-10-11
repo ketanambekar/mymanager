@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:mymanager/screen/create_task/create_task_view.dart';
 import 'package:mymanager/screen/dashboard/dashboard_controller.dart';
 import 'package:mymanager/widgets/app_bar/app_bar.dart';
 import 'package:mymanager/widgets/bottom_nav/bottom_nav_view.dart';
