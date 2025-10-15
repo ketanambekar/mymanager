@@ -14,7 +14,7 @@ class BottomNavController extends GetxController {
     () => const CalenderView(),
     () => const SizedBox.shrink(),
     () => const ReportsView(),
-    () => const ProfileView(),
+    () => ProfileView(),
   ];
 
   final Map<int, Widget> _cache = {};

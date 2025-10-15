@@ -58,7 +58,7 @@ class DashboardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TaskStorageService svc = Get.find<TaskStorageService>();
+    final TaskStorageService svc = Get.put(TaskStorageService());
 
     return SafeArea(
       child: Obx(() {

@@ -111,7 +111,6 @@ class FloatingGlassBottomNav extends GetView<BottomNavController> {
   }
 }
 
-/// Internal Nav button with selection animation & tooltip support.
 class _NavButton extends GetView<BottomNavController> {
   final NavItem item;
   final int index;
@@ -140,14 +139,12 @@ class _NavButton extends GetView<BottomNavController> {
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () {
-            if(index == 2) {
+            if (index == 2) {
               item.onTap?.call();
-            }
-            else {
+            } else {
               controller.changeIndex(index);
               item.onTap?.call();
             }
-
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8),
@@ -211,8 +208,6 @@ class _NavButton extends GetView<BottomNavController> {
   }
 }
 
-/// Helper: build [FloatingGlassBottomNav] from a `List<Map<String, dynamic>>`
-/// (keeps backward compatibility with existing route data).
 FloatingGlassBottomNav withItemsFromMap({
   required List<Map<String, dynamic>> itemsData,
   double height = 72,
@@ -231,7 +226,6 @@ FloatingGlassBottomNav withItemsFromMap({
       iconSelected: m['icon'] as IconData,
       label: m['label'] as String,
       onTap: m['onTap'] as VoidCallback?,
-      // support optional badge key
       showBadge: (m['showBadge'] as bool?) ?? false,
     );
   }).toList();

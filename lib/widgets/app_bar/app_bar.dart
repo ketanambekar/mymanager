@@ -24,7 +24,7 @@ class AppHeader extends GetView<BottomNavController>
   // Build actions depending on selected index
   List<Widget> _buildActions(int index, BuildContext context) {
     final List<Widget> actions = [];
-    if (index == 0) {
+    if (index == 0 || index == 4) {
       // final NotificationController? notifCtrl =
       // Get.isRegistered<NotificationController>() ? Get.find<NotificationController>() : null;
 
@@ -118,17 +118,17 @@ class AppHeader extends GetView<BottomNavController>
     }
 
     // Example: profile/settings icon on profile tab
-    if (index == 4) {
-      actions.add(
-        IconButton(
-          tooltip: 'Edit profile',
-          onPressed: () {
-            Get.toNamed('/profile/edit');
-          },
-          icon: const Icon(Icons.edit, color: Colors.white),
-        ),
-      );
-    }
+    // if (index == 4) {
+    //   actions.add(
+    //     IconButton(
+    //       tooltip: 'Edit profile',
+    //       onPressed: () {
+    //         Get.toNamed('/profile/edit');
+    //       },
+    //       icon: const Icon(Icons.edit, color: Colors.white),
+    //     ),
+    //   );
+    // }
 
     return actions;
   }

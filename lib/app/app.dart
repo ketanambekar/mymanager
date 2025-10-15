@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mymanager/app/app_binding.dart';
+import 'package:mymanager/app/app_controller.dart';
 import 'package:mymanager/routes/app_routes.dart';
 import 'package:mymanager/theme/app_theme.dart';
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
+   MyApp({super.key});
+  // final controller = Get.find<AppController>();
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
