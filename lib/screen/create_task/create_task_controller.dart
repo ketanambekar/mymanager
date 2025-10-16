@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:mymanager/core/models/sub_task.dart';
+// import 'package:mymanager/core/models/sub_task.dart';
 
 
 class CreateTaskController extends GetxController {
@@ -13,7 +13,7 @@ class CreateTaskController extends GetxController {
   final priority = 'Normal'.obs;
   final category = Rxn<String>();
   final taskAlerts = <String>[].obs; // e.g. '-10m'
-  final subTasks = <SubTask>[].obs;
+  // final subTasks = <SubTask>[].obs;
 
   @override
   void onClose() {
@@ -26,12 +26,12 @@ class CreateTaskController extends GetxController {
   }
 
   void addSubTask(String title) {
-    final id = '${DateTime.now().millisecondsSinceEpoch}${subTasks.length}';
-    subTasks.add(SubTask(id: id, name: title));
+    // final id = '${DateTime.now().millisecondsSinceEpoch}${subTasks.length}';
+    // subTasks.add(SubTask(id: id, name: title));
   }
 
   void removeSubTask(String id) {
-    subTasks.removeWhere((s) => s.id == id);
+    // subTasks.removeWhere((s) => s.id == id);
   }
 
   String? validateName(String? s) {

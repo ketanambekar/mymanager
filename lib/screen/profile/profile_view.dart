@@ -14,7 +14,7 @@ class ProfileView extends StatelessWidget {
       extendBody: true,
       extendBodyBehindAppBar: true,
       body: Container(
-        margin: EdgeInsets.fromLTRB(16, 120, 16, 16),
+        margin: EdgeInsets.fromLTRB(16, 16, 16, 16),
         child: Column(
           children: [
             Center(
@@ -65,14 +65,6 @@ class ProfileView extends StatelessWidget {
             Obx(() {
               return Text(controller.id.value, style: AppTheme.caption);
             }),
-
-            Obx(() {
-              return Text(
-                "- v${controller.appVersion.value} -",
-                style: AppTheme.caption,
-              );
-            }),
-
             Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -81,20 +73,34 @@ class ProfileView extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text('Active Since: ', style: AppTheme.caption),
-                    Text(formatDate(controller.activeSince.value), style: AppTheme.caption),
+                    Text(
+                      formatDate(controller.activeSince.value),
+                      style: AppTheme.caption,
+                    ),
                   ],
                 ),
 
-                Obx(()=> Row(
+                Obx(
+                  () => Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text('Last Update: ', style: AppTheme.caption),
-                      Text(formatDate(controller.lastActive.value), style: AppTheme.caption),
+                      Text(
+                        formatDate(controller.lastActive.value),
+                        style: AppTheme.caption,
+                      ),
                     ],
                   ),
                 ),
               ],
             ),
+
+            Obx(() {
+              return Text(
+                "Active Since Version: v${controller.appVersion.value}",
+                style: AppTheme.caption,
+              );
+            }),
 
             Padding(
               padding: const EdgeInsets.only(top: 16, bottom: 16),

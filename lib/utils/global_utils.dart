@@ -1,9 +1,12 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 String makeId(String type) =>
     type + DateTime.now().microsecondsSinceEpoch.toString();
+
 final uuid = Uuid();
 
 String formatDate(String dateString) {
@@ -17,4 +20,17 @@ String formatDate(String dateString) {
     }
     return '';
   }
+}
+
+
+String getRandomString(int length) {
+  const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  Random random = Random();
+
+  return String.fromCharCodes(
+    Iterable.generate(
+      length,
+          (_) => characters.codeUnitAt(random.nextInt(characters.length)),
+    ),
+  );
 }

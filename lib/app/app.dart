@@ -6,8 +6,7 @@ import 'package:mymanager/routes/app_routes.dart';
 import 'package:mymanager/theme/app_theme.dart';
 
 class MyApp extends StatelessWidget {
-   MyApp({super.key});
-  // final controller = Get.find<AppController>();
+  const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
@@ -26,7 +25,7 @@ class MyApp extends StatelessWidget {
               end: Alignment.bottomRight,
             ),
           ),
-          child: child ?? const SizedBox.shrink(),
+          child: SafeArea(child: child ?? const SizedBox.shrink()),
         );
       },
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mymanager/routes/app_routes.dart';
 import 'package:mymanager/screen/dashboard/dashboard_controller.dart';
 import 'package:mymanager/widgets/app_bar/app_bar.dart';
 import 'package:mymanager/widgets/bottom_nav/bottom_nav_view.dart';
@@ -45,6 +46,22 @@ class DashboardView extends StatelessWidget {
             ),
           ),
         ],
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: Container(
+        width: 80,
+        height: 80,
+        padding: const EdgeInsets.only(bottom: 15),
+        child: FloatingActionButton(
+          shape: CircleBorder(),
+          child: const Icon(Icons.add_sharp),
+          onPressed: () async {
+            final created = await Get.toNamed(AppRoutes.createProject);
+            if (created == true) {
+              controller.getAllProjects();
+            }
+          },
+        ),
       ),
     );
   }

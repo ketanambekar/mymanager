@@ -1,7 +1,8 @@
 import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
-import 'package:mymanager/database/constants/db_constants.dart';
+import 'package:mymanager/constants/app_constants.dart';
 import 'package:mymanager/database/tables/user_profile/user_tables.dart';
+import 'package:mymanager/database/tables/user_projects/user_projects_table.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -21,7 +22,7 @@ class DatabaseHelper {
   }
 
   static Future<Database> _initDB() async {
-    final path = join(await getDatabasesPath(), DBConstants.dbName);
+    final path = join(await getDatabasesPath(), AppConstants.dbName);
     if (kDebugMode) {
       developer.log('Database path: $path', name: 'DatabaseHelper');
     }
@@ -33,6 +34,8 @@ class DatabaseHelper {
           developer.log('Creating tables...', name: 'DatabaseHelper');
         }
         await db.execute(UserTables.userProfile);
+        await db.execute(UserProjectsTables.userProjects);
+
         if (kDebugMode) {
           developer.log('Table user_profile created ✅', name: 'DatabaseHelper');
         }

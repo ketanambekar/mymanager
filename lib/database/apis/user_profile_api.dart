@@ -2,11 +2,10 @@ import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:mymanager/database/helper/database_helper.dart';
 import 'package:mymanager/database/tables/user_profile/models/user_profile_model.dart';
+import 'package:mymanager/utils/global_utils.dart';
 import 'package:uuid/uuid.dart';
 
 class UserProfileApi {
-  static final _uuid = Uuid();
-
   static Future<UserProfile?> getProfile(String profileId) async {
     try {
       final db = await DatabaseHelper.database;
@@ -30,7 +29,7 @@ class UserProfileApi {
         stackTrace: stack,
         name: 'UserProfileApi',
       );
-      rethrow; // optionally propagate to higher layer
+      rethrow;
     }
   }
 
@@ -45,16 +44,14 @@ class UserProfileApi {
         stackTrace: stack,
         name: 'UserProfileApi',
       );
-      return []; // fallback to empty list
+      return [];
     }
   }
 
   static Future<void> createProfile(UserProfile profile) async {
     try {
       final db = await DatabaseHelper.database;
-      final id = (profile.profileId.isNotEmpty)
-          ? profile.profileId
-          : _uuid.v4();
+      final id = (profile.profileId.isNotEmpty) ? profile.profileId : uuid.v4();
 
       final map = <String, dynamic>{
         'profileId': id,
@@ -79,7 +76,7 @@ class UserProfileApi {
   static Future<int> updateProfile(UserProfile profile) async {
     try {
       final db = await DatabaseHelper.database;
-      final now = DateTime.now().toIso8601String();
+      final now = DateTime.now().toLocal().toIso8601String();
       final map = {
         'name': profile.name,
         'appVersion': profile.appVersion,
@@ -106,7 +103,7 @@ class UserProfileApi {
         stackTrace: stack,
         name: 'UserProfileApi',
       );
-      return 0; // fallback to 0 updated rows
+      return 0;
     }
   }
 

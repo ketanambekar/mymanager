@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:glass/glass.dart';
 import 'package:mymanager/screen/create_task/create_task_controller.dart';
-import 'package:mymanager/services/tasks_services/task_storage_service.dart';
+// import 'package:mymanager/services/tasks_services/task_storage_service.dart';
 
 showCreateTaskBottomSheet() async {
   if (!Get.isRegistered<CreateTaskController>()) {
@@ -54,28 +54,28 @@ class _CreateTaskSheetView extends GetView<CreateTaskController> {
       return;
     }
 
-    final svc = Get.find<TaskStorageService>();
+    // final svc = Get.find<TaskStorageService>();
 
     // create task from fields
-    await svc.createTaskFrom(
-      taskName: controller.nameController.text.trim(),
-      taskDate: controller.dateIso,
-      taskTime: controller.timeIso,
-      taskAlerts: controller.taskAlerts.isEmpty
-          ? null
-          : controller.taskAlerts.toList(),
-      taskSlot: null,
-      subTasks: controller.subTasks.toList(),
-      taskDuration: null,
-      taskEndTime: null,
-      taskStartDate: controller.dateIso,
-      taskFrequency: null,
-      isTaskAlert: controller.isAlert.value,
-      taskStatus: 'pending',
-      taskDescription: controller.descController.text.trim(),
-      taskCategory: controller.category.value,
-      taskPriority: controller.priority.value,
-    );
+    // await svc.createTaskFrom(
+    //   taskName: controller.nameController.text.trim(),
+    //   taskDate: controller.dateIso,
+    //   taskTime: controller.timeIso,
+    //   taskAlerts: controller.taskAlerts.isEmpty
+    //       ? null
+    //       : controller.taskAlerts.toList(),
+    //   taskSlot: null,
+    //   subTasks: controller.subTasks.toList(),
+    //   taskDuration: null,
+    //   taskEndTime: null,
+    //   taskStartDate: controller.dateIso,
+    //   taskFrequency: null,
+    //   isTaskAlert: controller.isAlert.value,
+    //   taskStatus: 'pending',
+    //   taskDescription: controller.descController.text.trim(),
+    //   taskCategory: controller.category.value,
+    //   taskPriority: controller.priority.value,
+    // );
 
     // close sheet
     Get.back();
@@ -443,93 +443,93 @@ class _CreateTaskSheetView extends GetView<CreateTaskController> {
           ),
         ),
         const SizedBox(height: 8),
-        Obx(() {
-          final subs = controller.subTasks;
-          return Column(
-            children: [
-              // list existing subtasks
-              if (subs.isNotEmpty)
-                Column(
-                  children: subs.map((s) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              s.name,
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () => controller.removeSubTask(s.id),
-                            icon: const Icon(
-                              Icons.close,
-                              color: Colors.white54,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              // input to add new subtask
-              Row(
-                children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child:
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: TextField(
-                              controller: newSubController,
-                              style: const TextStyle(color: Colors.white),
-                              decoration: const InputDecoration(
-                                hintText: 'Add subtask',
-                                hintStyle: TextStyle(color: Colors.white54),
-                                border: InputBorder.none,
-                              ),
-                              textInputAction: TextInputAction.done,
-                              onSubmitted: (v) {
-                                final trimmed = v.trim();
-                                if (trimmed.isNotEmpty) {
-                                  controller.addSubTask(trimmed);
-                                  newSubController.clear();
-                                }
-                              },
-                            ),
-                          ).asGlass(
-                            tintColor: Colors.white,
-                            blurX: 8,
-                            blurY: 8,
-                            clipBorderRadius: BorderRadius.circular(10),
-                          ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () {
-                      final v = newSubController.text.trim();
-                      if (v.isNotEmpty) {
-                        controller.addSubTask(v);
-                        newSubController.clear();
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white12,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text('Add'),
-                  ),
-                ],
-              ),
-            ],
-          );
-        }),
+        // Obx(() {
+        //   // final subs = controller.subTasks;
+        //   return Column(
+        //     children: [
+        //       // list existing subtasks
+        //       if (subs.isNotEmpty)
+        //         Column(
+        //           children: subs.map((s) {
+        //             return Padding(
+        //               padding: const EdgeInsets.symmetric(vertical: 4),
+        //               child: Row(
+        //                 children: [
+        //                   Expanded(
+        //                     child: Text(
+        //                       s.name,
+        //                       style: const TextStyle(color: Colors.white),
+        //                     ),
+        //                   ),
+        //                   IconButton(
+        //                     onPressed: () => controller.removeSubTask(s.id),
+        //                     icon: const Icon(
+        //                       Icons.close,
+        //                       color: Colors.white54,
+        //                     ),
+        //                   ),
+        //                 ],
+        //               ),
+        //             );
+        //           }).toList(),
+        //         ),
+        //       // input to add new subtask
+        //       Row(
+        //         children: [
+        //           Expanded(
+        //             child: ClipRRect(
+        //               borderRadius: BorderRadius.circular(10),
+        //               child:
+        //                   Container(
+        //                     padding: const EdgeInsets.symmetric(horizontal: 8),
+        //                     child: TextField(
+        //                       controller: newSubController,
+        //                       style: const TextStyle(color: Colors.white),
+        //                       decoration: const InputDecoration(
+        //                         hintText: 'Add subtask',
+        //                         hintStyle: TextStyle(color: Colors.white54),
+        //                         border: InputBorder.none,
+        //                       ),
+        //                       textInputAction: TextInputAction.done,
+        //                       onSubmitted: (v) {
+        //                         final trimmed = v.trim();
+        //                         if (trimmed.isNotEmpty) {
+        //                           controller.addSubTask(trimmed);
+        //                           newSubController.clear();
+        //                         }
+        //                       },
+        //                     ),
+        //                   ).asGlass(
+        //                     tintColor: Colors.white,
+        //                     blurX: 8,
+        //                     blurY: 8,
+        //                     clipBorderRadius: BorderRadius.circular(10),
+        //                   ),
+        //             ),
+        //           ),
+        //           const SizedBox(width: 8),
+        //           ElevatedButton(
+        //             onPressed: () {
+        //               final v = newSubController.text.trim();
+        //               if (v.isNotEmpty) {
+        //                 controller.addSubTask(v);
+        //                 newSubController.clear();
+        //               }
+        //             },
+        //             style: ElevatedButton.styleFrom(
+        //               backgroundColor: Colors.white12,
+        //               foregroundColor: Colors.white,
+        //               shape: RoundedRectangleBorder(
+        //                 borderRadius: BorderRadius.circular(10),
+        //               ),
+        //             ),
+        //             child: const Text('Add'),
+        //           ),
+        //         ],
+        //       ),
+        //     ],
+        //   );
+        // }),
       ],
     );
   }

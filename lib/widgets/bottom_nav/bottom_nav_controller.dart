@@ -10,7 +10,7 @@ class BottomNavController extends GetxController {
   final selectedIndex = 0.obs;
 
   final List<Widget Function()> _pageBuilders = [
-    () => const DashboardContent(),
+    () => DashboardContent(),
     () => const CalenderView(),
     () => const SizedBox.shrink(),
     () => const ReportsView(),
