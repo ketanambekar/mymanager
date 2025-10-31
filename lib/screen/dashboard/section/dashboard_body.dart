@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mymanager/screen/dashboard/dashboard_controller.dart';
+import 'package:mymanager/screen/dashboard/widgets/project_tiles.dart';
 import 'package:mymanager/theme/app_theme.dart';
 import 'package:mymanager/utils/global_utils.dart';
 
@@ -10,27 +11,6 @@ class DashboardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget _projectCard(index) {
-      final project = controller.projects[index];
-      return Container(
-        margin: const EdgeInsets.fromLTRB(0, 16, 16, 16),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white38,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(project.projectName ?? ''),
-            Text(
-              'Created At: ${formatDate(project.projectCreatedAt.toString())}',
-            ),
-          ],
-        ),
-      );
-    }
-
     Widget _viewMoreCard() {
       return Container(
         margin: const EdgeInsets.fromLTRB(0, 16, 16, 16),
@@ -60,7 +40,10 @@ class DashboardContent extends StatelessWidget {
           final visibleCount = count > 5 ? 5 : count;
           final children = <Widget>[
             // generate visible project cards
-            ...List.generate(visibleCount, (i) => _projectCard(i)),
+            ...List.generate(
+              visibleCount,
+              (i) => ProjectTiles(project: controller.projects[i]),
+            ),
             // if more than 5 show a single "View More" card
             if (count > 5) _viewMoreCard(),
           ];

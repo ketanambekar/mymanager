@@ -31,7 +31,7 @@ class DashboardController extends GetxController {
     projects.value = await UserProjectsApi.getProjects();
     for (var project in projects) {
       print(
-        '${project.projectId}: ${project.projectName} (${project.projectUpdatedAt})',
+        '${project.projectId}: ${project.projectName} ${project.projectStatus} (${project.projectUpdatedAt})',
       );
     }
 

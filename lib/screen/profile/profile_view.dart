@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mymanager/screen/profile/profile_controller.dart';
 import 'package:mymanager/screen/profile/widgets/add_update_bottomsheet.dart';
+import 'package:mymanager/screen/profile/widgets/profile_tab_tiles.dart';
 import 'package:mymanager/theme/app_theme.dart';
 import 'package:mymanager/utils/global_utils.dart';
 
@@ -63,49 +64,71 @@ class ProfileView extends StatelessWidget {
               }),
             ),
             Obx(() {
-              return Text(controller.id.value, style: AppTheme.caption);
-            }),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Active Since: ', style: AppTheme.caption),
-                    Text(
-                      formatDate(controller.activeSince.value),
-                      style: AppTheme.caption,
-                    ),
-                  ],
-                ),
-
-                Obx(
-                  () => Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Last Update: ', style: AppTheme.caption),
-                      Text(
-                        formatDate(controller.lastActive.value),
-                        style: AppTheme.caption,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-
-            Obx(() {
-              return Text(
-                "Active Since Version: v${controller.appVersion.value}",
-                style: AppTheme.caption,
-              );
+              return ProfileTabTiles(
+                title: 'Id',
+                value: controller.id.value,
+                icon: Icons.perm_device_information_rounded,
+              ); //Text(controller.id.value, style: AppTheme.caption);
             }),
 
-            Padding(
-              padding: const EdgeInsets.only(top: 16, bottom: 16),
-              child: Divider(color: Colors.white, thickness: 0.75),
+            ProfileTabTiles(
+              title: 'Active Since',
+              value: formatDate(controller.activeSince.value),
+              icon: Icons.timer,
             ),
+
+            Obx(()=> ProfileTabTiles(
+                title: 'Last Update',
+                value: formatDate(controller.lastActive.value),
+                icon: Icons.timer,
+              ),
+            ),
+            ProfileTabTiles(
+              title: 'Active Since Version',
+              value: "v${controller.appVersion.value}",
+              icon: Icons.info_outline_rounded,
+            ),
+            // Column(
+            //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //   crossAxisAlignment: CrossAxisAlignment.center,
+            //   children: [
+            //     Row(
+            //       mainAxisAlignment: MainAxisAlignment.center,
+            //       children: [
+            //         Text('Active Since: ', style: AppTheme.caption),
+            //         Text(
+            //           formatDate(controller.activeSince.value),
+            //           style: AppTheme.caption,
+            //         ),
+            //       ],
+            //     ),
+            //
+            //     Obx(
+            //       () => Row(
+            //         mainAxisAlignment: MainAxisAlignment.center,
+            //         children: [
+            //           Text('Last Update: ', style: AppTheme.caption),
+            //           Text(
+            //             formatDate(controller.lastActive.value),
+            //             style: AppTheme.caption,
+            //           ),
+            //         ],
+            //       ),
+            //     ),
+            //   ],
+            // ),
+            //
+            // Obx(() {
+            //   return Text(
+            //     "Active Since Version: v${controller.appVersion.value}",
+            //     style: AppTheme.caption,
+            //   );
+            // }),
+
+            // Padding(
+            //   padding: const EdgeInsets.only(top: 16, bottom: 16),
+            //   child: Divider(color: Colors.white, thickness: 0.75),
+            // ),
 
             Container(
               padding: EdgeInsets.only(
