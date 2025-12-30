@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mymanager/screen/profile/profile_controller.dart';
-import 'package:mymanager/theme/app_theme.dart';
+import 'package:mymanager/theme/app_text_styles.dart';
 import 'package:mymanager/widgets/app_button.dart';
 
 class AddUpdateBottomSheet extends StatelessWidget {
@@ -32,7 +32,7 @@ class AddUpdateBottomSheet extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.only(bottom: 32),
-            child: Text('Profile Name', style: AppTheme.headlineSmall),
+            child: Text('Profile Name', style: AppTextStyles.headline2),
           ),
           TextField(
             controller: _controller,

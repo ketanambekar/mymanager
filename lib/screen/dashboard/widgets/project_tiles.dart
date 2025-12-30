@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mymanager/database/tables/user_projects/models/user_project_model.dart';
-import 'package:mymanager/theme/app_theme.dart';
+import 'package:mymanager/theme/app_text_styles.dart';
 import 'package:mymanager/utils/global_utils.dart';
 
 class ProjectTiles extends StatelessWidget {
@@ -19,7 +19,7 @@ class ProjectTiles extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(project.projectName ?? '', style: AppTheme.body),
+          Text(project.projectName ?? '', style: AppTextStyles.bodyLarge),
           Row(
             children: [
               Padding(
@@ -32,7 +32,7 @@ class ProjectTiles extends StatelessWidget {
               ),
               Text(
                 timeAgo(project.projectUpdatedAt.toString()),
-                style: AppTheme.caption,
+                style: AppTextStyles.caption,
               ),
             ],
           ),

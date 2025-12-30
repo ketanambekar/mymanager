@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -22,20 +23,16 @@ class DashboardController extends GetxController {
     getAllProjects();
   }
 
-  @override
-  void onReady() {
-    super.onReady();
-  }
-
   Future<void> getAllProjects() async {
     projects.value = await UserProjectsApi.getProjects();
-    for (var project in projects) {
-      print(
-        '${project.projectId}: ${project.projectName} ${project.projectStatus} (${project.projectUpdatedAt})',
-      );
+    if (kDebugMode) {
+      for (var project in projects) {
+        developer.log(
+          '${project.projectId}: ${project.projectName} ${project.projectStatus} (${project.projectUpdatedAt})',
+          name: 'DashboardController',
+        );
+      }
     }
-
-    final allProjects = await UserProjectsApi.getProjects(includeDeleted: true);
   }
 
 
@@ -71,8 +68,13 @@ class DashboardController extends GetxController {
         );
       });
     } catch (e, stack) {
-      if(kDebugMode) {
-        print("Dashboard LoadDashboard $e $stack");
+      if (kDebugMode) {
+        developer.log(
+          'Error loading dashboard: $e',
+          error: e,
+          stackTrace: stack,
+          name: 'DashboardController',
+        );
       }
     } finally {
       isLoadingDashboard = false;

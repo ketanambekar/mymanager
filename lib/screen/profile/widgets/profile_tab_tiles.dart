@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mymanager/theme/app_theme.dart';
+import 'package:mymanager/theme/app_text_styles.dart';
 
 class ProfileTabTiles extends StatelessWidget {
   final String title;
@@ -30,11 +30,11 @@ class ProfileTabTiles extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: AppTheme.caption),
+                Text(title, style: AppTextStyles.caption),
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: AppTheme.body,
+                  style: AppTextStyles.bodyLarge,
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),

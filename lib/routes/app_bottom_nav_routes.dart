@@ -9,10 +9,10 @@ final appBottomNavRoutes = [
     'route': AppRoutes.dashboard,
   },
   {
-    'icon': Icons.calendar_today_outlined,
-    'icon_selected': Icons.calendar_month_sharp,
+    'icon': Icons.task_alt_outlined,
+    'icon_selected': Icons.task_alt,
     'label': 'Tasks',
-    'route': AppRoutes.calender,
+    'route': AppRoutes.tasks,
   },
   {
     'icon': Icons.add_circle_outline,

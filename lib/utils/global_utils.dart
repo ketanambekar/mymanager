@@ -1,5 +1,5 @@
+import 'dart:developer' as developer;
 import 'dart:math';
-
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -16,7 +16,7 @@ String formatDate(String dateString) {
     return formatter.format(parsedDate);
   } catch (e) {
     if (kDebugMode) {
-      print('Date parsing error: $e');
+      developer.log('Date parsing error: $e', name: 'GlobalUtils');
     }
     return '';
   }
@@ -47,12 +47,11 @@ String timeAgo(String dateString) {
     }
   } catch (e) {
     if (kDebugMode) {
-      print('Date parsing error: $e');
+      developer.log('Date parsing error: $e', name: 'GlobalUtils');
     }
     return '';
   }
 }
-
 
 String getRandomString(int length) {
   const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';

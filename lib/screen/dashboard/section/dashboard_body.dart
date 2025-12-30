@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mymanager/screen/dashboard/dashboard_controller.dart';
 import 'package:mymanager/screen/dashboard/widgets/project_tiles.dart';
-import 'package:mymanager/theme/app_theme.dart';
+import 'package:mymanager/theme/app_text_styles.dart';
 import 'package:mymanager/utils/global_utils.dart';
 
 class DashboardContent extends StatelessWidget {
@@ -54,7 +54,7 @@ class DashboardContent extends StatelessWidget {
             children: [
               Text(
                 'Active Projects ($count)',
-                style: AppTheme.headlineSmall.copyWith(
+                style: AppTextStyles.headline2.copyWith(
                   fontSize: 16,
                   color: Colors.white,
                 ),

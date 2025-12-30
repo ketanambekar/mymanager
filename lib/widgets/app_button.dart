@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mymanager/theme/app_theme.dart';
+import 'package:mymanager/theme/app_text_styles.dart';
 
 class AppButton extends StatelessWidget {
   final String text;
@@ -23,7 +23,7 @@ class AppButton extends StatelessWidget {
             color: Colors.purpleAccent,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Center(child: Text(text, style: AppTheme.body)),
+          child: Center(child: Text(text, style: AppTextStyles.bodyLarge)),
         ),
       ),
     );

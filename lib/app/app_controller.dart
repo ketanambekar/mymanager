@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -17,7 +18,7 @@ class AppController extends GetxController {
   Future<void> checkUser() async {
     final userId = await GetStorage().read(AppConstants.profileId);
     if (kDebugMode) {
-      print("userId:>>$userId");
+      developer.log('userId: $userId', name: 'AppController');
     }
     if (userId == null || userId == '') {
       await GetStorage().write(AppConstants.profileId, uuid.v4());

@@ -1,5 +1,6 @@
 import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
+import 'package:mymanager/constants/app_constants.dart';
 import 'package:mymanager/database/helper/database_helper.dart';
 import 'package:mymanager/database/tables/user_projects/models/user_project_model.dart';
 import 'package:mymanager/utils/global_utils.dart';
@@ -20,7 +21,7 @@ class UserProjectsApi {
       final map = <String, dynamic>{
         'project_id': id,
         'project_name': project.projectName,
-        'project_status': project.projectStatus ?? 'Active',
+        'project_status': project.projectStatus ?? AppConstants.projectStatusActive,
         'project_description': project.projectDescription,
         'project_type': project.projectType,
         'project_color': project.projectColor,
@@ -48,7 +49,7 @@ class UserProjectsApi {
   }) async {
     try {
       final db = await DatabaseHelper.database;
-      final whereClause = includeDeleted ? null : "project_status != 'Deleted'";
+      final whereClause = includeDeleted ? null : "project_status != '${AppConstants.projectStatusDeleted}'";
       final maps = await db.query(
         'user_projects_table',
         where: whereClause,
@@ -136,7 +137,7 @@ class UserProjectsApi {
 
       final count = await db.update(
         'user_projects_table',
-        {'project_status': 'Deleted', 'project_updated_at': now},
+        {'project_status': AppConstants.projectStatusDeleted, 'project_updated_at': now},
         where: 'project_id = ?',
         whereArgs: [projectId],
       );

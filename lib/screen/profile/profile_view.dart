@@ -4,6 +4,7 @@ import 'package:mymanager/screen/profile/profile_controller.dart';
 import 'package:mymanager/screen/profile/widgets/add_update_bottomsheet.dart';
 import 'package:mymanager/screen/profile/widgets/profile_tab_tiles.dart';
 import 'package:mymanager/theme/app_theme.dart';
+import 'package:mymanager/theme/app_text_styles.dart';
 import 'package:mymanager/utils/global_utils.dart';
 
 class ProfileView extends StatelessWidget {
@@ -56,7 +57,7 @@ class ProfileView extends StatelessWidget {
                         controller.userName.value.isEmpty
                             ? 'Click To Update Name'
                             : controller.userName.value,
-                        style: AppTheme.headlineSmall,
+                        style: AppTextStyles.headline2,
                       ),
                     ),
                   ],
@@ -144,7 +145,7 @@ class ProfileView extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("About Me", style: AppTheme.body),
+                  Text("About Me", style: AppTextStyles.bodyLarge),
                   Icon(
                     Icons.arrow_forward_ios_sharp,
                     color: Colors.white,

@@ -19,11 +19,7 @@ class MyApp extends StatelessWidget {
       builder: (context, child) {
         return DecoratedBox(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.indigo.shade700, Colors.purple.shade700],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            gradient: AppTheme.backgroundGradient,
           ),
           child: SafeArea(child: child ?? const SizedBox.shrink()),
         );

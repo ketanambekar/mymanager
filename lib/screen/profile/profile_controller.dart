@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:mymanager/constants/app_constants.dart';
@@ -19,23 +21,36 @@ class ProfileController extends GetxController {
   Future<void> getUserData() async {
     try {
       final profileId = GetStorage().read(AppConstants.profileId);
-      print('ProfileId from storage: $profileId');
+      if (kDebugMode) {
+        developer.log('ProfileId from storage: $profileId', name: 'ProfileController');
+      }
 
       if (profileId != null) {
         final fetched = await UserProfileApi.getProfile(profileId);
-        print('Fetched profile: ${fetched?.createdAt!}');
-        print('Fetched profile: ${fetched?.updatedAt!}');
+        if (kDebugMode) {
+          developer.log(
+            'Fetched profile - Created: ${fetched?.createdAt}, Updated: ${fetched?.updatedAt}',
+            name: 'ProfileController',
+          );
+        }
 
         if (fetched != null) {
-          userName.value = fetched.name!;
-          appVersion.value = fetched.appVersion!;
+          userName.value = fetched.name ?? '';
+          appVersion.value = fetched.appVersion ?? '';
           id.value = fetched.profileId;
-          activeSince.value = fetched.createdAt!;
-          lastActive.value = fetched.updatedAt!;
+          activeSince.value = fetched.createdAt ?? '';
+          lastActive.value = fetched.updatedAt ?? '';
         }
       }
-    } catch (e) {
-      print('Error fetching user profile: $e');
+    } catch (e, stack) {
+      if (kDebugMode) {
+        developer.log(
+          'Error fetching user profile: $e',
+          error: e,
+          stackTrace: stack,
+          name: 'ProfileController',
+        );
+      }
     }
   }
 
@@ -45,7 +60,9 @@ class ProfileController extends GetxController {
 
       if (profileId != null) {
         final fetched = await UserProfileApi.getProfile(profileId);
-        print('Fetched profile: $fetched');
+        if (kDebugMode) {
+          developer.log('Updating profile name', name: 'ProfileController');
+        }
 
         if (fetched != null) {
           final updated = fetched.copyWith(name: userName.value);
@@ -53,8 +70,15 @@ class ProfileController extends GetxController {
           getUserData();
         }
       }
-    } catch (e) {
-      print('Error fetching user profile: $e');
+    } catch (e, stack) {
+      if (kDebugMode) {
+        developer.log(
+          'Error updating user profile: $e',
+          error: e,
+          stackTrace: stack,
+          name: 'ProfileController',
+        );
+      }
     }
   }
 }

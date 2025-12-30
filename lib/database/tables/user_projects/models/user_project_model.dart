@@ -31,14 +31,14 @@ class UserProjects {
   );
 
   Map<String, dynamic> toMap() => {
-    'projectId': projectId,
-    'projectName': projectName,
-    'projectStatus': projectStatus,
-    'projectDescription': projectDescription,
-    'projectType': projectType,
-    'projectColor': projectColor,
-    'projectCreatedAt': projectCreatedAt,
-    'projectUpdatedAt': projectUpdatedAt,
+    'project_id': projectId,
+    'project_name': projectName,
+    'project_status': projectStatus,
+    'project_description': projectDescription,
+    'project_type': projectType,
+    'project_color': projectColor,
+    'project_created_at': projectCreatedAt,
+    'project_updated_at': projectUpdatedAt,
   };
 
   UserProjects copyWith({

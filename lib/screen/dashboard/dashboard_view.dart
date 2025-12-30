@@ -1,12 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mymanager/routes/app_routes.dart';
+import 'package:mymanager/screen/create_task/create_task_view.dart';
 import 'package:mymanager/screen/dashboard/dashboard_controller.dart';
+import 'package:mymanager/theme/app_theme.dart';
+import 'package:mymanager/theme/app_colors.dart';
+import 'package:mymanager/theme/app_text_styles.dart';
+import 'package:mymanager/theme/app_decorations.dart';
 import 'package:mymanager/widgets/app_bar/app_bar.dart';
 import 'package:mymanager/widgets/bottom_nav/bottom_nav_view.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
+
+  void _showCreateMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.transparent,
+      builder: (context) => Container(
+        decoration: AppDecorations.modalDecoration,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 16),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: AppDecorations.handleDecoration,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Create New',
+              style: AppTextStyles.headline3,
+            ),
+            const SizedBox(height: 24),
+            ListTile(
+              leading: Container(
+                padding: AppDecorations.paddingMedium,
+                decoration: AppDecorations.iconContainerDecoration(AppColors.success),
+                child: Icon(Icons.task_alt, color: AppColors.success),
+              ),
+              title: Text('Task', style: AppTextStyles.listTitle),
+              subtitle: Text('Create a new task', style: AppTextStyles.listSubtitle),
+              onTap: () async {
+                Get.back();
+                await showCreateTaskBottomSheet();
+                Get.find<DashboardController>().getAllProjects();
+              },
+            ),
+            ListTile(
+              leading: Container(
+                padding: AppDecorations.paddingMedium,
+                decoration: AppDecorations.iconContainerDecoration(AppColors.info),
+                child: Icon(Icons.folder_special, color: AppColors.info),
+              ),
+              title: Text('Project', style: AppTextStyles.listTitle),
+              subtitle: Text('Create a new project', style: AppTextStyles.listSubtitle),
+              onTap: () async {
+                Get.back();
+                final created = await Get.toNamed(AppRoutes.createProject);
+                if (created == true) {
+                  Get.find<DashboardController>().getAllProjects();
+                }
+              },
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     final DashboardController controller = Get.find<DashboardController>();
@@ -19,11 +82,7 @@ class DashboardView extends StatelessWidget {
         children: [
           Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.indigo.shade700, Colors.purple.shade700],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              gradient: AppTheme.backgroundGradient,
             ),
           ),
 
@@ -47,20 +106,14 @@ class DashboardView extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: Container(
-        width: 80,
-        height: 80,
-        padding: const EdgeInsets.only(bottom: 15),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 70),
         child: FloatingActionButton(
-          shape: CircleBorder(),
-          child: const Icon(Icons.add_sharp),
-          onPressed: () async {
-            final created = await Get.toNamed(AppRoutes.createProject);
-            if (created == true) {
-              controller.getAllProjects();
-            }
-          },
+          shape: AppDecorations.circleShape,
+          backgroundColor: AppColors.primary,
+          child: const Icon(Icons.add_sharp, size: 32),
+          onPressed: () => _showCreateMenu(context),
         ),
       ),
     );
