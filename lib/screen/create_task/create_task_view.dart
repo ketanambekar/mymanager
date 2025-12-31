@@ -25,12 +25,9 @@ class CreateTaskView extends GetView<CreateTaskController> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
     return SafeArea(
       child: Container(
-        height: MediaQuery.of(context).size.height * 0.85,
-        margin: EdgeInsets.only(bottom: bottomInset),
+        height: MediaQuery.of(context).size.height * 0.90,
         child: ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           child: Container(

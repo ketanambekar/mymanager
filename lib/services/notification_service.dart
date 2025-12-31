@@ -115,8 +115,43 @@ class NotificationService {
     // TODO: Navigate to specific task/habit based on payload
   }
 
+  /// Request notification permissions (Android 13+)
+  Future<bool> requestPermissions() async {
+    try {
+      final androidImpl = _notifications.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      
+      if (androidImpl != null) {
+        // Request exact alarm permission for Android 13+
+        final exactAlarmGranted = await androidImpl.requestExactAlarmsPermission();
+        
+        // Request notification permission
+        final notificationGranted = await androidImpl.requestNotificationsPermission();
+        
+        if (kDebugMode) {
+          developer.log(
+            'Notification permissions - Exact alarms: $exactAlarmGranted, Notifications: $notificationGranted',
+            name: 'NotificationService',
+          );
+        }
+        
+        return exactAlarmGranted == true && notificationGranted == true;
+      }
+      
+      return true; // iOS handles permissions differently
+    } catch (e, stack) {
+      developer.log(
+        'Error requesting permissions: $e',
+        error: e,
+        stackTrace: stack,
+        name: 'NotificationService',
+      );
+      return false;
+    }
+  }
+
   /// Schedule task notification
-  Future<void> scheduleTaskNotification({
+  Future<bool> scheduleTaskNotification({
     required int id,
     required String title,
     required String body,
@@ -124,6 +159,19 @@ class NotificationService {
     String? payload,
   }) async {
     try {
+      // Check and request permissions if needed
+      final hasPermission = await requestPermissions();
+      
+      if (!hasPermission) {
+        if (kDebugMode) {
+          developer.log(
+            'Notification permissions not granted, skipping scheduling',
+            name: 'NotificationService',
+          );
+        }
+        return false;
+      }
+
       const androidDetails = AndroidNotificationDetails(
         AppConstants.channelIdTasks,
         AppConstants.channelNameTasks,
@@ -149,13 +197,18 @@ class NotificationService {
       if (kDebugMode) {
         developer.log('Scheduled notification $id for $scheduledDate', name: 'NotificationService');
       }
+      return true;
     } catch (e, stack) {
-      developer.log(
-        'Error scheduling notification: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'NotificationService',
-      );
+      // Only log the error, don't throw - task creation should succeed even if notification fails
+      if (kDebugMode) {
+        developer.log(
+          'Could not schedule notification: ${e.toString()}',
+          error: e,
+          stackTrace: stack,
+          name: 'NotificationService',
+        );
+      }
+      return false;
     }
   }
 
@@ -294,36 +347,6 @@ class NotificationService {
         stackTrace: stack,
         name: 'NotificationService',
       );
-    }
-  }
-
-  /// Request notification permissions
-  Future<bool> requestPermissions() async {
-    try {
-      final androidImpl = _notifications.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
-
-      final iosImpl = _notifications
-          .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
-
-      final granted = await iosImpl?.requestPermissions(
-            alert: true,
-            badge: true,
-            sound: true,
-          ) ??
-          true;
-
-      await androidImpl?.requestNotificationsPermission();
-
-      return granted;
-    } catch (e, stack) {
-      developer.log(
-        'Error requesting permissions: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'NotificationService',
-      );
-      return false;
     }
   }
 

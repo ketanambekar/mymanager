@@ -5,13 +5,14 @@ import 'package:mymanager/screen/calander/calender_view.dart';
 import 'package:mymanager/screen/dashboard/section/dashboard_body.dart';
 import 'package:mymanager/screen/profile/profile_view.dart';
 import 'package:mymanager/screen/reports/reports_view.dart';
+import 'package:mymanager/screen/tasks/tasks_view.dart';
 
 class BottomNavController extends GetxController {
   final selectedIndex = 0.obs;
 
   final List<Widget Function()> _pageBuilders = [
     () => DashboardContent(),
-    () => const CalenderView(),
+    () => const TasksView(),
     () => const SizedBox.shrink(),
     () => const ReportsView(),
     () => ProfileView(),

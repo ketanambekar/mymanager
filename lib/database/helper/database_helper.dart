@@ -4,6 +4,7 @@ import 'package:mymanager/constants/app_constants.dart';
 import 'package:mymanager/database/tables/tasks/tasks_table.dart';
 import 'package:mymanager/database/tables/user_profile/user_tables.dart';
 import 'package:mymanager/database/tables/user_projects/user_projects_table.dart';
+import 'package:mymanager/database/tables/notifications/notification_tables.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -29,7 +30,7 @@ class DatabaseHelper {
     }
     final db = await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         if (kDebugMode) {
           developer.log('Creating tables...', name: 'DatabaseHelper');
@@ -40,6 +41,7 @@ class DatabaseHelper {
         await db.execute(TasksTables.taskHistory);
         await db.execute(TasksTables.habits);
         await db.execute(TasksTables.habitLogs);
+        await db.execute(NotificationTables.notifications);
 
         if (kDebugMode) {
           developer.log('All tables created ✅', name: 'DatabaseHelper');
@@ -53,6 +55,12 @@ class DatabaseHelper {
           await db.execute(TasksTables.habitLogs);
           if (kDebugMode) {
             developer.log('Database upgraded to v2 ✅', name: 'DatabaseHelper');
+          }
+        }
+        if (oldVersion < 3) {
+          await db.execute(NotificationTables.notifications);
+          if (kDebugMode) {
+            developer.log('Database upgraded to v3 (notifications) ✅', name: 'DatabaseHelper');
           }
         }
       },

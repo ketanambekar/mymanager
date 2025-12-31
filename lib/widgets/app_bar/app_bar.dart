@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mymanager/screen/notifications/notifications_view.dart';
 import 'package:mymanager/widgets/bottom_nav/bottom_nav_controller.dart';
+
+import '../../database/apis/notification_api.dart';
 
 class AppHeader extends GetView<BottomNavController>
     implements PreferredSizeWidget {
@@ -32,8 +35,9 @@ class AppHeader extends GetView<BottomNavController>
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
           child: GestureDetector(
-            onTap: () {
-              Get.toNamed('/notifications');
+            onTap: () async {
+              await Get.to(() => NotificationsView());
+              // unreadNotifications.value = await NotificationApi.getUnreadCount();
             },
             child: Obx(() {
               final count = 2.obs; //notifCtrl?.unread.value ?? 0;

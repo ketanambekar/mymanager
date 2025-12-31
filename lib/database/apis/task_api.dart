@@ -64,6 +64,10 @@ class TaskApi {
         whereArgs.add(AppConstants.taskStatusCompleted);
       }
 
+      // Exclude deleted tasks by default
+      whereClauses.add('task_status != ?');
+      whereArgs.add('Deleted');
+
       if (priority != null) {
         whereClauses.add('task_priority = ?');
         whereArgs.add(priority);
@@ -231,22 +235,111 @@ class TaskApi {
     }
   }
 
-  /// Delete task
+  /// Soft delete task by setting status to 'Deleted'
   static Future<int> deleteTask(String taskId) async {
     try {
       final db = await DatabaseHelper.database;
-      // Also delete all subtasks
-      await db.delete('tasks', where: 'parent_task_id = ?', whereArgs: [taskId]);
+      final now = _nowIso();
 
-      final count = await db.delete('tasks', where: 'task_id = ?', whereArgs: [taskId]);
+      // Soft delete all subtasks
+      await db.update(
+        'tasks',
+        {'task_status': 'Deleted', 'task_updated_at': now},
+        where: 'parent_task_id = ?',
+        whereArgs: [taskId],
+      );
+
+      // Soft delete the task itself
+      final count = await db.update(
+        'tasks',
+        {'task_status': 'Deleted', 'task_updated_at': now},
+        where: 'task_id = ?',
+        whereArgs: [taskId],
+      );
 
       if (kDebugMode) {
-        developer.log('Deleted task $taskId and its subtasks', name: 'TaskApi');
+        developer.log('Soft-deleted task $taskId and its subtasks', name: 'TaskApi');
       }
       return count;
     } catch (e, stack) {
       developer.log(
         'Error deleting task: $e',
+        error: e,
+        stackTrace: stack,
+        name: 'TaskApi',
+      );
+      return 0;
+    }
+  }
+
+  /// Permanently delete task and subtasks
+  static Future<int> permanentlyDeleteTask(String taskId) async {
+    try {
+      final db = await DatabaseHelper.database;
+      
+      // Delete all subtasks
+      await db.delete('tasks', where: 'parent_task_id = ?', whereArgs: [taskId]);
+
+      // Delete the task itself
+      final count = await db.delete('tasks', where: 'task_id = ?', whereArgs: [taskId]);
+
+      if (kDebugMode) {
+        developer.log('Permanently deleted task $taskId', name: 'TaskApi');
+      }
+      return count;
+    } catch (e, stack) {
+      developer.log(
+        'Error permanently deleting task: $e',
+        error: e,
+        stackTrace: stack,
+        name: 'TaskApi',
+      );
+      return 0;
+    }
+  }
+
+  /// Get all deleted tasks
+  static Future<List<Task>> getDeletedTasks() async {
+    try {
+      final db = await DatabaseHelper.database;
+      final results = await db.query(
+        'tasks',
+        where: 'task_status = ?',
+        whereArgs: ['Deleted'],
+        orderBy: 'task_updated_at DESC',
+      );
+      return results.map((m) => Task.fromMap(m)).toList();
+    } catch (e, stack) {
+      developer.log(
+        'Error getting deleted tasks: $e',
+        error: e,
+        stackTrace: stack,
+        name: 'TaskApi',
+      );
+      return [];
+    }
+  }
+
+  /// Restore deleted task
+  static Future<int> restoreTask(String taskId) async {
+    try {
+      final db = await DatabaseHelper.database;
+      final now = _nowIso();
+
+      final count = await db.update(
+        'tasks',
+        {'task_status': 'Todo', 'task_updated_at': now},
+        where: 'task_id = ?',
+        whereArgs: [taskId],
+      );
+
+      if (kDebugMode) {
+        developer.log('Restored task $taskId', name: 'TaskApi');
+      }
+      return count;
+    } catch (e, stack) {
+      developer.log(
+        'Error restoring task: $e',
         error: e,
         stackTrace: stack,
         name: 'TaskApi',

@@ -16,6 +16,8 @@ class DashboardController extends GetxController {
   late final List<NavItem> items;
   RxList<UserProjects> projects = <UserProjects>[].obs;
   bool isLoadingDashboard = false;
+  final RxBool isDashboardRefreshing = false.obs;
+  
   @override
   void onInit() {
     super.onInit();
@@ -32,6 +34,18 @@ class DashboardController extends GetxController {
           name: 'DashboardController',
         );
       }
+    }
+  }
+
+  /// Refresh dashboard - triggers rebuild of dashboard content
+  void refreshDashboard() {
+    isDashboardRefreshing.value = true;
+    // Force rebuild by toggling the refresh flag
+    Future.delayed(const Duration(milliseconds: 100), () {
+      isDashboardRefreshing.value = false;
+    });
+    if (kDebugMode) {
+      developer.log('Dashboard refreshed', name: 'DashboardController');
     }
   }
 
