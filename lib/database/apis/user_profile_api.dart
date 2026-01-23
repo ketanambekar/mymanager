@@ -80,6 +80,8 @@ class UserProfileApi {
       final map = {
         'name': profile.name,
         'appVersion': profile.appVersion,
+        'xp_points': profile.xpPoints,
+        'level': profile.level,
         'updated_at': now,
       };
 

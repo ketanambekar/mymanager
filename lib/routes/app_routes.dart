@@ -12,6 +12,12 @@ import 'package:mymanager/screen/task_group_detail/task_group_detail_view.dart';
 import 'package:mymanager/screen/notifications/notifications_view.dart';
 import 'package:mymanager/screen/task_listing/task_listing_view.dart';
 import 'package:mymanager/screen/task_group_listing/task_group_listing_view.dart';
+import 'package:mymanager/screen/habit_list/habit_list_view.dart';
+import 'package:mymanager/screen/habit_list/habit_list_binding.dart';
+import 'package:mymanager/screen/create_edit_habit/create_edit_habit_view.dart';
+import 'package:mymanager/screen/create_edit_habit/create_edit_habit_binding.dart';
+import 'package:mymanager/screen/habit_detail/habit_detail_view.dart';
+import 'package:mymanager/screen/habit_detail/habit_detail_binding.dart';
 
 class AppRoutes {
   static const dashboard = '/dashboard';
@@ -24,6 +30,9 @@ class AppRoutes {
   static const notifications = '/notifications';
   static const taskListing = '/task-listing';
   static const taskGroupListing = '/task-group-listing';
+  static const habitList = '/habit-list';
+  static const createHabit = '/create-habit';
+  static const habitDetail = '/habit-detail';
 }
 
 class AppPages {
@@ -69,6 +78,24 @@ class AppPages {
     GetPage(
       name: AppRoutes.taskGroupListing,
       page: () => TaskGroupListingView(),
+    ),
+    GetPage(
+      name: AppRoutes.habitList,
+      page: () => const HabitListView(),
+      binding: HabitListBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.createHabit,
+      page: () => const CreateEditHabitView(),
+      binding: CreateEditHabitBinding(),
+      transition: Transition.downToUp,
+      transitionDuration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    ),
+    GetPage(
+      name: AppRoutes.habitDetail,
+      page: () => const HabitDetailView(),
+      binding: HabitDetailBinding(),
     ),
   ];
 }

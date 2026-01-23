@@ -1,13 +1,19 @@
 import 'package:get/get.dart';
 import 'package:mymanager/database/apis/task_api.dart';
 import 'package:mymanager/database/apis/user_project_api.dart';
+import 'package:mymanager/database/apis/habit_api.dart';
+import 'package:mymanager/database/apis/user_profile_api.dart';
 import 'package:mymanager/database/tables/tasks/models/task_model.dart';
 import 'package:mymanager/database/tables/user_projects/models/user_project_model.dart';
+import 'package:mymanager/database/tables/tasks/models/habit_model.dart';
+import 'package:mymanager/database/tables/user_profile/models/user_profile_model.dart';
 import 'dart:developer' as developer;
 
 class ReportsController extends GetxController {
   final RxList<Task> allTasks = <Task>[].obs;
   final RxList<UserProjects> allProjects = <UserProjects>[].obs;
+  final RxList<Habit> allHabits = <Habit>[].obs;
+  final Rx<UserProfile?> userProfile = Rx<UserProfile?>(null);
   final RxBool isLoading = false.obs;
 
   // Task Statistics
@@ -34,6 +40,19 @@ class ReportsController extends GetxController {
   final RxInt thisWeekTasks = 0.obs;
   final RxInt thisMonthTasks = 0.obs;
 
+  // Habit Statistics
+  final RxInt totalHabits = 0.obs;
+  final RxInt activeHabits = 0.obs;
+  final RxInt completedToday = 0.obs;
+  final RxInt bestStreak = 0.obs;
+  final RxDouble avgStreak = 0.0.obs;
+
+  // XP Statistics
+  final RxInt totalXP = 0.obs;
+  final RxInt currentLevel = 0.obs;
+  final RxInt xpToNextLevel = 0.obs;
+  final RxDouble levelProgress = 0.0.obs;
+
   // Completion Rate
   final RxDouble completionRate = 0.0.obs;
 
@@ -50,18 +69,25 @@ class ReportsController extends GetxController {
       // Load all data
       final tasks = await TaskApi.getTasks();
       final projects = await UserProjectsApi.getProjects();
+      final habits = await HabitApi.getHabits();
+      final profiles = await UserProfileApi.getAllProfiles();
+      final profile = profiles.isNotEmpty ? profiles.first : null;
 
       allTasks.value = tasks;
       allProjects.value = projects;
+      allHabits.value = habits;
+      userProfile.value = profile;
 
       // Calculate statistics
       _calculateTaskStatistics(tasks);
       _calculatePriorityStatistics(tasks);
       _calculateFrequencyStatistics(tasks);
       _calculateTimeStatistics(tasks);
+      _calculateHabitStatistics(habits);
+      _calculateXPStatistics(profile);
       _calculateCompletionRate(tasks);
 
-      developer.log('Report data loaded: ${tasks.length} tasks, ${projects.length} projects',
+      developer.log('Report data loaded: ${tasks.length} tasks, ${projects.length} projects, ${habits.length} habits',
           name: 'ReportsController');
     } catch (e) {
       developer.log('Error loading report data: $e', name: 'ReportsController');
@@ -125,6 +151,42 @@ class ReportsController extends GetxController {
       final dueDate = DateTime.parse(t.taskDueDate!);
       return dueDate.isAfter(monthStart) && dueDate.month == now.month;
     }).length;
+  }
+
+  void _calculateHabitStatistics(List<Habit> habits) {
+    totalHabits.value = habits.length;
+    activeHabits.value = habits.where((h) => h.currentStreak > 0).length;
+    
+    if (habits.isNotEmpty) {
+      bestStreak.value = habits.map((h) => h.bestStreak).reduce((a, b) => a > b ? a : b);
+      final totalStreak = habits.fold<int>(0, (sum, h) => sum + h.currentStreak);
+      avgStreak.value = totalStreak / habits.length;
+    } else {
+      bestStreak.value = 0;
+      avgStreak.value = 0.0;
+    }
+    
+    // Note: completedToday would need habit log data
+    completedToday.value = 0;
+  }
+
+  void _calculateXPStatistics(UserProfile? profile) {
+    if (profile != null) {
+      totalXP.value = profile.xpPoints;
+      currentLevel.value = profile.level;
+      
+      final currentLevelXP = (profile.level - 1) * 100;
+      final nextLevelXP = profile.level * 100;
+      xpToNextLevel.value = nextLevelXP - profile.xpPoints;
+      
+      final progress = (profile.xpPoints - currentLevelXP) / 100;
+      levelProgress.value = progress.clamp(0.0, 1.0);
+    } else {
+      totalXP.value = 0;
+      currentLevel.value = 1;
+      xpToNextLevel.value = 100;
+      levelProgress.value = 0.0;
+    }
   }
 
   void _calculateCompletionRate(List<Task> tasks) {

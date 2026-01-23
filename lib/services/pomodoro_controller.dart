@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:mymanager/constants/app_constants.dart';
 import 'package:mymanager/services/notification_service.dart';
+import 'package:mymanager/services/xp_service.dart';
 
 class PomodoroController extends GetxController {
   final RxInt minutes = AppConstants.pomodoroWorkMinutes.obs;
@@ -66,11 +67,14 @@ class PomodoroController extends GetxController {
     if (isWorkSession.value) {
       sessionsCompleted.value++;
       
+      // Award XP for completing pomodoro work session
+      XpService.awardXp(XpService.xpPomodoroComplete, reason: 'Pomodoro session');
+      
       // Show completion notification
       NotificationService().showNotification(
         id: 999,
-        title: 'Pomodoro Complete!',
-        body: 'Great work! Time for a break.',
+        title: 'Pomodoro Complete! 🎉',
+        body: 'Great work! +${XpService.xpPomodoroComplete} XP. Time for a break.',
         channelId: AppConstants.channelIdFocus,
       );
       

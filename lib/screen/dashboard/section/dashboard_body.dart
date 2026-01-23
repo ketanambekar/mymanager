@@ -6,6 +6,7 @@ import 'package:mymanager/database/apis/notification_api.dart';
 import 'package:mymanager/database/apis/user_profile_api.dart';
 import 'package:mymanager/database/tables/tasks/models/task_model.dart';
 import 'package:mymanager/screen/dashboard/dashboard_controller.dart';
+import 'package:mymanager/screen/dashboard/widgets/dashboard_xp_habits_widget.dart';
 import 'package:mymanager/screen/task_group_detail/task_group_detail_view.dart';
 import 'package:mymanager/screen/notifications/notifications_view.dart';
 import 'package:mymanager/constants/app_constants.dart';
@@ -242,6 +243,71 @@ class _DashboardContentState extends State<DashboardContent> {
                             ],
                           ),
                         ),
+                        GestureDetector(
+                          onTap: () async {
+                            await Get.to(() => NotificationsView());
+                            _loadNotificationCount();
+                          },
+                          child: Obx(() {
+                            final count = unreadNotifications.value;
+                            final showBadge = count > 0;
+                            final display = (count > 99) ? '99+' : '$count';
+                            
+                            return Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.notifications_none,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                                if (showBadge)
+                                  Positioned(
+                                    right: -2,
+                                    top: -2,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.redAccent,
+                                        borderRadius: BorderRadius.circular(10),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.25),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      constraints: const BoxConstraints(
+                                        minWidth: 18,
+                                        minHeight: 16,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          display,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          }),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -318,6 +384,12 @@ class _DashboardContentState extends State<DashboardContent> {
               ),
 
               const SizedBox(height: 24),
+
+              // XP Progress Widget
+              const DashboardXpWidget(),
+
+              // Today's Habits Widget
+              const DashboardHabitsWidget(),
 
               // In Progress Section
               Row(

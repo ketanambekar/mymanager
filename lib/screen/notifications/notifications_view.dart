@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:mymanager/screen/notifications/notifications_controller.dart';
 import 'package:mymanager/database/tables/notifications/models/notification_model.dart';
 import 'package:mymanager/utils/global_utils.dart';
+import 'package:mymanager/services/notification_service.dart';
+import 'package:flutter/foundation.dart';
 
 class NotificationsView extends StatelessWidget {
   NotificationsView({super.key});
@@ -109,6 +111,161 @@ class NotificationsView extends StatelessWidget {
                                 ),
                               )
                             : const SizedBox.shrink()),
+                        // Test notification button (debug only)
+                        if (kDebugMode) ...[
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () async {
+                              // Show pending notifications dialog
+                              final pending = await NotificationService().getPendingNotifications();
+                              Get.dialog(
+                                Dialog(
+                                  backgroundColor: const Color(0xFF1E1E1E),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(20),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Pending Notifications',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        if (pending.isEmpty)
+                                          const Text(
+                                            'No pending notifications',
+                                            style: TextStyle(color: Colors.white70),
+                                          )
+                                        else
+                                          ...pending.map((notif) => Padding(
+                                            padding: const EdgeInsets.only(bottom: 12),
+                                            child: Container(
+                                              padding: const EdgeInsets.all(12),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFF2A2A2A),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    'ID: ${notif['id']}',
+                                                    style: const TextStyle(
+                                                      color: Color(0xFF4ECDC4),
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    notif['title'] ?? 'No title',
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    notif['body'] ?? 'No body',
+                                                    style: const TextStyle(color: Colors.white70),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          )).toList(),
+                                        const SizedBox(height: 16),
+                                        Align(
+                                          alignment: Alignment.centerRight,
+                                          child: TextButton(
+                                            onPressed: () => Get.back(),
+                                            child: const Text('Close'),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFF6B6B),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(
+                                    Icons.pending_actions,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Pending',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () async {
+                              await NotificationService().showTestNotification();
+                              Get.snackbar(
+                                'Test Notification',
+                                'A test notification has been sent!',
+                                backgroundColor: const Color(0xFF4ECDC4),
+                                colorText: Colors.white,
+                                duration: const Duration(seconds: 2),
+                                snackPosition: SnackPosition.BOTTOM,
+                                margin: const EdgeInsets.all(16),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF4ECDC4),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(
+                                    Icons.notification_add,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Test',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -189,41 +346,127 @@ class NotificationsView extends StatelessWidget {
                     );
                   }
 
-                  if (controller.notifications.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.notifications_off_outlined,
-                            size: 80,
-                            color: Colors.white.withOpacity(0.3),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No notifications',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.6),
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
                   return RefreshIndicator(
                     onRefresh: controller.loadNotifications,
                     color: const Color(0xFF7C4DFF),
                     backgroundColor: const Color(0xFF1A1A2E),
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      itemCount: controller.notifications.length,
-                      itemBuilder: (context, index) {
-                        final notification = controller.notifications[index];
-                        return _buildNotificationCard(notification);
-                      },
+                    child: ListView(
+                      padding: const EdgeInsets.all(20),
+                      children: [
+                        // Upcoming Notifications Section
+                        if (controller.scheduledNotifications.isNotEmpty) ...[
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.schedule,
+                                color: Color(0xFF4ECDC4),
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Upcoming Notifications',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF4ECDC4).withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '${controller.scheduledNotifications.length}',
+                                  style: const TextStyle(
+                                    color: Color(0xFF4ECDC4),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          ...controller.scheduledNotifications.take(5).map((scheduled) {
+                            return _buildScheduledNotificationCard(scheduled);
+                          }).toList(),
+                          const SizedBox(height: 24),
+                        ],
+
+                        // Past Notifications Section
+                        if (controller.notifications.isEmpty &&
+                            controller.scheduledNotifications.isEmpty)
+                          Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.notifications_off_outlined,
+                                  size: 80,
+                                  color: Colors.white.withOpacity(0.3),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No notifications yet',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.6),
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                        if (controller.notifications.isNotEmpty) ...[
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.history,
+                                color: Color(0xFF7C4DFF),
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Past Notifications',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF7C4DFF).withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '${controller.notifications.length}',
+                                  style: const TextStyle(
+                                    color: Color(0xFF7C4DFF),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          ...controller.filteredNotifications.map((notification) {
+                            return _buildNotificationCard(notification);
+                          }).toList(),
+                        ],
+                      ],
                     ),
                   );
                 }),
@@ -233,6 +476,121 @@ class NotificationsView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildScheduledNotificationCard(ScheduledNotificationInfo scheduled) {
+    final now = DateTime.now();
+    final difference = scheduled.scheduledTime.difference(now);
+    String timeUntil;
+
+    if (difference.inDays > 0) {
+      timeUntil = 'in ${difference.inDays}d ${difference.inHours % 24}h';
+    } else if (difference.inHours > 0) {
+      timeUntil = 'in ${difference.inHours}h ${difference.inMinutes % 60}m';
+    } else if (difference.inMinutes > 0) {
+      timeUntil = 'in ${difference.inMinutes}m';
+    } else {
+      timeUntil = 'any moment';
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF4ECDC4).withOpacity(0.2),
+            const Color(0xFF44A08D).withOpacity(0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF4ECDC4).withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF4ECDC4).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                scheduled.type == 'task' ? Icons.task_alt : Icons.self_improvement,
+                color: const Color(0xFF4ECDC4),
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    scheduled.title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    scheduled.body,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.6),
+                      fontSize: 12,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4ECDC4).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    timeUntil,
+                    style: const TextStyle(
+                      color: Color(0xFF4ECDC4),
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _formatTime(scheduled.scheduledTime),
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.5),
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatTime(DateTime dateTime) {
+    final hour = dateTime.hour.toString().padLeft(2, '0');
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 
   Widget _buildFilterChip(String label, String value, bool isSelected) {

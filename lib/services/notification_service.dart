@@ -22,7 +22,9 @@ class NotificationService {
     try {
       tz.initializeTimeZones();
 
-      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const androidSettings = AndroidInitializationSettings(
+        '@mipmap/ic_launcher',
+      );
       const iosSettings = DarwinInitializationSettings(
         requestAlertPermission: true,
         requestBadgePermission: true,
@@ -41,6 +43,9 @@ class NotificationService {
 
       // Create notification channels for Android
       await _createNotificationChannels();
+      
+      // Request permissions immediately
+      await requestPermissions();
 
       _initialized = true;
       if (kDebugMode) {
@@ -65,6 +70,8 @@ class NotificationService {
         description: 'Notifications for task reminders',
         importance: Importance.high,
         enableVibration: true,
+        playSound: true,
+        showBadge: true,
       );
 
       const habitsChannel = AndroidNotificationChannel(
@@ -73,6 +80,8 @@ class NotificationService {
         description: 'Notifications for habit reminders',
         importance: Importance.high,
         enableVibration: true,
+        playSound: true,
+        showBadge: true,
       );
 
       const focusChannel = AndroidNotificationChannel(
@@ -81,6 +90,9 @@ class NotificationService {
         description: 'Notifications for focus sessions',
         importance: Importance.high,
         sound: RawResourceAndroidNotificationSound('focus_complete'),
+        enableVibration: true,
+        playSound: true,
+        showBadge: true,
       );
 
       await _notifications
@@ -184,18 +196,34 @@ class NotificationService {
 
       const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
 
+      final scheduledTz = tz.TZDateTime.from(scheduledDate, tz.local);
+      final now = DateTime.now();
+      
+      if (kDebugMode) {
+        developer.log(
+          'Scheduling notification:\n'
+          '  ID: $id\n'
+          '  Title: $title\n'
+          '  Scheduled Date: $scheduledDate\n'
+          '  Scheduled TZ: $scheduledTz\n'
+          '  Current Time: $now\n'
+          '  Time until notification: ${scheduledTz.difference(now).inMinutes} minutes',
+          name: 'NotificationService',
+        );
+      }
+      
       await _notifications.zonedSchedule(
         id,
         title,
         body,
-        tz.TZDateTime.from(scheduledDate, tz.local),
+        scheduledTz,
         details,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         payload: payload,
       );
 
       if (kDebugMode) {
-        developer.log('Scheduled notification $id for $scheduledDate', name: 'NotificationService');
+        developer.log('✅ Notification $id scheduled successfully', name: 'NotificationService');
       }
       return true;
     } catch (e, stack) {
@@ -297,15 +325,30 @@ class NotificationService {
         channelId,
         channelId == AppConstants.channelIdTasks
             ? AppConstants.channelNameTasks
-            : AppConstants.channelNameFocus,
+            : channelId == AppConstants.channelIdHabits
+                ? AppConstants.channelNameHabits
+                : AppConstants.channelNameFocus,
         importance: Importance.high,
         priority: Priority.high,
+        playSound: true,
+        enableVibration: true,
+        // Force show notification even if app is in foreground
+        visibility: NotificationVisibility.public,
+        channelShowBadge: true,
       );
 
-      const iosDetails = DarwinNotificationDetails();
+      const iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
       final details = NotificationDetails(android: androidDetails, iOS: iosDetails);
 
       await _notifications.show(id, title, body, details, payload: payload);
+      
+      if (kDebugMode) {
+        developer.log('Showed notification: $title', name: 'NotificationService');
+      }
     } catch (e, stack) {
       developer.log(
         'Error showing notification: $e',
@@ -314,6 +357,16 @@ class NotificationService {
         name: 'NotificationService',
       );
     }
+  }
+  
+  /// Test notification (for debugging)
+  Future<void> showTestNotification() async {
+    await showNotification(
+      id: 999999,
+      title: 'Test Notification',
+      body: 'This is a test notification from MyManager',
+      channelId: AppConstants.channelIdTasks,
+    );
   }
 
   /// Cancel notification
@@ -367,5 +420,38 @@ class NotificationService {
     }
 
     return scheduledDate;
+  }
+
+  /// Get all pending (scheduled) notifications
+  Future<List<Map<String, dynamic>>> getPendingNotifications() async {
+    try {
+      final pending = await _notifications.pendingNotificationRequests();
+      return pending.map((notification) {
+        return {
+          'id': notification.id,
+          'title': notification.title ?? 'No Title',
+          'body': notification.body ?? 'No Body',
+          'payload': notification.payload,
+        };
+      }).toList();
+    } catch (e, stack) {
+      developer.log(
+        'Error getting pending notifications: $e',
+        error: e,
+        stackTrace: stack,
+        name: 'NotificationService',
+      );
+      return [];
+    }
+  }
+
+  /// Get count of pending notifications
+  Future<int> getPendingNotificationCount() async {
+    try {
+      final pending = await _notifications.pendingNotificationRequests();
+      return pending.length;
+    } catch (e) {
+      return 0;
+    }
   }
 }

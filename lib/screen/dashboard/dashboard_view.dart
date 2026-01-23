@@ -64,6 +64,19 @@ class DashboardView extends StatelessWidget {
                 }
               },
             ),
+            ListTile(
+              leading: Container(
+                padding: AppDecorations.paddingMedium,
+                decoration: AppDecorations.iconContainerDecoration(const Color(0xFF4ECDC4)),
+                child: const Icon(Icons.track_changes, color: Color(0xFF4ECDC4)),
+              ),
+              title: Text('Habit', style: AppTextStyles.listTitle),
+              subtitle: Text('Build a new habit', style: AppTextStyles.listSubtitle),
+              onTap: () {
+                Get.back();
+                Get.toNamed(AppRoutes.createHabit);
+              },
+            ),
             const SizedBox(height: 24),
           ],
         ),

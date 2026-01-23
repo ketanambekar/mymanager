@@ -3,8 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mymanager/screen/notifications/notifications_view.dart';
 import 'package:mymanager/widgets/bottom_nav/bottom_nav_controller.dart';
-
-import '../../database/apis/notification_api.dart';
+import 'package:mymanager/database/apis/notification_api.dart';
 
 class AppHeader extends GetView<BottomNavController>
     implements PreferredSizeWidget {
@@ -28,8 +27,12 @@ class AppHeader extends GetView<BottomNavController>
   List<Widget> _buildActions(int index, BuildContext context) {
     final List<Widget> actions = [];
     if (index == 0 || index == 4) {
-      // final NotificationController? notifCtrl =
-      // Get.isRegistered<NotificationController>() ? Get.find<NotificationController>() : null;
+      final unreadCount = 0.obs;
+
+      // Load unread count initially
+      NotificationApi.getUnreadCount().then((count) {
+        unreadCount.value = count;
+      });
 
       actions.add(
         Padding(
@@ -37,10 +40,11 @@ class AppHeader extends GetView<BottomNavController>
           child: GestureDetector(
             onTap: () async {
               await Get.to(() => NotificationsView());
-              // unreadNotifications.value = await NotificationApi.getUnreadCount();
+              // Refresh count after returning from notifications page
+              unreadCount.value = await NotificationApi.getUnreadCount();
             },
             child: Obx(() {
-              final count = 2.obs; //notifCtrl?.unread.value ?? 0;
+              final count = unreadCount.value;
               final showBadge = count > 0;
               final display = (count > 99) ? '99+' : '$count';
 

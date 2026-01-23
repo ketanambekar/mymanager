@@ -1,11 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mymanager/routes/app_routes.dart';
 import 'package:mymanager/screen/profile/profile_controller.dart';
 import 'package:mymanager/screen/profile/widgets/add_update_bottomsheet.dart';
 import 'package:mymanager/screen/profile/widgets/profile_tab_tiles.dart';
 import 'package:mymanager/theme/app_theme.dart';
 import 'package:mymanager/theme/app_text_styles.dart';
 import 'package:mymanager/utils/global_utils.dart';
+import 'package:mymanager/services/test_data_service.dart';
 
 class ProfileView extends StatelessWidget {
   ProfileView({super.key});
@@ -188,6 +191,68 @@ class ProfileView extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
+                // Habits Button
+                GestureDetector(
+                  onTap: () => Get.toNamed(AppRoutes.habitList),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.1),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4ECDC4).withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.track_changes,
+                            color: Color(0xFF4ECDC4),
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'My Habits',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Track and manage your habits',
+                                style: TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.white.withOpacity(0.3),
+                          size: 16,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
                 // Backup Database Button
                 GestureDetector(
                   onTap: () => controller.backupDatabase(),
@@ -311,6 +376,234 @@ class ProfileView extends StatelessWidget {
                     ),
                   ),
                 ),
+
+                // TEST DATA SECTION - Only visible in debug mode
+                if (kDebugMode) ...[
+                  const SizedBox(height: 24),
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      children: [
+                        Text(
+                          'Test Data',
+                          style: TextStyle(
+                            color: Colors.orange,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.bug_report, color: Colors.orange, size: 20),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  
+                  // Reload Test Data Button
+                  GestureDetector(
+                    onTap: () async {
+                      Get.dialog(
+                        AlertDialog(
+                          backgroundColor: const Color(0xFF1F1F2E),
+                          title: const Text(
+                            'Reload Test Data?',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          content: const Text(
+                            'This will reinitialize all test data. Existing data will be preserved.',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Get.back(),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                Get.back();
+                                Get.dialog(
+                                  const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                  barrierDismissible: false,
+                                );
+                                await TestDataService.initializeTestData(force: true);
+                                Get.back();
+                                Get.snackbar(
+                                  '✅ Success',
+                                  'Test data reloaded',
+                                  snackPosition: SnackPosition.BOTTOM,
+                                  backgroundColor: Colors.green,
+                                  colorText: Colors.white,
+                                );
+                              },
+                              child: const Text(
+                                'Reload',
+                                style: TextStyle(color: Colors.orange),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.orange.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.refresh,
+                              color: Colors.orange,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Reload Test Data',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Reinitialize dummy data for testing',
+                                  style: TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(
+                            Icons.play_arrow,
+                            color: Colors.orange,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  // Clear Test Data Button
+                  GestureDetector(
+                    onTap: () async {
+                      Get.dialog(
+                        AlertDialog(
+                          backgroundColor: const Color(0xFF1F1F2E),
+                          title: const Text(
+                            'Clear Test Data Flag?',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          content: const Text(
+                            'This will clear the test data initialization flag. Data will remain but can be reinitialized.',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Get.back(),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                Get.back();
+                                await TestDataService.clearTestData();
+                                Get.snackbar(
+                                  '✅ Success',
+                                  'Test data flag cleared',
+                                  snackPosition: SnackPosition.BOTTOM,
+                                  backgroundColor: Colors.green,
+                                  colorText: Colors.white,
+                                );
+                              },
+                              child: const Text(
+                                'Clear',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.red.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.clear,
+                              color: Colors.red,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Clear Test Data Flag',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Reset initialization flag',
+                                  style: TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(
+                            Icons.delete_outline,
+                            color: Colors.red,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
 
                 const SizedBox(height: 24),
 

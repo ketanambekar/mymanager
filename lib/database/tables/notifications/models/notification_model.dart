@@ -6,6 +6,7 @@ class NotificationModel {
   final String? relatedId;
   final bool isRead;
   final String createdAt;
+  final String? scheduledFor; // When this notification is/was scheduled for
 
   NotificationModel({
     required this.notificationId,
@@ -15,6 +16,7 @@ class NotificationModel {
     this.relatedId,
     this.isRead = false,
     required this.createdAt,
+    this.scheduledFor,
   });
 
   factory NotificationModel.fromMap(Map<String, dynamic> map) {
@@ -26,6 +28,7 @@ class NotificationModel {
       relatedId: map['relatedId'] as String?,
       isRead: (map['isRead'] as int) == 1,
       createdAt: map['created_at'] as String,
+      scheduledFor: map['scheduled_for'] as String?,
     );
   }
 
@@ -38,6 +41,7 @@ class NotificationModel {
       'relatedId': relatedId,
       'isRead': isRead ? 1 : 0,
       'created_at': createdAt,
+      'scheduled_for': scheduledFor,
     };
   }
 
@@ -49,6 +53,7 @@ class NotificationModel {
     String? relatedId,
     bool? isRead,
     String? createdAt,
+    String? scheduledFor,
   }) {
     return NotificationModel(
       notificationId: notificationId ?? this.notificationId,
@@ -58,6 +63,23 @@ class NotificationModel {
       relatedId: relatedId ?? this.relatedId,
       isRead: isRead ?? this.isRead,
       createdAt: createdAt ?? this.createdAt,
+      scheduledFor: scheduledFor ?? this.scheduledFor,
     );
   }
+}
+
+class ScheduledNotificationInfo {
+  final int id;
+  final String title;
+  final String body;
+  final DateTime scheduledTime;
+  final String type;
+
+  ScheduledNotificationInfo({
+    required this.id,
+    required this.title,
+    required this.body,
+    required this.scheduledTime,
+    required this.type,
+  });
 }

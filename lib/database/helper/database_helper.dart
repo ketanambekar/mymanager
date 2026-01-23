@@ -30,7 +30,7 @@ class DatabaseHelper {
     }
     final db = await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: (db, version) async {
         if (kDebugMode) {
           developer.log('Creating tables...', name: 'DatabaseHelper');
@@ -61,6 +61,13 @@ class DatabaseHelper {
           await db.execute(NotificationTables.notifications);
           if (kDebugMode) {
             developer.log('Database upgraded to v3 (notifications) ✅', name: 'DatabaseHelper');
+          }
+        }
+        if (oldVersion < 4) {
+          await db.execute('ALTER TABLE user_profile ADD COLUMN xp_points INTEGER DEFAULT 0');
+          await db.execute('ALTER TABLE user_profile ADD COLUMN level INTEGER DEFAULT 1');
+          if (kDebugMode) {
+            developer.log('Database upgraded to v4 (xp/level) ✅', name: 'DatabaseHelper');
           }
         }
       },

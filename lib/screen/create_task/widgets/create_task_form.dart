@@ -57,47 +57,53 @@ class CreateTaskForm extends GetView<CreateTaskController> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Form(
-              key: controller.formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Task Name
-                  AppGlassField(
-                    child: TextFormField(
-                      controller: controller.nameController,
-                      style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
-                      decoration: const InputDecoration(
-                        labelText: 'Task Name *',
-                        labelStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-                        border: InputBorder.none,
-                      ),
-                      validator: controller.validateName,
-                    ),
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  // Description
-                  AppGlassField(
-                    child: TextFormField(
-                      controller: controller.descController,
-                      style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
-                      maxLines: 3,
-                      decoration: const InputDecoration(
-                        labelText: 'Description',
-                        labelStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-                        hintText: 'Add task description...',
-                        hintStyle: TextStyle(color: AppColors.textTertiary, fontSize: 14),
-                        border: InputBorder.none,
+    return GestureDetector(
+      onTap: () {
+        // Dismiss keyboard when tapping outside text fields
+        FocusScope.of(context).unfocus();
+      },
+      child: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              child: Form(
+                key: controller.formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Task Name
+                    AppGlassField(
+                      child: TextFormField(
+                        controller: controller.nameController,
+                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
+                        decoration: const InputDecoration(
+                          labelText: 'Task Name *',
+                          labelStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                          border: InputBorder.none,
+                        ),
+                        validator: controller.validateName,
                       ),
                     ),
-                  ),
+
+                    const SizedBox(height: 18),
+
+                    // Description
+                    AppGlassField(
+                      child: TextFormField(
+                        controller: controller.descController,
+                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
+                        maxLines: 3,
+                        decoration: const InputDecoration(
+                          labelText: 'Description',
+                          labelStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                          hintText: 'Add task description...',
+                          hintStyle: TextStyle(color: AppColors.textTertiary, fontSize: 14),
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
 
                   const SizedBox(height: 20),
 
@@ -539,6 +545,7 @@ class CreateTaskForm extends GetView<CreateTaskController> {
           ),
         ),
       ],
+    ),
     );
   }
 

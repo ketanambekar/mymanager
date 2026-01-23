@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mymanager/database/apis/task_api.dart';
 import 'package:mymanager/database/tables/tasks/models/task_model.dart';
+import 'package:mymanager/services/xp_service.dart';
 import 'dart:developer' as developer;
 
 class TasksController extends GetxController {
@@ -296,6 +297,12 @@ class TasksController extends GetxController {
       if (task != null) {
         final updated = task.copyWith(taskStatus: newStatus);
         await TaskApi.updateTask(taskId, updated);
+        
+        // Award XP when task is completed
+        if (newStatus == 'Completed' && currentStatus != 'Completed') {
+          await XpService.awardXp(XpService.xpTaskComplete, reason: 'Task completed');
+        }
+        
         await loadTasks();
       }
     } catch (e) {
