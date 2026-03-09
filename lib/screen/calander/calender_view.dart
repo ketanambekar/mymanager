@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mymanager/routes/app_routes.dart';
 import 'package:mymanager/theme/app_colors.dart';
 import 'package:mymanager/screen/calander/calender_controller.dart';
+import 'package:mymanager/widgets/app_side_menu.dart';
 
 class CalenderView extends StatelessWidget {
   const CalenderView({super.key});
@@ -9,120 +11,144 @@ class CalenderView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(CalenderController());
+    final isDesktop = MediaQuery.sizeOf(context).width >= 980;
+
+    final calendarContent = SingleChildScrollView(
+      child: Column(
+        children: [
+          if (!isDesktop)
+            Padding(
+              padding: const EdgeInsets.only(left: 8, top: 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                  icon: const Icon(Icons.menu_rounded, color: AppColors.textPrimary),
+                ),
+              ),
+            ),
+          Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.cardDark,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.shadowDark,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: _MonthlyCalendar(controller: controller),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Obx(() {
+              final tasks = controller.tasksForSelectedDay;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Tasks for Selected Day',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  if (tasks.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: AppColors.cardDark,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'No tasks for this day',
+                          style: TextStyle(color: AppColors.textTertiary),
+                        ),
+                      ),
+                    )
+                  else
+                    ...tasks.map((task) => Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.cardDark,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.shadowDark,
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            task.taskTitle,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          if (task.taskDescription != null && task.taskDescription!.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              task.taskDescription!,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: AppColors.textSecondary,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
+                    )),
+                ],
+              );
+            }),
+          ),
+          const SizedBox(height: 80),
+        ],
+      ),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
-      appBar: AppBar(
-        backgroundColor: AppColors.cardDark,
-        elevation: 0,
-        title: const Text(
-          'Calendar',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.cardDark,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.shadowDark,
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+      appBar: isDesktop
+          ? null
+          : AppBar(
+              backgroundColor: AppColors.cardDark,
+              elevation: 0,
+              title: const Text(
+                'Calendar',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              child: _MonthlyCalendar(controller: controller),
             ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Obx(() {
-                final tasks = controller.tasksForSelectedDay;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Tasks for Selected Day',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    if (tasks.isEmpty)
-                      Container(
-                        padding: const EdgeInsets.all(32),
-                        decoration: BoxDecoration(
-                          color: AppColors.cardDark,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            'No tasks for this day',
-                            style: TextStyle(color: AppColors.textTertiary),
-                          ),
-                        ),
-                      )
-                    else
-                      ...tasks.map((task) => Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppColors.cardDark,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.shadowDark,
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              task.taskTitle,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            if (task.taskDescription != null && task.taskDescription!.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                task.taskDescription!,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.textSecondary,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ],
-                        ),
-                      )),
-                  ],
-                );
-              }),
-            ),
-            const SizedBox(height: 80), // Bottom padding for nav bar
-          ],
-        ),
-      ),
+      drawer: isDesktop ? null : const Drawer(child: AppSideMenu(activeRoute: AppRoutes.calender)),
+      body: isDesktop
+          ? Row(
+              children: [
+                const AppSideMenu(activeRoute: AppRoutes.calender),
+                Expanded(child: calendarContent),
+              ],
+            )
+          : calendarContent,
     );
   }
 }

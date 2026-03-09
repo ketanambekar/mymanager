@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:mymanager/screen/reports/reports_controller.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:mymanager/routes/app_routes.dart';
+import 'package:mymanager/screen/reports/reports_controller.dart';
+import 'package:mymanager/theme/theme_tokens.dart';
+import 'package:mymanager/widgets/app_side_menu.dart';
 
 class ReportsView extends StatelessWidget {
   const ReportsView({super.key});
@@ -9,754 +13,187 @@ class ReportsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(ReportsController());
+    final isDesktop = MediaQuery.sizeOf(context).width >= 980;
+
+    final page = SafeArea(
+      child: Obx(() {
+        if (controller.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        return RefreshIndicator(
+          onRefresh: controller.loadReportData,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              if (!isDesktop)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    onPressed: () => Scaffold.of(context).openDrawer(),
+                    icon: Icon(Icons.menu_rounded, color: context.title),
+                  ),
+                ),
+              Text(
+                'Reports & Analytics',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: context.title,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                DateFormat('MMMM d, yyyy').format(DateTime.now()),
+                style: GoogleFonts.plusJakartaSans(color: context.subtitle, fontSize: 13),
+              ),
+              const SizedBox(height: 14),
+              _HighlightCard(
+                title: 'Overall Progress',
+                value: '${controller.completionRate.value.toStringAsFixed(1)}%',
+                subtitle: '${controller.completedTasks.value} of ${controller.totalTasks.value} tasks completed',
+              ),
+              const SizedBox(height: 12),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final twoCols = constraints.maxWidth > 700;
+                  if (twoCols) {
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: _StatCard(label: 'Total Tasks', value: controller.totalTasks.value.toString(), icon: Icons.task_alt_rounded),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _StatCard(label: 'Projects', value: controller.allProjects.length.toString(), icon: Icons.folder_rounded),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _StatCard(label: 'Habits', value: controller.totalHabits.value.toString(), icon: Icons.track_changes_rounded),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _StatCard(label: 'Overdue', value: controller.overdueTasks.value.toString(), icon: Icons.warning_amber_rounded),
+                        ),
+                      ],
+                    );
+                  }
+                  return Column(
+                    children: [
+                      _StatCard(label: 'Total Tasks', value: controller.totalTasks.value.toString(), icon: Icons.task_alt_rounded),
+                      const SizedBox(height: 10),
+                      _StatCard(label: 'Projects', value: controller.allProjects.length.toString(), icon: Icons.folder_rounded),
+                      const SizedBox(height: 10),
+                      _StatCard(label: 'Habits', value: controller.totalHabits.value.toString(), icon: Icons.track_changes_rounded),
+                      const SizedBox(height: 10),
+                      _StatCard(label: 'Overdue', value: controller.overdueTasks.value.toString(), icon: Icons.warning_amber_rounded),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              _StatCard(
+                label: 'XP Level',
+                value: 'Level ${controller.currentLevel.value}',
+                icon: Icons.stars_rounded,
+                detail: '${controller.totalXP.value} XP total • ${controller.xpToNextLevel.value} XP to next level',
+              ),
+            ],
+          ),
+        );
+      }),
+    );
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
-          ),
-        ),
-        child: SafeArea(
-          child: Obx(() {
-            if (controller.isLoading.value) {
-              return const Center(
-                child: CircularProgressIndicator(color: Color(0xFF7C4DFF)),
-              );
-            }
-
-            return RefreshIndicator(
-              onRefresh: controller.loadReportData,
-              color: const Color(0xFF7C4DFF),
-              backgroundColor: const Color(0xFF1A1A2E),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF7C4DFF), Color(0xFF536DFE)],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Icon(
-                            Icons.analytics_outlined,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Reports & Analytics',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                DateFormat('MMMM d, yyyy').format(DateTime.now()),
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.6),
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Overall Statistics Card
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF7C4DFF), Color(0xFF536DFE)],
-                        ),
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF7C4DFF).withOpacity(0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Overall Progress',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  '${controller.completionRate.value.toStringAsFixed(1)}%',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildStatItem(
-                                  'Total Tasks',
-                                  controller.totalTasks.value.toString(),
-                                  Icons.task_outlined,
-                                  Colors.white,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _buildStatItem(
-                                  'Projects',
-                                  controller.allProjects.length.toString(),
-                                  Icons.folder_outlined,
-                                  Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // XP & Level Section
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFFBE0B), Color(0xFFFF9F1C)],
-                        ),
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFFFBE0B).withOpacity(0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'XP & Level Progress',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.stars,
-                                      color: Colors.white,
-                                      size: 16,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      'Level ${controller.currentLevel.value}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildStatItem(
-                                  'Total XP',
-                                  controller.totalXP.value.toString(),
-                                  Icons.bolt,
-                                  Colors.white,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _buildStatItem(
-                                  'To Next Level',
-                                  controller.xpToNextLevel.value.toString(),
-                                  Icons.trending_up,
-                                  Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: LinearProgressIndicator(
-                              value: controller.levelProgress.value,
-                              backgroundColor: Colors.white.withOpacity(0.3),
-                              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                              minHeight: 12,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '${(controller.levelProgress.value * 100).toStringAsFixed(1)}% to Level ${controller.currentLevel.value + 1}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Habit Statistics Section
-                    if (controller.totalHabits.value > 0) ...[
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF4ECDC4), Color(0xFF44A08D)],
-                          ),
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF4ECDC4).withOpacity(0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Habit Tracking',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildStatItem(
-                                    'Total Habits',
-                                    controller.totalHabits.value.toString(),
-                                    Icons.self_improvement,
-                                    Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _buildStatItem(
-                                    'Active Habits',
-                                    controller.activeHabits.value.toString(),
-                                    Icons.local_fire_department,
-                                    Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildStatItem(
-                                    'Best Streak',
-                                    '${controller.bestStreak.value} days',
-                                    Icons.emoji_events,
-                                    Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _buildStatItem(
-                                    'Avg Streak',
-                                    '${controller.avgStreak.value.toStringAsFixed(1)} days',
-                                    Icons.trending_up,
-                                    Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-
-                    // Task Status Section
-                    const Text(
-                      'Task Status',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildStatusCard(
-                            'Completed',
-                            controller.completedTasks.value,
-                            Icons.check_circle_outline,
-                            const Color(0xFF4ECDC4),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildStatusCard(
-                            'In Progress',
-                            controller.inProgressTasks.value,
-                            Icons.pending_outlined,
-                            const Color(0xFFFFBE0B),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildStatusCard(
-                            'To Do',
-                            controller.todoTasks.value,
-                            Icons.radio_button_unchecked,
-                            const Color(0xFF7C4DFF),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildStatusCard(
-                            'Overdue',
-                            controller.overdueTasks.value,
-                            Icons.warning_outlined,
-                            const Color(0xFFFF6B6B),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Priority Distribution Section
-                    const Text(
-                      'Priority Distribution',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildPriorityCard(
-                      'Urgent and Important',
-                      controller.urgentImportant.value,
-                      Icons.flag,
-                      const Color(0xFFFF6B6B),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildPriorityCard(
-                      'Urgent but Not Important',
-                      controller.urgentNotImportant.value,
-                      Icons.flag_outlined,
-                      const Color(0xFFFFBE0B),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildPriorityCard(
-                      'Not Urgent but Important',
-                      controller.notUrgentImportant.value,
-                      Icons.flag_outlined,
-                      const Color(0xFF5B8DEE),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildPriorityCard(
-                      'Not Urgent Not Important',
-                      controller.notUrgentNotImportant.value,
-                      Icons.outlined_flag,
-                      const Color(0xFF4ECDC4),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Task Frequency Section
-                    const Text(
-                      'Task Frequency',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildFrequencyCard(
-                            'Once',
-                            controller.onceTasks.value,
-                            Icons.check_circle_outline,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildFrequencyCard(
-                            'Daily',
-                            controller.dailyTasks.value,
-                            Icons.today,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildFrequencyCard(
-                            'Weekly',
-                            controller.weeklyTasks.value,
-                            Icons.date_range,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildFrequencyCard(
-                            'Monthly',
-                            controller.monthlyTasks.value,
-                            Icons.calendar_month,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Time-based Statistics Section
-                    const Text(
-                      'Time Statistics',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildTimeStatCard(
-                      'Tasks Due Today',
-                      controller.todayTasks.value,
-                      Icons.today_outlined,
-                      const Color(0xFF7C4DFF),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildTimeStatCard(
-                      'Tasks This Week',
-                      controller.thisWeekTasks.value,
-                      Icons.date_range_outlined,
-                      const Color(0xFF5B8DEE),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildTimeStatCard(
-                      'Tasks This Month',
-                      controller.thisMonthTasks.value,
-                      Icons.calendar_month_outlined,
-                      const Color(0xFF4ECDC4),
-                    ),
-
-                    const SizedBox(height: 80),
-                  ],
-                ),
-              ),
-            );
-          }),
-        ),
-      ),
+      backgroundColor: context.appBg,
+      drawer: isDesktop ? null : const Drawer(child: AppSideMenu(activeRoute: AppRoutes.reports)),
+      body: isDesktop
+          ? Row(
+              children: [
+                const AppSideMenu(activeRoute: AppRoutes.reports),
+                Expanded(child: page),
+              ],
+            )
+          : page,
     );
   }
+}
 
-  Widget _buildStatItem(String label, String value, IconData icon, Color color) {
+class _HighlightCard extends StatelessWidget {
+  const _HighlightCard({required this.title, required this.value, required this.subtitle});
+
+  final String title;
+  final String value;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        gradient: const LinearGradient(colors: [Color(0xFF7C3AED), Color(0xFF4F46E5)]),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          Icon(icon, color: color, size: 24),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                const SizedBox(height: 6),
+                Text(subtitle, style: GoogleFonts.plusJakartaSans(color: Colors.white70, fontSize: 12)),
+              ],
+            ),
+          ),
           const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          Text(value, style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800)),
         ],
       ),
     );
   }
+}
 
-  Widget _buildStatusCard(String label, int count, IconData icon, Color color) {
+class _StatCard extends StatelessWidget {
+  const _StatCard({required this.label, required this.value, required this.icon, this.detail});
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final String? detail;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            count.toString(),
-            style: TextStyle(
-              color: color,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
-              fontSize: 12,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPriorityCard(String label, int count, IconData icon, Color color) {
-    final total = Get.find<ReportsController>().totalTasks.value;
-    final percentage = total > 0 ? (count / total * 100).toStringAsFixed(1) : '0.0';
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 1,
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 20),
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(color: const Color(0xFFF5F3FF), borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, color: const Color(0xFF7C3AED), size: 18),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                Text(label, style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF6B7280))),
+                const SizedBox(height: 2),
+                Text(value, style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: const Color(0xFF111827))),
+                if (detail != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(detail!, style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF9CA3AF))),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '$count task${count != 1 ? 's' : ''} ($percentage%)',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
-                    fontSize: 12,
-                  ),
-                ),
               ],
-            ),
-          ),
-          Text(
-            count.toString(),
-            style: TextStyle(
-              color: color,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFrequencyCard(String label, int count, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: const Color(0xFF7C4DFF), size: 28),
-          const SizedBox(height: 8),
-          Text(
-            count.toString(),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.6),
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTimeStatCard(String label, int count, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              count.toString(),
-              style: TextStyle(
-                color: color,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
             ),
           ),
         ],

@@ -1,42 +1,42 @@
+import 'dart:convert';
 import 'dart:developer' as developer;
+
 import 'package:flutter/foundation.dart';
-import 'package:mymanager/constants/app_constants.dart';
-import 'package:mymanager/database/helper/database_helper.dart';
+import 'package:mymanager/database/apis/task_status_api.dart';
+import 'package:mymanager/database/apis/user_project_api.dart';
 import 'package:mymanager/database/tables/tasks/models/task_model.dart';
-import 'package:mymanager/utils/global_utils.dart';
+import 'package:mymanager/database/tables/user_projects/models/user_project_model.dart';
+import 'package:mymanager/services/api_client.dart';
 
 class TaskApi {
-  static String _generateId() => uuid.v4();
-  static String _nowIso() => DateTime.now().toLocal().toIso8601String();
+  static final ApiClient _client = ApiClient.instance;
 
-  /// Create a new task
   static Future<void> createTask(Task task) async {
-    try {
-      final db = await DatabaseHelper.database;
-      final id = task.taskId.isNotEmpty ? task.taskId : _generateId();
-      final now = _nowIso();
+    await TaskStatusApi.getTaskStatuses();
 
-      final map = task.toMap();
-      map['task_id'] = id;
-      map['task_created_at'] = now;
-      map['task_updated_at'] = now;
+    final projectId = task.projectId;
+    if (projectId == null || projectId.isEmpty) {
+      throw Exception('Task requires projectId');
+    }
 
-      await db.insert('tasks', map);
-      if (kDebugMode) {
-        developer.log('Created task: $id', name: 'TaskApi');
-      }
-    } catch (e, stack) {
-      developer.log(
-        'Error creating task: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'TaskApi',
-      );
-      rethrow;
+    final columnId = await _resolveColumnId(projectId);
+
+    final response = await _client.post('/tasks', body: {
+      'title': task.taskTitle,
+      'description': task.taskDescription,
+      'priority': _toBackendPriority(task.taskPriority),
+      'status': TaskStatusApi.toCode(task.taskStatus),
+      'project_id': int.tryParse(projectId),
+      'column_id': columnId,
+      'due_date': task.taskDueDate,
+      'order_index': task.taskOrder
+    });
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Failed to create task: ${response.body}');
     }
   }
 
-  /// Get all tasks with optional filters
   static Future<List<Task>> getTasks({
     String? projectId,
     String? status,
@@ -45,385 +45,248 @@ class TaskApi {
     bool onlyParentTasks = false,
   }) async {
     try {
-      final db = await DatabaseHelper.database;
-      final whereClauses = <String>[];
-      final whereArgs = <dynamic>[];
+      await TaskStatusApi.getTaskStatuses();
 
-      if (projectId != null) {
-        whereClauses.add('project_id = ?');
-        whereArgs.add(projectId);
+      final projectIds = <String>[];
+      if (projectId != null && projectId.isNotEmpty) {
+        final projects = await UserProjectsApi.getProjects();
+        projectIds.addAll(_collectProjectTreeIds(projects, projectId));
+      } else {
+        final projects = await UserProjectsApi.getProjects();
+        projectIds.addAll(projects.map((p) => p.projectId));
       }
 
-      if (status != null) {
-        whereClauses.add('task_status = ?');
-        whereArgs.add(status);
+      final all = <Task>[];
+      for (final pid in projectIds) {
+        final query = <String, String>{
+          'project_id': pid,
+          'limit': '100',
+          'page': '1'
+        };
+        if (status != null) query['status'] = TaskStatusApi.toCode(status);
+        if (priority != null) query['priority'] = _toBackendPriority(priority);
+
+        final uriQuery = query.entries.map((e) => '${e.key}=${Uri.encodeQueryComponent(e.value)}').join('&');
+        final response = await _client.get('/tasks?$uriQuery');
+        if (response.statusCode < 200 || response.statusCode >= 300) continue;
+
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final rows = (body['data'] as List<dynamic>? ?? const []);
+        all.addAll(rows.cast<Map<String, dynamic>>().map(_mapTask));
       }
 
+      var filtered = all;
       if (!includeCompleted) {
-        whereClauses.add('task_status != ?');
-        whereArgs.add(AppConstants.taskStatusCompleted);
+        filtered = filtered.where((t) => !TaskStatusApi.isCompletedStatus(t.taskStatus)).toList();
       }
-
-      // Exclude deleted tasks by default
-      whereClauses.add('task_status != ?');
-      whereArgs.add('Deleted');
-
-      if (priority != null) {
-        whereClauses.add('task_priority = ?');
-        whereArgs.add(priority);
-      }
-
       if (onlyParentTasks) {
-        whereClauses.add('(parent_task_id IS NULL OR parent_task_id = \"\")');
+        filtered = filtered.where((t) => (t.parentTaskId ?? '').isEmpty).toList();
       }
 
-      final maps = await db.query(
-        'tasks',
-        where: whereClauses.isEmpty ? null : whereClauses.join(' AND '),
-        whereArgs: whereArgs.isEmpty ? null : whereArgs,
-        orderBy: 'task_order ASC, task_created_at DESC',
-      );
+      filtered.sort((a, b) {
+        final aOrder = a.taskOrder;
+        final bOrder = b.taskOrder;
+        if (aOrder != bOrder) return aOrder.compareTo(bOrder);
+        return (b.taskCreatedAt ?? '').compareTo(a.taskCreatedAt ?? '');
+      });
 
-      return maps.map((m) => Task.fromMap(m)).toList();
+      return filtered;
     } catch (e, stack) {
-      developer.log(
-        'Error getting tasks: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'TaskApi',
-      );
+      if (kDebugMode) {
+        developer.log('Error getting tasks: $e', stackTrace: stack, name: 'TaskApi');
+      }
       return [];
     }
   }
 
-  /// Get subtasks for a parent task
-  static Future<List<Task>> getSubTasks(String parentTaskId) async {
-    try {
-      final db = await DatabaseHelper.database;
-      final maps = await db.query(
-        'tasks',
-        where: 'parent_task_id = ?',
-        whereArgs: [parentTaskId],
-        orderBy: 'task_order ASC',
-      );
-      return maps.map((m) => Task.fromMap(m)).toList();
-    } catch (e, stack) {
-      developer.log(
-        'Error getting subtasks: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'TaskApi',
-      );
-      return [];
+  static List<String> _collectProjectTreeIds(List<UserProjects> projects, String rootProjectId) {
+    final included = <String>{rootProjectId};
+    var added = true;
+
+    while (added) {
+      added = false;
+      for (final project in projects) {
+        final parentId = project.parentProjectId;
+        if ((parentId ?? '').isEmpty) continue;
+        if (!included.contains(parentId)) continue;
+        if (included.add(project.projectId)) {
+          added = true;
+        }
+      }
     }
+
+    return included.toList();
   }
 
-  /// Get tasks by Eisenhower Matrix quadrant
-  static Future<List<Task>> getTasksByQuadrant({
-    required bool urgent,
-    required bool important,
-  }) async {
-    try {
-      final db = await DatabaseHelper.database;
-      final urgencyValue = urgent ? 'High' : 'Medium';
-      final importanceValue = important ? 'High' : 'Medium';
-
-      final maps = await db.query(
-        'tasks',
-        where: 'task_urgency = ? AND task_importance = ? AND task_status != ?',
-        whereArgs: [urgencyValue, importanceValue, AppConstants.taskStatusCompleted],
-        orderBy: 'task_due_date ASC',
-      );
-
-      return maps.map((m) => Task.fromMap(m)).toList();
-    } catch (e, stack) {
-      developer.log(
-        'Error getting tasks by quadrant: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'TaskApi',
-      );
-      return [];
-    }
+  static Future<List<Task>> getSubTasks(String parentTaskId, {String? projectId}) async {
+    final all = await getTasks(
+      projectId: projectId,
+      includeCompleted: true,
+      onlyParentTasks: false,
+    );
+    return all.where((t) => t.parentTaskId == parentTaskId).toList();
   }
 
-  /// Get task by ID
+  static Future<List<Task>> getTasksByQuadrant({required bool urgent, required bool important}) async {
+    final tasks = await getTasks(includeCompleted: true);
+    return tasks.where((t) {
+      final u = (t.taskUrgency ?? '').toLowerCase() == 'high';
+      final i = (t.taskImportance ?? '').toLowerCase() == 'high';
+      return u == urgent && i == important;
+    }).toList();
+  }
+
   static Future<Task?> getTaskById(String taskId) async {
-    try {
-      final db = await DatabaseHelper.database;
-      final maps = await db.query(
-        'tasks',
-        where: 'task_id = ?',
-        whereArgs: [taskId],
-        limit: 1,
-      );
-      if (maps.isEmpty) return null;
-      return Task.fromMap(maps.first);
-    } catch (e, stack) {
-      developer.log(
-        'Error getting task by ID: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'TaskApi',
-      );
-      return null;
-    }
+    final tasks = await getTasks(includeCompleted: true);
+    final matches = tasks.where((t) => t.taskId == taskId);
+    return matches.isEmpty ? null : matches.first;
   }
 
-  /// Update task
   static Future<int> updateTask(String taskId, Task updated) async {
-    try {
-      final db = await DatabaseHelper.database;
-      final now = _nowIso();
+    await TaskStatusApi.getTaskStatuses();
 
-      final map = updated.toMap();
-      map['task_updated_at'] = now;
-      map.remove('task_id');
-      map.remove('task_created_at');
+    final body = <String, dynamic>{
+      'title': updated.taskTitle,
+      'description': updated.taskDescription,
+      'priority': _toBackendPriority(updated.taskPriority),
+      'status': TaskStatusApi.toCode(updated.taskStatus),
+      'due_date': updated.taskDueDate,
+      'order_index': updated.taskOrder
+    }..removeWhere((_, value) => value == null);
 
-      final count = await db.update(
-        'tasks',
-        map,
-        where: 'task_id = ?',
-        whereArgs: [taskId],
-      );
-
-      if (kDebugMode) {
-        developer.log('Updated task $taskId, rows=$count', name: 'TaskApi');
-      }
-      return count;
-    } catch (e, stack) {
-      developer.log(
-        'Error updating task: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'TaskApi',
-      );
-      return 0;
-    }
+    final response = await _client.put('/tasks/$taskId', body: body);
+    return response.statusCode >= 200 && response.statusCode < 300 ? 1 : 0;
   }
 
-  /// Mark task as completed
   static Future<int> completeTask(String taskId) async {
-    try {
-      final db = await DatabaseHelper.database;
-      final now = _nowIso();
-
-      final count = await db.update(
-        'tasks',
-        {
-          'task_status': AppConstants.taskStatusCompleted,
-          'task_completed_date': now,
-          'task_updated_at': now,
-        },
-        where: 'task_id = ?',
-        whereArgs: [taskId],
-      );
-
-      if (kDebugMode) {
-        developer.log('Completed task $taskId', name: 'TaskApi');
-      }
-      return count;
-    } catch (e, stack) {
-      developer.log(
-        'Error completing task: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'TaskApi',
-      );
-      return 0;
-    }
+    final response = await _client.put('/tasks/$taskId', body: {
+      'status': 'done'
+    });
+    return response.statusCode >= 200 && response.statusCode < 300 ? 1 : 0;
   }
 
-  /// Soft delete task by setting status to 'Deleted'
   static Future<int> deleteTask(String taskId) async {
-    try {
-      final db = await DatabaseHelper.database;
-      final now = _nowIso();
-
-      // Soft delete all subtasks
-      await db.update(
-        'tasks',
-        {'task_status': 'Deleted', 'task_updated_at': now},
-        where: 'parent_task_id = ?',
-        whereArgs: [taskId],
-      );
-
-      // Soft delete the task itself
-      final count = await db.update(
-        'tasks',
-        {'task_status': 'Deleted', 'task_updated_at': now},
-        where: 'task_id = ?',
-        whereArgs: [taskId],
-      );
-
-      if (kDebugMode) {
-        developer.log('Soft-deleted task $taskId and its subtasks', name: 'TaskApi');
-      }
-      return count;
-    } catch (e, stack) {
-      developer.log(
-        'Error deleting task: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'TaskApi',
-      );
-      return 0;
-    }
+    final response = await _client.delete('/tasks/$taskId');
+    return response.statusCode >= 200 && response.statusCode < 300 ? 1 : 0;
   }
 
-  /// Permanently delete task and subtasks
-  static Future<int> permanentlyDeleteTask(String taskId) async {
-    try {
-      final db = await DatabaseHelper.database;
-      
-      // Delete all subtasks
-      await db.delete('tasks', where: 'parent_task_id = ?', whereArgs: [taskId]);
+  static Future<int> permanentlyDeleteTask(String taskId) => deleteTask(taskId);
 
-      // Delete the task itself
-      final count = await db.delete('tasks', where: 'task_id = ?', whereArgs: [taskId]);
-
-      if (kDebugMode) {
-        developer.log('Permanently deleted task $taskId', name: 'TaskApi');
-      }
-      return count;
-    } catch (e, stack) {
-      developer.log(
-        'Error permanently deleting task: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'TaskApi',
-      );
-      return 0;
-    }
-  }
-
-  /// Get all deleted tasks
   static Future<List<Task>> getDeletedTasks() async {
-    try {
-      final db = await DatabaseHelper.database;
-      final results = await db.query(
-        'tasks',
-        where: 'task_status = ?',
-        whereArgs: ['Deleted'],
-        orderBy: 'task_updated_at DESC',
-      );
-      return results.map((m) => Task.fromMap(m)).toList();
-    } catch (e, stack) {
-      developer.log(
-        'Error getting deleted tasks: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'TaskApi',
-      );
-      return [];
-    }
+    return const [];
   }
 
-  /// Restore deleted task
   static Future<int> restoreTask(String taskId) async {
-    try {
-      final db = await DatabaseHelper.database;
-      final now = _nowIso();
-
-      final count = await db.update(
-        'tasks',
-        {'task_status': 'Todo', 'task_updated_at': now},
-        where: 'task_id = ?',
-        whereArgs: [taskId],
-      );
-
-      if (kDebugMode) {
-        developer.log('Restored task $taskId', name: 'TaskApi');
-      }
-      return count;
-    } catch (e, stack) {
-      developer.log(
-        'Error restoring task: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'TaskApi',
-      );
-      return 0;
-    }
+    return 0;
   }
 
-  /// Get tasks due today
   static Future<List<Task>> getTodayTasks() async {
-    try {
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day).toIso8601String();
-      final tomorrow = DateTime(now.year, now.month, now.day + 1).toIso8601String();
-
-      final db = await DatabaseHelper.database;
-      final maps = await db.query(
-        'tasks',
-        where: 'task_due_date >= ? AND task_due_date < ? AND task_status != ?',
-        whereArgs: [today, tomorrow, AppConstants.taskStatusCompleted],
-        orderBy: 'task_urgency DESC, task_importance DESC',
-      );
-
-      return maps.map((m) => Task.fromMap(m)).toList();
-    } catch (e, stack) {
-      developer.log(
-        'Error getting today tasks: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'TaskApi',
-      );
-      return [];
-    }
+    final tasks = await getTasks(includeCompleted: false);
+    final now = DateTime.now();
+    return tasks.where((t) {
+      if (t.taskDueDate == null) return false;
+      final due = DateTime.tryParse(t.taskDueDate!);
+      if (due == null) return false;
+      return due.year == now.year && due.month == now.month && due.day == now.day;
+    }).toList();
   }
 
-  /// Get overdue tasks
   static Future<List<Task>> getOverdueTasks() async {
-    try {
-      final now = DateTime.now().toIso8601String();
-      final db = await DatabaseHelper.database;
-      final maps = await db.query(
-        'tasks',
-        where: 'task_due_date < ? AND task_status != ?',
-        whereArgs: [now, AppConstants.taskStatusCompleted],
-        orderBy: 'task_due_date ASC',
-      );
-
-      return maps.map((m) => Task.fromMap(m)).toList();
-    } catch (e, stack) {
-      developer.log(
-        'Error getting overdue tasks: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'TaskApi',
-      );
-      return [];
-    }
+    final tasks = await getTasks(includeCompleted: false);
+    final now = DateTime.now();
+    return tasks.where((t) {
+      if (t.taskDueDate == null) return false;
+      final due = DateTime.tryParse(t.taskDueDate!);
+      if (due == null) return false;
+      return due.isBefore(now);
+    }).toList();
   }
 
-  /// Update task time spent
   static Future<int> updateTimeSpent(String taskId, int minutesToAdd) async {
-    try {
-      final task = await getTaskById(taskId);
-      if (task == null) return 0;
+    final task = await getTaskById(taskId);
+    if (task == null) return 0;
+    final updated = task.copyWith(timeSpent: task.timeSpent + minutesToAdd);
+    return updateTask(taskId, updated);
+  }
 
-      final db = await DatabaseHelper.database;
-      final newTimeSpent = task.timeSpent + minutesToAdd;
+  static Future<int> moveTask({required String taskId, required String columnId, required String status, int orderIndex = 0}) async {
+    await TaskStatusApi.getTaskStatuses();
 
-      final count = await db.update(
-        'tasks',
-        {'time_spent': newTimeSpent, 'task_updated_at': _nowIso()},
-        where: 'task_id = ?',
-        whereArgs: [taskId],
-      );
+    final response = await _client.patch('/tasks/$taskId/move', body: {
+      'column_id': int.tryParse(columnId),
+      'status': TaskStatusApi.toCode(status),
+      'order_index': orderIndex
+    });
+    return response.statusCode >= 200 && response.statusCode < 300 ? 1 : 0;
+  }
 
-      return count;
-    } catch (e, stack) {
-      developer.log(
-        'Error updating time spent: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'TaskApi',
-      );
-      return 0;
+  static Future<int?> _resolveColumnId(String projectId) async {
+    final response = await _client.get('/projects/$projectId/boards');
+    if (response.statusCode < 200 || response.statusCode >= 300) return null;
+
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final boards = (body['data'] as List<dynamic>? ?? const []);
+    if (boards.isEmpty) return null;
+
+    final firstBoard = boards.first as Map<String, dynamic>;
+    final columns = (firstBoard['Columns'] as List<dynamic>? ?? const []);
+    if (columns.isEmpty) return null;
+
+    for (final col in columns.cast<Map<String, dynamic>>()) {
+      final name = (col['name']?.toString() ?? '').toLowerCase();
+      if (name.contains('to do') || name == 'todo') {
+        return col['id'] as int?;
+      }
+    }
+
+    return columns.first['id'] as int?;
+  }
+
+  static Task _mapTask(Map<String, dynamic> raw) {
+    return Task.fromMap({
+      'task_id': raw['id'].toString(),
+      'project_id': raw['project_id']?.toString(),
+      'task_title': raw['title'] ?? '',
+      'task_description': raw['description'],
+      'task_priority': _fromBackendPriority(raw['priority']?.toString()),
+      'task_urgency': _fromBackendPriority(raw['priority']?.toString()) == 'High' ? 'High' : 'Low',
+      'task_importance': _fromBackendPriority(raw['priority']?.toString()) == 'High' ? 'High' : 'Low',
+      'task_status': TaskStatusApi.toDisplay(raw['status']?.toString()),
+      'task_frequency': null,
+      'task_frequency_value': null,
+      'enable_alerts': 0,
+      'alert_time': null,
+      'task_start_date': null,
+      'task_due_date': raw['due_date'],
+      'task_completed_date': TaskStatusApi.isCompletedStatus(raw['status']?.toString()) ? raw['updated_at'] : null,
+      'time_estimate': null,
+      'time_spent': 0,
+      'task_color': null,
+      'task_order': raw['order_index'] ?? 0,
+      'is_recurring': 0,
+      'parent_task_id': null,
+      'energy_level': null,
+      'focus_required': 0,
+      'task_created_at': raw['created_at'],
+      'task_updated_at': raw['updated_at']
+    });
+  }
+
+  static String _toBackendPriority(String? priority) {
+    final input = (priority ?? '').toLowerCase();
+    if (input.contains('high') || input.contains('urgent')) return 'high';
+    if (input.contains('low')) return 'low';
+    return 'medium';
+  }
+
+  static String _fromBackendPriority(String? priority) {
+    switch ((priority ?? '').toLowerCase()) {
+      case 'high':
+        return 'High';
+      case 'low':
+        return 'Low';
+      default:
+        return 'Medium';
     }
   }
 }

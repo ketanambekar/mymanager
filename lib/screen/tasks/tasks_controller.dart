@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mymanager/database/apis/task_api.dart';
+import 'package:mymanager/database/apis/task_status_api.dart';
+import 'package:mymanager/database/models/task_status_option.dart';
 import 'package:mymanager/database/tables/tasks/models/task_model.dart';
+import 'package:mymanager/services/project_context_controller.dart';
 import 'package:mymanager/services/xp_service.dart';
 import 'dart:developer' as developer;
 
@@ -14,13 +16,24 @@ class TasksController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxString selectedFilter = 'All'.obs;
   final Rx<DateTime> selectedDate = DateTime.now().obs;
+  final RxList<TaskStatusOption> taskStatuses = <TaskStatusOption>[].obs;
   final RxMap<String, List<Task>> subtasksMap = <String, List<Task>>{}.obs;
   final RxSet<String> expandedTasks = <String>{}.obs;
+  late final ProjectContextController _projectContext;
+  Worker? _projectSwitchWorker;
   
   @override
   void onInit() {
     super.onInit();
+    _projectContext = Get.find<ProjectContextController>();
+    _projectSwitchWorker = ever<String?>(_projectContext.selectedProjectId, (_) => loadTasks());
     loadTasks();
+  }
+
+  @override
+  void onClose() {
+    _projectSwitchWorker?.dispose();
+    super.onClose();
   }
   
   void selectDate(DateTime date) {
@@ -30,6 +43,22 @@ class TasksController extends GetxController {
   
   void setFilter(String filter) {
     selectedFilter.value = filter;
+  }
+
+  List<String> get filterOptions {
+    final names = taskStatuses.map((s) => s.name).toList();
+    return ['All', ...names];
+  }
+
+  String get completedStatusName => TaskStatusApi.completedStatusName();
+
+  bool isCompletedStatus(String status) => TaskStatusApi.isCompletedStatus(status);
+
+  Future<void> loadTaskStatuses({bool forceRefresh = false}) async {
+    taskStatuses.value = await TaskStatusApi.getTaskStatuses(forceRefresh: forceRefresh);
+    if (selectedFilter.value != 'All' && !filterOptions.contains(selectedFilter.value)) {
+      selectedFilter.value = 'All';
+    }
   }
   
   // Expand recurring tasks into virtual instances
@@ -114,9 +143,10 @@ class TasksController extends GetxController {
   Future<void> loadTasks() async {
     try {
       isLoading.value = true;
+      await loadTaskStatuses();
       
       // Load all tasks
-      final tasks = await TaskApi.getTasks();
+      final tasks = await TaskApi.getTasks(projectId: _projectContext.selectedProjectId.value);
       
       // Expand recurring tasks
       final expandedTasks = _expandRecurringTasks(tasks);
@@ -140,10 +170,10 @@ class TasksController extends GetxController {
       upcomingTasks.value = expandedTasks.where((task) => 
         task.taskDueDate != null && 
         DateTime.parse(task.taskDueDate!).isAfter(nextDay) &&
-        task.taskStatus != 'Completed'
+        !TaskStatusApi.isCompletedStatus(task.taskStatus)
       ).toList();
       
-      completedTasks.value = expandedTasks.where((task) => task.taskStatus == 'Completed').toList();
+      completedTasks.value = expandedTasks.where((task) => TaskStatusApi.isCompletedStatus(task.taskStatus)).toList();
       
       developer.log('Loaded ${expandedTasks.length} tasks (${tasks.length} unique) for ${selectedDate.value}', name: 'TasksController');
       
@@ -159,7 +189,10 @@ class TasksController extends GetxController {
   Future<void> loadSubtasksForTasks(List<Task> tasks) async {
     try {
       for (final task in tasks) {
-        final subs = await TaskApi.getSubTasks(task.taskId);
+        final subs = await TaskApi.getSubTasks(
+          task.taskId,
+          projectId: _projectContext.selectedProjectId.value,
+        );
         if (subs.isNotEmpty) {
           subtasksMap[task.taskId] = subs;
         }
@@ -193,17 +226,10 @@ class TasksController extends GetxController {
     List<Task> tasks = todayTasks.toList();
     
     switch (selectedFilter.value) {
-      case 'To do':
-        tasks = tasks.where((task) => task.taskStatus == 'Todo').toList();
-        break;
-      case 'In Progress':
-        tasks = tasks.where((task) => task.taskStatus == 'In Progress').toList();
-        break;
-      case 'Completed':
-        tasks = tasks.where((task) => task.taskStatus == 'Completed').toList();
-        break;
       default:
-        // All tasks
+        if (selectedFilter.value != 'All') {
+          tasks = tasks.where((task) => task.taskStatus == selectedFilter.value).toList();
+        }
         break;
     }
     
@@ -245,7 +271,7 @@ class TasksController extends GetxController {
             taskPriority: task.taskPriority,
             taskUrgency: task.taskUrgency,
             taskImportance: task.taskImportance,
-            taskStatus: 'active',
+            taskStatus: taskStatuses.isNotEmpty ? taskStatuses.first.name : 'Todo',
             taskFrequency: task.taskFrequency,
             taskFrequencyValue: task.taskFrequencyValue,
             enableAlerts: task.enableAlerts,
@@ -271,6 +297,33 @@ class TasksController extends GetxController {
     } catch (e) {
       developer.log('Error toggling task: $e', name: 'TasksController');
     }
+  }
+
+  Future<void> setTaskStatus(String taskId, String statusName) async {
+    final task = allTasks.firstWhereOrNull((t) => t.taskId == taskId);
+    if (task == null) return;
+
+    final updated = task.copyWith(taskStatus: statusName);
+    await TaskApi.updateTask(taskId, updated);
+    await loadTasks();
+  }
+
+  Future<void> addCustomStatus(String name) async {
+    await TaskStatusApi.createTaskStatus(name: name);
+    await loadTaskStatuses(forceRefresh: true);
+    await loadTasks();
+  }
+
+  Future<void> renameStatus(TaskStatusOption status, String newName) async {
+    await TaskStatusApi.updateTaskStatus(id: status.id, name: newName);
+    await loadTaskStatuses(forceRefresh: true);
+    await loadTasks();
+  }
+
+  Future<void> deleteStatus(TaskStatusOption status) async {
+    await TaskStatusApi.deleteTaskStatus(status.id);
+    await loadTaskStatuses(forceRefresh: true);
+    await loadTasks();
   }
   
   Future<void> deleteTask(String taskId) async {

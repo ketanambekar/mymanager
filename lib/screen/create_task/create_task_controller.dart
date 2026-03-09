@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mymanager/constants/app_constants.dart';
 import 'package:mymanager/database/apis/task_api.dart';
+import 'package:mymanager/database/apis/task_status_api.dart';
 import 'package:mymanager/database/apis/user_project_api.dart';
+import 'package:mymanager/database/models/task_status_option.dart';
 import 'package:mymanager/database/tables/tasks/models/task_model.dart';
 import 'package:mymanager/database/tables/user_projects/models/user_project_model.dart';
 import 'package:mymanager/screen/dashboard/dashboard_controller.dart';
@@ -39,12 +41,21 @@ class CreateTaskController extends GetxController {
   
   final RxList<UserProjects> projects = <UserProjects>[].obs;
   final RxList<Task> availableTasks = <Task>[].obs;
+  final RxList<TaskStatusOption> statusOptions = <TaskStatusOption>[].obs;
 
   @override
   void onInit() {
     super.onInit();
+    _loadStatuses();
     _loadProjects();
     _loadTasks();
+  }
+
+  Future<void> _loadStatuses() async {
+    statusOptions.value = await TaskStatusApi.getTaskStatuses();
+    if (statusOptions.isNotEmpty) {
+      taskStatus.value = statusOptions.first.name;
+    }
   }
 
   Future<void> _loadProjects() async {
@@ -134,7 +145,7 @@ class CreateTaskController extends GetxController {
           taskTitle: subtaskTitle,
           taskDescription: '',
           taskPriority: computedPriority,
-          taskStatus: 'Todo',
+          taskStatus: statusOptions.isNotEmpty ? statusOptions.first.name : 'Todo',
           parentTaskId: taskId,
           taskDueDate: dueDate?.toIso8601String(),
         );

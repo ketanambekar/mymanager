@@ -35,7 +35,7 @@ class PomodoroWidget extends StatelessWidget {
         children: [
           Obx(() => Text(
                 controller.isWorkSession.value ? 'Focus Time' : 'Break Time',
-                style: AppTheme.headline.copyWith(fontSize: 24),
+                style: AppTextStyles.headline2.copyWith(fontSize: 24),
               )),
           const SizedBox(height: 20),
           

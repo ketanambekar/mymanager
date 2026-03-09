@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:mymanager/constants/app_constants.dart';
 import 'package:mymanager/database/tables/tasks/models/task_model.dart';
-import 'package:mymanager/theme/app_theme.dart';
+import 'package:mymanager/theme/app_colors.dart';
+import 'package:mymanager/theme/app_text_styles.dart';
 import 'package:mymanager/utils/global_utils.dart';
 
 /// Natural-looking task card with organic feel

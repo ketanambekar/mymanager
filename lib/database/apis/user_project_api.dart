@@ -1,192 +1,87 @@
+import 'dart:convert';
 import 'dart:developer' as developer;
+
 import 'package:flutter/foundation.dart';
-import 'package:mymanager/constants/app_constants.dart';
-import 'package:mymanager/database/helper/database_helper.dart';
 import 'package:mymanager/database/tables/user_projects/models/user_project_model.dart';
-import 'package:mymanager/utils/global_utils.dart';
+import 'package:mymanager/services/api_client.dart';
 
 class UserProjectsApi {
-  static String _generateId() => uuid.v4();
+  static final ApiClient _client = ApiClient.instance;
 
-  static String _nowIso() => DateTime.now().toLocal().toIso8601String();
-
-  /// Create a new project
   static Future<void> createProject(UserProjects project) async {
-    try {
-      final db = await DatabaseHelper.database;
-      final id = project.projectId.isNotEmpty
-          ? project.projectId
-          : _generateId();
-      final now = _nowIso();
-      final map = <String, dynamic>{
-        'project_id': id,
-        'project_name': project.projectName,
-        'project_status': project.projectStatus ?? AppConstants.projectStatusActive,
-        'project_description': project.projectDescription,
-        'project_type': project.projectType,
-        'project_color': project.projectColor,
-        'project_created_at': now,
-        'project_updated_at': now,
-      };
+    final response = await _client.post('/projects', body: {
+      'name': project.projectName ?? 'Untitled Project',
+      'description': project.projectDescription,
+      'parent_project_id':
+          (project.parentProjectId == null || project.parentProjectId!.isEmpty)
+              ? null
+              : int.tryParse(project.parentProjectId!)
+    });
 
-      await db.insert('user_projects_table', map);
-      if (kDebugMode) {
-        developer.log('Inserted project $id', name: 'UserProjectsApi');
-      }
-    } catch (e, stack) {
-      developer.log(
-        'Error in createProject: $e',
-        stackTrace: stack,
-        name: 'UserProjectsApi',
-      );
-      rethrow;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Failed to create project: ${response.body}');
     }
   }
 
-  /// Get all projects. Exclude Deleted by default.
-  static Future<List<UserProjects>> getProjects({
-    bool includeDeleted = false,
-  }) async {
+  static Future<List<UserProjects>> getProjects({bool includeDeleted = false}) async {
     try {
-      final db = await DatabaseHelper.database;
-      final whereClause = includeDeleted ? null : "project_status != '${AppConstants.projectStatusDeleted}'";
-      final maps = await db.query(
-        'user_projects_table',
-        where: whereClause,
-        orderBy: 'project_created_at DESC',
-      );
-      return maps.map((m) => UserProjects.fromMap(m)).toList();
+      final response = await _client.get('/projects');
+      if (response.statusCode < 200 || response.statusCode >= 300) return [];
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final list = (body['data'] as List<dynamic>? ?? const []);
+      return list
+          .cast<Map<String, dynamic>>()
+          .map(_mapProject)
+          .where((p) => includeDeleted || (p.projectStatus ?? '').toLowerCase() != 'deleted')
+          .toList();
     } catch (e, stack) {
-      developer.log(
-        'Error in getProjects: $e',
-        stackTrace: stack,
-        name: 'UserProjectsApi',
-      );
+      if (kDebugMode) {
+        developer.log('Error in getProjects: $e', stackTrace: stack, name: 'UserProjectsApi');
+      }
       return [];
     }
   }
 
-  /// Get project by ID
   static Future<UserProjects?> getProjectById(String projectId) async {
-    try {
-      final db = await DatabaseHelper.database;
-      final maps = await db.query(
-        'user_projects_table',
-        where: 'project_id = ?',
-        whereArgs: [projectId],
-        limit: 1,
-      );
-      if (maps.isEmpty) return null;
-      return UserProjects.fromMap(maps.first);
-    } catch (e, stack) {
-      developer.log(
-        'Error in getProjectById: $e',
-        stackTrace: stack,
-        name: 'UserProjectsApi',
-      );
-      rethrow;
-    }
+    final response = await _client.get('/projects/$projectId');
+    if (response.statusCode < 200 || response.statusCode >= 300) return null;
+
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = body['data'] as Map<String, dynamic>?;
+    if (data == null) return null;
+    return _mapProject(data);
   }
 
-  /// Update project by ID (partial updates supported)
-  static Future<int> updateProjectById(
-    String projectId,
-    UserProjects updated,
-  ) async {
-    try {
-      final db = await DatabaseHelper.database;
-      final now = _nowIso();
-
-      final map = <String, dynamic>{
-        'project_name': updated.projectName,
-        'project_status': updated.projectStatus,
-        'project_description': updated.projectDescription,
-        'project_type': updated.projectType,
-        'project_color': updated.projectColor,
-        'project_updated_at': now,
-      }..removeWhere((key, value) => value == null);
-
-      final count = await db.update(
-        'user_projects_table',
-        map,
-        where: 'project_id = ?',
-        whereArgs: [projectId],
-      );
-      if (kDebugMode) {
-        developer.log(
-          'Updated project $projectId, rows=$count',
-          name: 'UserProjectsApi',
-        );
-      }
-      return count;
-    } catch (e, stack) {
-      developer.log(
-        'Error in updateProjectById: $e',
-        stackTrace: stack,
-        name: 'UserProjectsApi',
-      );
-      return 0;
-    }
+  static Future<int> updateProjectById(String projectId, UserProjects updated) async {
+    final response = await _client.put('/projects/$projectId', body: {
+      'name': updated.projectName,
+      'description': updated.projectDescription
+    });
+    return response.statusCode >= 200 && response.statusCode < 300 ? 1 : 0;
   }
 
-  /// Soft delete: sets project_status = 'Deleted'
   static Future<int> deleteProjectById(String projectId) async {
-    try {
-      final db = await DatabaseHelper.database;
-      final now = _nowIso();
-
-      final count = await db.update(
-        'user_projects_table',
-        {'project_status': AppConstants.projectStatusDeleted, 'project_updated_at': now},
-        where: 'project_id = ?',
-        whereArgs: [projectId],
-      );
-      if (kDebugMode) {
-        developer.log(
-          'Soft-deleted project $projectId, rows=$count',
-          name: 'UserProjectsApi',
-        );
-      }
-      return count;
-    } catch (e, stack) {
-      developer.log(
-        'Error in deleteProjectById: $e',
-        stackTrace: stack,
-        name: 'UserProjectsApi',
-      );
-      return 0;
-    }
+    final response = await _client.delete('/projects/$projectId');
+    return response.statusCode >= 200 && response.statusCode < 300 ? 1 : 0;
   }
 
-  /// Update only project status
-  static Future<int> updateProjectStatus(
-    String projectId,
-    String status,
-  ) async {
-    try {
-      final db = await DatabaseHelper.database;
-      final now = _nowIso();
+  static Future<int> updateProjectStatus(String projectId, String status) async {
+    final response = await _client.put('/projects/$projectId', body: {});
+    return response.statusCode >= 200 && response.statusCode < 300 ? 1 : 0;
+  }
 
-      final count = await db.update(
-        'user_projects_table',
-        {'project_status': status, 'project_updated_at': now},
-        where: 'project_id = ?',
-        whereArgs: [projectId],
-      );
-      if (kDebugMode) {
-        developer.log(
-          'Updated project status $projectId -> $status, rows=$count',
-          name: 'UserProjectsApi',
-        );
-      }
-      return count;
-    } catch (e, stack) {
-      developer.log(
-        'Error in updateProjectStatus: $e',
-        stackTrace: stack,
-        name: 'UserProjectsApi',
-      );
-      return 0;
-    }
+  static UserProjects _mapProject(Map<String, dynamic> raw) {
+    return UserProjects.fromMap({
+      'project_id': raw['id'].toString(),
+      'parent_project_id': raw['parent_project_id']?.toString(),
+      'project_name': raw['name'],
+      'project_status': 'Active',
+      'project_description': raw['description'],
+      'project_type': null,
+      'project_color': null,
+      'project_created_at': raw['created_at'],
+      'project_updated_at': raw['updated_at']
+    });
   }
 }

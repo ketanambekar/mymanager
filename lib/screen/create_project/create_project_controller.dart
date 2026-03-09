@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:mymanager/constants/app_constants.dart';
 import 'package:mymanager/database/apis/user_project_api.dart';
 import 'package:mymanager/database/tables/user_projects/models/user_project_model.dart';
+import 'package:mymanager/services/project_context_controller.dart';
 
 class CreateProjectController extends GetxController {
   final projectFormKey = GlobalKey<FormState>();
@@ -14,10 +15,17 @@ class CreateProjectController extends GetxController {
       TextEditingController();
   final TextEditingController projectTypeTextController =
       TextEditingController();
+  final RxList<UserProjects> availableParentProjects = <UserProjects>[].obs;
+  final RxnString selectedParentProjectId = RxnString();
 
   @override
   void onInit() {
     super.onInit();
+    _loadParentProjects();
+  }
+
+  Future<void> _loadParentProjects() async {
+    availableParentProjects.value = await UserProjectsApi.getProjects();
   }
 
   Future<void> createProject() async {
@@ -26,6 +34,7 @@ class CreateProjectController extends GetxController {
     try {
       final newProject = UserProjects(
         projectId: '',
+        parentProjectId: selectedParentProjectId.value,
         projectName: projectNameTextController.text.trim(),
         projectStatus: AppConstants.projectStatusActive,
         projectDescription: projectDescTextController.text.trim(),
@@ -34,6 +43,9 @@ class CreateProjectController extends GetxController {
       );
 
       await UserProjectsApi.createProject(newProject);
+      if (Get.isRegistered<ProjectContextController>()) {
+        await Get.find<ProjectContextController>().loadProjects();
+      }
       if (kDebugMode) {
         developer.log('Project created successfully', name: 'CreateProjectController');
       }

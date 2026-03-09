@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:mymanager/constants/app_constants.dart';
 import 'package:mymanager/database/tables/tasks/models/task_model.dart';
-import 'package:mymanager/theme/app_theme.dart';
+import 'package:mymanager/theme/app_text_styles.dart';
 
 /// Eisenhower Matrix visual quadrant view
 class EisenhowerMatrix extends StatelessWidget {
@@ -29,7 +28,7 @@ class EisenhowerMatrix extends StatelessWidget {
         children: [
           Text(
             'Eisenhower Matrix',
-            style: AppTheme.headlineSmall.copyWith(fontSize: 20),
+            style: AppTextStyles.headline4.copyWith(fontSize: 20),
           ),
           const SizedBox(height: 16),
           Expanded(

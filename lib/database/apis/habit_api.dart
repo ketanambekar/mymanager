@@ -1,201 +1,85 @@
-import 'dart:developer' as developer;
-import 'package:flutter/foundation.dart';
-import 'package:mymanager/database/helper/database_helper.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:mymanager/database/tables/tasks/models/habit_model.dart';
-import 'package:mymanager/utils/global_utils.dart';
 
 class HabitApi {
-  static String _generateId() => uuid.v4();
-  static String _nowIso() => DateTime.now().toLocal().toIso8601String();
+  static final GetStorage _storage = GetStorage();
+  static const _habitsKey = 'habits_list';
+  static const _logsKey = 'habit_logs';
 
-  /// Create a new habit
+  static List<Map<String, dynamic>> _habitMaps() {
+    final raw = _storage.read<List>(_habitsKey) ?? const [];
+    return raw.map((e) => (e as Map).cast<String, dynamic>()).toList();
+  }
+
+  static Future<void> _saveHabits(List<Map<String, dynamic>> habits) async {
+    await _storage.write(_habitsKey, habits);
+  }
+
   static Future<void> createHabit(Habit habit) async {
-    try {
-      final db = await DatabaseHelper.database;
-      final id = habit.habitId.isNotEmpty ? habit.habitId : _generateId();
-      final now = _nowIso();
-
-      final map = habit.toMap();
-      map['habit_id'] = id;
-      map['habit_created_at'] = now;
-      map['habit_updated_at'] = now;
-
-      await db.insert('habits', map);
-      if (kDebugMode) {
-        developer.log('Created habit: $id', name: 'HabitApi');
-      }
-    } catch (e, stack) {
-      developer.log(
-        'Error creating habit: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'HabitApi',
-      );
-      rethrow;
-    }
+    final habits = _habitMaps();
+    habits.add(habit.toMap());
+    await _saveHabits(habits);
   }
 
-  /// Get all habits
   static Future<List<Habit>> getHabits() async {
-    try {
-      final db = await DatabaseHelper.database;
-      final maps = await db.query('habits', orderBy: 'habit_created_at DESC');
-      return maps.map((m) => Habit.fromMap(m)).toList();
-    } catch (e, stack) {
-      developer.log(
-        'Error getting habits: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'HabitApi',
-      );
-      return [];
-    }
+    return _habitMaps().map(Habit.fromMap).toList();
   }
 
-  /// Get habit by ID
   static Future<Habit?> getHabitById(String habitId) async {
-    try {
-      final db = await DatabaseHelper.database;
-      final maps = await db.query(
-        'habits',
-        where: 'habit_id = ?',
-        whereArgs: [habitId],
-        limit: 1,
-      );
-      if (maps.isEmpty) return null;
-      return Habit.fromMap(maps.first);
-    } catch (e, stack) {
-      developer.log(
-        'Error getting habit by ID: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'HabitApi',
-      );
-      return null;
-    }
+    final habits = await getHabits();
+    final found = habits.where((h) => h.habitId == habitId);
+    return found.isEmpty ? null : found.first;
   }
 
-  /// Update habit
   static Future<int> updateHabit(String habitId, Habit updated) async {
-    try {
-      final db = await DatabaseHelper.database;
-      final map = updated.toMap();
-      map['habit_updated_at'] = _nowIso();
-      map.remove('habit_id');
-      map.remove('habit_created_at');
-
-      final count = await db.update(
-        'habits',
-        map,
-        where: 'habit_id = ?',
-        whereArgs: [habitId],
-      );
-
-      if (kDebugMode) {
-        developer.log('Updated habit $habitId', name: 'HabitApi');
-      }
-      return count;
-    } catch (e, stack) {
-      developer.log(
-        'Error updating habit: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'HabitApi',
-      );
-      return 0;
-    }
+    final habits = _habitMaps();
+    final index = habits.indexWhere((h) => h['habit_id'] == habitId);
+    if (index == -1) return 0;
+    habits[index] = updated.toMap();
+    await _saveHabits(habits);
+    return 1;
   }
 
-  /// Complete habit for today
   static Future<void> completeHabit(String habitId, {String? notes}) async {
-    try {
-      final db = await DatabaseHelper.database;
-      final now = _nowIso();
-      final habit = await getHabitById(habitId);
-      if (habit == null) return;
+    final habit = await getHabitById(habitId);
+    if (habit == null) return;
 
-      // Log completion
-      await db.insert('habit_logs', {
-        'log_id': _generateId(),
-        'habit_id': habitId,
-        'completed_date': now,
-        'notes': notes,
-      });
+    final streak = habit.currentStreak + 1;
+    final best = streak > habit.bestStreak ? streak : habit.bestStreak;
 
-      // Update streak
-      int newStreak = habit.currentStreak + 1;
-      int newBest = newStreak > habit.bestStreak ? newStreak : habit.bestStreak;
+    await updateHabit(
+      habitId,
+      habit.copyWith(
+        currentStreak: streak,
+        bestStreak: best,
+        lastCompleted: DateTime.now().toIso8601String(),
+        habitUpdatedAt: DateTime.now().toIso8601String(),
+      ),
+    );
 
-      await db.update(
-        'habits',
-        {
-          'current_streak': newStreak,
-          'best_streak': newBest,
-          'last_completed': now,
-          'habit_updated_at': now,
-        },
-        where: 'habit_id = ?',
-        whereArgs: [habitId],
-      );
-
-      if (kDebugMode) {
-        developer.log('Completed habit $habitId, streak: $newStreak', name: 'HabitApi');
-      }
-    } catch (e, stack) {
-      developer.log(
-        'Error completing habit: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'HabitApi',
-      );
-      rethrow;
-    }
+    final logs = (_storage.read<List>(_logsKey) ?? const []).map((e) => (e as Map).cast<String, dynamic>()).toList();
+    logs.add({
+      'habit_id': habitId,
+      'completed_date': DateTime.now().toIso8601String(),
+      'notes': notes
+    });
+    await _storage.write(_logsKey, logs);
   }
 
-  /// Delete habit
   static Future<int> deleteHabit(String habitId) async {
-    try {
-      final db = await DatabaseHelper.database;
-      await db.delete('habit_logs', where: 'habit_id = ?', whereArgs: [habitId]);
-      final count = await db.delete('habits', where: 'habit_id = ?', whereArgs: [habitId]);
-
-      if (kDebugMode) {
-        developer.log('Deleted habit $habitId', name: 'HabitApi');
-      }
-      return count;
-    } catch (e, stack) {
-      developer.log(
-        'Error deleting habit: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'HabitApi',
-      );
-      return 0;
-    }
+    final habits = _habitMaps();
+    habits.removeWhere((h) => h['habit_id'] == habitId);
+    await _saveHabits(habits);
+    return 1;
   }
 
-  /// Get habit logs
   static Future<List<Map<String, dynamic>>> getHabitLogs(String habitId, {int days = 30}) async {
-    try {
-      final db = await DatabaseHelper.database;
-      final cutoffDate = DateTime.now().subtract(Duration(days: days)).toIso8601String();
-
-      final maps = await db.query(
-        'habit_logs',
-        where: 'habit_id = ? AND completed_date >= ?',
-        whereArgs: [habitId, cutoffDate],
-        orderBy: 'completed_date DESC',
-      );
-
-      return maps;
-    } catch (e, stack) {
-      developer.log(
-        'Error getting habit logs: $e',
-        error: e,
-        stackTrace: stack,
-        name: 'HabitApi',
-      );
-      return [];
-    }
+    final logs = (_storage.read<List>(_logsKey) ?? const []).map((e) => (e as Map).cast<String, dynamic>()).toList();
+    final cutoff = DateTime.now().subtract(Duration(days: days));
+    return logs.where((log) {
+      final sameHabit = log['habit_id'] == habitId;
+      final date = DateTime.tryParse(log['completed_date']?.toString() ?? '');
+      return sameHabit && date != null && date.isAfter(cutoff);
+    }).toList();
   }
 }

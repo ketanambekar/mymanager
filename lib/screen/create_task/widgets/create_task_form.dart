@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:mymanager/constants/app_constants.dart';
 import 'package:mymanager/screen/create_task/create_task_controller.dart';
 import 'package:mymanager/theme/app_colors.dart';
-import 'package:mymanager/screen/create_task/widgets/priority_indicator.dart';
 import 'package:mymanager/widgets/app_glass_field.dart';
 import 'package:mymanager/widgets/app_glass_button.dart';
 import 'package:mymanager/widgets/app_glass_toggle.dart';
@@ -253,6 +252,31 @@ class CreateTaskForm extends GetView<CreateTaskController> {
 
                   const SizedBox(height: 20),
 
+                  const Text(
+                    'Status',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 12),
+                  Obx(() {
+                    final selected = controller.taskStatus.value;
+                    final options = controller.statusOptions.map((s) => s.name).toList();
+                    return Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: options
+                          .map(
+                            (status) => ChoiceChip(
+                              label: Text(status),
+                              selected: selected == status,
+                              onSelected: (_) => controller.taskStatus.value = status,
+                            ),
+                          )
+                          .toList(),
+                    );
+                  }),
+
+                  const SizedBox(height: 20),
+
                   // Frequency - Inline Selection
                   const Text(
                     'Frequency',
@@ -261,7 +285,9 @@ class CreateTaskForm extends GetView<CreateTaskController> {
                   const SizedBox(height: 12),
                   Obx(() {
                     final frequency = controller.frequency.value;
-                    return Row(
+                    return Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
                         _FrequencyChip(
                           label: 'Once',
@@ -269,21 +295,18 @@ class CreateTaskForm extends GetView<CreateTaskController> {
                           isSelected: frequency == AppConstants.frequencyOnce,
                           onTap: () => controller.frequency.value = AppConstants.frequencyOnce,
                         ),
-                        const SizedBox(width: 8),
                         _FrequencyChip(
                           label: 'Daily',
                           icon: Icons.today,
                           isSelected: frequency == AppConstants.frequencyDaily,
                           onTap: () => controller.frequency.value = AppConstants.frequencyDaily,
                         ),
-                        const SizedBox(width: 8),
                         _FrequencyChip(
                           label: 'Weekly',
                           icon: Icons.date_range,
                           isSelected: frequency == AppConstants.frequencyWeekly,
                           onTap: () => controller.frequency.value = AppConstants.frequencyWeekly,
                         ),
-                        const SizedBox(width: 8),
                         _FrequencyChip(
                           label: 'Monthly',
                           icon: Icons.calendar_month,
@@ -634,50 +657,6 @@ class CreateTaskForm extends GetView<CreateTaskController> {
     );
   }
 
-  void _showFrequencyPicker(BuildContext context) {
-    Get.bottomSheet(
-      Container(
-        decoration: BoxDecoration(
-          color: AppColors.cardDark,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text('Once', style: TextStyle(color: AppColors.textPrimary)),
-              onTap: () {
-                controller.frequency.value = AppConstants.frequencyOnce;
-                Get.back();
-              },
-            ),
-            ListTile(
-              title: const Text('Daily', style: TextStyle(color: AppColors.textPrimary)),
-              onTap: () {
-                controller.frequency.value = AppConstants.frequencyDaily;
-                Get.back();
-              },
-            ),
-            ListTile(
-              title: const Text('Weekly', style: TextStyle(color: AppColors.textPrimary)),
-              onTap: () {
-                controller.frequency.value = AppConstants.frequencyWeekly;
-                Get.back();
-              },
-            ),
-            ListTile(
-              title: const Text('Monthly', style: TextStyle(color: AppColors.textPrimary)),
-              onTap: () {
-                controller.frequency.value = AppConstants.frequencyMonthly;
-                Get.back();
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _showEnergyPicker(BuildContext context) {
     Get.bottomSheet(
       Container(
@@ -792,44 +771,45 @@ class _FrequencyChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF5B8DEE).withOpacity(0.2) : AppColors.cardDark.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected ? const Color(0xFF5B8DEE) : AppColors.textTertiary.withOpacity(0.3),
-              width: isSelected ? 2 : 1,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 90,
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF5B8DEE).withOpacity(0.2) : AppColors.cardDark.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF5B8DEE) : AppColors.textTertiary.withOpacity(0.3),
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF5B8DEE).withOpacity(0.2),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : [],
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? const Color(0xFF5B8DEE) : AppColors.textSecondary,
+              size: 20,
             ),
-            boxShadow: isSelected ? [
-              BoxShadow(
-                color: const Color(0xFF5B8DEE).withOpacity(0.2),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ] : [],
-          ),
-          child: Column(
-            children: [
-              Icon(
-                icon,
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
                 color: isSelected ? const Color(0xFF5B8DEE) : AppColors.textSecondary,
-                size: 20,
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
               ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? const Color(0xFF5B8DEE) : AppColors.textSecondary,
-                  fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

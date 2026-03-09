@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:glass/glass.dart';
-import 'package:mymanager/constants/app_constants.dart';
 import 'package:mymanager/screen/create_task/create_task_controller.dart';
 import 'package:mymanager/screen/create_task/widgets/create_task_form.dart';
 import 'package:mymanager/theme/app_colors.dart';
@@ -25,9 +24,10 @@ class CreateTaskView extends GetView<CreateTaskController> {
 
   @override
   Widget build(BuildContext context) {
+    final height = MediaQuery.of(context).size.height;
     return SafeArea(
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.90,
+      child: SizedBox(
+        height: height < 760 ? height * 0.94 : height * 0.90,
         child: ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           child: Container(
@@ -45,17 +45,45 @@ class CreateTaskView extends GetView<CreateTaskController> {
                 ),
 
                 // Header
-                Padding(
-                  padding: const EdgeInsets.all(20),
+                Container(
+                  margin: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.03),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: Colors.white.withOpacity(0.08)),
+                  ),
                   child: Row(
                     children: [
-                      Text(
-                        'Create Task',
-                        style: AppTextStyles.headline2,
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF5B8DEE), Color(0xFF3B6BBE)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.add_task_rounded, color: Colors.white, size: 22),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Create Task', style: AppTextStyles.headline2),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Capture work, set priority, and schedule reminders.',
+                              style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
                       IconButton(
-                        icon: Icon(Icons.close, color: AppColors.textPrimary),
+                        icon: Icon(Icons.close_rounded, color: AppColors.textPrimary),
                         onPressed: () => Get.back(),
                       ),
                     ],

@@ -41,7 +41,10 @@ class CalenderView extends StatelessWidget {
                   ),
                 ],
               ),
-              child: _MonthlyCalendar(controller: controller),
+              child: Text(
+                'Legacy calendar view is no longer used. Please open the new calendar screen.',
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
             ),
             const SizedBox(height: 16),
             Padding(

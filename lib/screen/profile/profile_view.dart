@@ -1,660 +1,225 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:mymanager/routes/app_routes.dart';
 import 'package:mymanager/screen/profile/profile_controller.dart';
 import 'package:mymanager/screen/profile/widgets/add_update_bottomsheet.dart';
-import 'package:mymanager/screen/profile/widgets/profile_tab_tiles.dart';
-import 'package:mymanager/theme/app_theme.dart';
-import 'package:mymanager/theme/app_text_styles.dart';
 import 'package:mymanager/utils/global_utils.dart';
-import 'package:mymanager/services/test_data_service.dart';
+import 'package:mymanager/theme/theme_tokens.dart';
+import 'package:mymanager/widgets/app_side_menu.dart';
 
 class ProfileView extends StatelessWidget {
   ProfileView({super.key});
+
   final controller = Get.put(ProfileController());
-  
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                // Profile Header
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF7C4DFF), Color(0xFF536DFE)],
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF7C4DFF).withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 12,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: CircleAvatar(
-                          radius: 50,
-                          backgroundColor: const Color(0xFF7C4DFF),
-                          child: const Icon(
-                            Icons.person,
-                            color: Colors.white,
-                            size: 48,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Obx(() => GestureDetector(
-                        onTap: () async {
-                          await Get.bottomSheet<void>(
-                            AddUpdateBottomSheet(
-                              initialName: controller.userName.value,
-                              onSave: (String name) {},
-                            ),
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            enableDrag: true,
-                          );
-                        },
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              controller.userName.value.isEmpty
-                                  ? 'Tap to set name'
-                                  : controller.userName.value,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Icon(
-                              Icons.edit,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                          ],
-                        ),
-                      )),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Text(
-                          'Profile',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+    final isDesktop = MediaQuery.sizeOf(context).width >= 980;
+
+    final page = SafeArea(
+      child: Obx(
+        () => ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            if (!isDesktop)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                  icon: Icon(Icons.menu_rounded, color: context.title),
                 ),
-
-                const SizedBox(height: 24),
-
-                // Account Info Section
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Account Information',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+              ),
+            Text(
+              'Profile',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+                color: context.title,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [Color(0xFF7C3AED), Color(0xFF4F46E5)]),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  const CircleAvatar(
+                    radius: 36,
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.person, size: 42, color: Color(0xFF7C3AED)),
                   ),
-                ),
-                const SizedBox(height: 12),
-
-                Obx(() => ProfileTabTiles(
-                  title: 'User ID',
-                  value: controller.id.value.isEmpty ? 'Not set' : controller.id.value,
-                  icon: Icons.fingerprint,
-                )),
-
-                Obx(() => ProfileTabTiles(
-                  title: 'Active Since',
-                  value: controller.activeSince.value.isEmpty 
-                      ? 'Not available' 
-                      : formatDate(controller.activeSince.value),
-                  icon: Icons.calendar_today,
-                )),
-
-                Obx(() => ProfileTabTiles(
-                  title: 'Last Update',
-                  value: controller.lastActive.value.isEmpty 
-                      ? 'Not available' 
-                      : formatDate(controller.lastActive.value),
-                  icon: Icons.update,
-                )),
-
-                Obx(() => ProfileTabTiles(
-                  title: 'App Version',
-                  value: controller.appVersion.value.isEmpty 
-                      ? 'v1.0.0' 
-                      : "v${controller.appVersion.value}",
-                  icon: Icons.info_outline,
-                )),
-
-                const SizedBox(height: 24),
-
-                // Data Management Section
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Data Management',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Habits Button
-                GestureDetector(
-                  onTap: () => Get.toNamed(AppRoutes.habitList),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.1),
-                        width: 1,
-                      ),
-                    ),
+                  const SizedBox(height: 10),
+                  GestureDetector(
+                    onTap: () async {
+                      await Get.bottomSheet<void>(
+                        AddUpdateBottomSheet(
+                          initialName: controller.userName.value,
+                          onSave: (_) {},
+                        ),
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                      );
+                    },
                     child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF4ECDC4).withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.track_changes,
-                            color: Color(0xFF4ECDC4),
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'My Habits',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                'Track and manage your habits',
-                                style: TextStyle(
-                                  color: Colors.white54,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          color: Colors.white.withOpacity(0.3),
-                          size: 16,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Backup Database Button
-                GestureDetector(
-                  onTap: () => controller.backupDatabase(),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: const Color(0xFF4ECDC4).withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF4ECDC4).withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.backup,
-                            color: Color(0xFF4ECDC4),
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Backup Database',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Export all your data',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.6),
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Icon(
-                          Icons.arrow_forward_ios,
-                          color: Color(0xFF4ECDC4),
-                          size: 16,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Import Database Button
-                GestureDetector(
-                  onTap: () => controller.importDatabase(),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: const Color(0xFF7C4DFF).withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF7C4DFF).withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.cloud_download,
-                            color: Color(0xFF7C4DFF),
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Import & Merge Database',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Restore from backup file',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.6),
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Icon(
-                          Icons.arrow_forward_ios,
-                          color: Color(0xFF7C4DFF),
-                          size: 16,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // TEST DATA SECTION - Only visible in debug mode
-                if (kDebugMode) ...[
-                  const SizedBox(height: 24),
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Test Data',
-                          style: TextStyle(
-                            color: Colors.orange,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                          controller.userName.value.isEmpty ? 'Tap to set name' : controller.userName.value,
+                          style: GoogleFonts.plusJakartaSans(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-                        SizedBox(width: 8),
-                        Icon(Icons.bug_report, color: Colors.orange, size: 20),
+                        const SizedBox(width: 6),
+                        const Icon(Icons.edit, size: 16, color: Colors.white),
                       ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  
-                  // Reload Test Data Button
-                  GestureDetector(
-                    onTap: () async {
-                      Get.dialog(
-                        AlertDialog(
-                          backgroundColor: const Color(0xFF1F1F2E),
-                          title: const Text(
-                            'Reload Test Data?',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          content: const Text(
-                            'This will reinitialize all test data. Existing data will be preserved.',
-                            style: TextStyle(color: Colors.white70),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Get.back(),
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () async {
-                                Get.back();
-                                Get.dialog(
-                                  const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                  barrierDismissible: false,
-                                );
-                                await TestDataService.initializeTestData(force: true);
-                                Get.back();
-                                Get.snackbar(
-                                  '✅ Success',
-                                  'Test data reloaded',
-                                  snackPosition: SnackPosition.BOTTOM,
-                                  backgroundColor: Colors.green,
-                                  colorText: Colors.white,
-                                );
-                              },
-                              child: const Text(
-                                'Reload',
-                                style: TextStyle(color: Colors.orange),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.orange.withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.refresh,
-                              color: Colors.orange,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Reload Test Data',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Reinitialize dummy data for testing',
-                                  style: TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(
-                            Icons.play_arrow,
-                            color: Colors.orange,
-                            size: 20,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  
-                  // Clear Test Data Button
-                  GestureDetector(
-                    onTap: () async {
-                      Get.dialog(
-                        AlertDialog(
-                          backgroundColor: const Color(0xFF1F1F2E),
-                          title: const Text(
-                            'Clear Test Data Flag?',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          content: const Text(
-                            'This will clear the test data initialization flag. Data will remain but can be reinitialized.',
-                            style: TextStyle(color: Colors.white70),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Get.back(),
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () async {
-                                Get.back();
-                                await TestDataService.clearTestData();
-                                Get.snackbar(
-                                  '✅ Success',
-                                  'Test data flag cleared',
-                                  snackPosition: SnackPosition.BOTTOM,
-                                  backgroundColor: Colors.green,
-                                  colorText: Colors.white,
-                                );
-                              },
-                              child: const Text(
-                                'Clear',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.red.withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.clear,
-                              color: Colors.red,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Clear Test Data Flag',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Reset initialization flag',
-                                  style: TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(
-                            Icons.delete_outline,
-                            color: Colors.red,
-                            size: 20,
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            _InfoCard(title: 'User ID', value: controller.id.value.isEmpty ? 'Not set' : controller.id.value),
+            _InfoCard(
+              title: 'Active Since',
+              value: controller.activeSince.value.isEmpty ? 'Not available' : formatDate(controller.activeSince.value),
+            ),
+            _InfoCard(
+              title: 'Last Update',
+              value: controller.lastActive.value.isEmpty ? 'Not available' : formatDate(controller.lastActive.value),
+            ),
+            _InfoCard(
+              title: 'App Version',
+              value: controller.appVersion.value.isEmpty ? 'v1.0.0' : 'v${controller.appVersion.value}',
+            ),
+            const SizedBox(height: 8),
+            _ActionTile(
+              icon: Icons.track_changes_rounded,
+              title: 'My Habits',
+              subtitle: 'Track and manage your habits',
+              onTap: () => Get.toNamed(AppRoutes.habitList),
+            ),
+            _ActionTile(
+              icon: Icons.download_rounded,
+              title: 'Backup Database',
+              subtitle: 'Save your data to a backup file',
+              onTap: controller.backupDatabase,
+            ),
+            _ActionTile(
+              icon: Icons.upload_file_rounded,
+              title: 'Import Database',
+              subtitle: 'Merge data from a backup file',
+              onTap: controller.importDatabase,
+            ),
+            _ActionTile(
+              icon: Icons.logout_rounded,
+              title: 'Logout',
+              subtitle: 'Sign out and go to login',
+              onTap: controller.logout,
+            ),
+          ],
+        ),
+      ),
+    );
 
-                const SizedBox(height: 24),
-
-                // About Section
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'About',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.1),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'About MyManager',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.white.withOpacity(0.5),
-                        size: 16,
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 80),
+    return Scaffold(
+      backgroundColor: context.appBg,
+      drawer: isDesktop ? null : const Drawer(child: AppSideMenu(activeRoute: AppRoutes.profile)),
+      body: isDesktop
+          ? Row(
+              children: [
+                const AppSideMenu(activeRoute: AppRoutes.profile),
+                Expanded(child: page),
               ],
+            )
+          : page,
+    );
+  }
+}
+
+class _InfoCard extends StatelessWidget {
+  const _InfoCard({required this.title, required this.value});
+
+  final String title;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: context.panel,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: context.border),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: GoogleFonts.plusJakartaSans(color: context.subtitle, fontWeight: FontWeight.w600),
             ),
           ),
+          Text(
+            value,
+            style: GoogleFonts.plusJakartaSans(color: context.title, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionTile extends StatelessWidget {
+  const _ActionTile({required this.icon, required this.title, required this.subtitle, required this.onTap});
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: context.panel,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: context.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F3FF),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: const Color(0xFF7C3AED), size: 20),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: context.title)),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: GoogleFonts.plusJakartaSans(fontSize: 12, color: context.subtitle)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
+          ],
         ),
       ),
     );

@@ -216,27 +216,17 @@ class EditTaskForm extends StatelessWidget {
                   const SizedBox(height: 12),
                   Obx(() {
                     final status = controller.selectedStatus.value;
-                    return Row(
+                    final options = controller.statusOptions.map((s) => s.name).toList();
+                    return Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
-                        _StatusChip(
-                          label: 'Todo',
-                          icon: Icons.radio_button_unchecked,
-                          isSelected: status == 'Todo',
-                          onTap: () => controller.selectedStatus.value = 'Todo',
-                        ),
-                        const SizedBox(width: 8),
-                        _StatusChip(
-                          label: 'In Progress',
-                          icon: Icons.pending_outlined,
-                          isSelected: status == 'In Progress',
-                          onTap: () => controller.selectedStatus.value = 'In Progress',
-                        ),
-                        const SizedBox(width: 8),
-                        _StatusChip(
-                          label: 'Completed',
-                          icon: Icons.check_circle_outline,
-                          isSelected: status == 'Completed',
-                          onTap: () => controller.selectedStatus.value = 'Completed',
+                        ...options.map(
+                          (opt) => ChoiceChip(
+                            label: Text(opt),
+                            selected: status == opt,
+                            onSelected: (_) => controller.selectedStatus.value = opt,
+                          ),
                         ),
                       ],
                     );
@@ -717,66 +707,6 @@ class _PriorityFlag extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _StatusChip({
-    required this.label,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.success.withOpacity(0.2) : AppColors.cardDark.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected ? AppColors.success : AppColors.textTertiary.withOpacity(0.3),
-              width: isSelected ? 2 : 1,
-            ),
-            boxShadow: isSelected ? [
-              BoxShadow(
-                color: AppColors.success.withOpacity(0.2),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ] : [],
-          ),
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                color: isSelected ? AppColors.success : AppColors.textSecondary,
-                size: 20,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? AppColors.success : AppColors.textSecondary,
-                  fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
               ),
             ],
           ),

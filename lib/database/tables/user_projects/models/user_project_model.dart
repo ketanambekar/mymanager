@@ -1,5 +1,6 @@
 class UserProjects {
   final String projectId;
+  final String? parentProjectId;
   final String? projectName;
   final String? projectStatus;
   final String? projectDescription;
@@ -10,6 +11,7 @@ class UserProjects {
 
   UserProjects({
     required this.projectId,
+    this.parentProjectId,
     this.projectName,
     this.projectStatus,
     this.projectDescription,
@@ -21,6 +23,7 @@ class UserProjects {
 
   factory UserProjects.fromMap(Map<String, dynamic> m) => UserProjects(
     projectId: m['project_id'] as String,
+    parentProjectId: m['parent_project_id'] as String?,
     projectName: m['project_name'] as String?,
     projectStatus: m['project_status'] as String?,
     projectDescription: m['project_description'] as String?,
@@ -32,6 +35,7 @@ class UserProjects {
 
   Map<String, dynamic> toMap() => {
     'project_id': projectId,
+    'parent_project_id': parentProjectId,
     'project_name': projectName,
     'project_status': projectStatus,
     'project_description': projectDescription,
@@ -42,6 +46,7 @@ class UserProjects {
   };
 
   UserProjects copyWith({
+    String? parentProjectId,
     String? projectName,
     String? projectStatus,
     String? projectDescription,
@@ -51,6 +56,7 @@ class UserProjects {
   }) {
     return UserProjects(
       projectId: projectId,
+      parentProjectId: parentProjectId ?? this.parentProjectId,
       projectName: projectName ?? this.projectName,
       projectStatus: projectStatus ?? this.projectStatus,
       projectDescription: projectDescription ?? this.projectDescription,

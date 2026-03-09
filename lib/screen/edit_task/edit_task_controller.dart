@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mymanager/constants/app_constants.dart';
 import 'package:mymanager/database/apis/task_api.dart';
+import 'package:mymanager/database/apis/task_status_api.dart';
 import 'package:mymanager/database/apis/user_project_api.dart';
+import 'package:mymanager/database/models/task_status_option.dart';
 import 'package:mymanager/database/tables/tasks/models/task_model.dart';
 import 'package:mymanager/database/tables/user_projects/models/user_project_model.dart';
 import 'package:mymanager/screen/dashboard/dashboard_controller.dart';
@@ -36,6 +38,7 @@ class EditTaskController extends GetxController {
   
   final RxList<Task> subtasks = <Task>[].obs;
   final RxList<UserProjects> projects = <UserProjects>[].obs;
+  final RxList<TaskStatusOption> statusOptions = <TaskStatusOption>[].obs;
 
   @override
   void onInit() {
@@ -64,10 +67,20 @@ class EditTaskController extends GetxController {
         developer.log('Error parsing date: $e', name: 'EditTaskController');
       }
     }
+
+    _loadStatuses();
     
     _loadProjects();
     _loadCurrentProject();
     loadSubtasks();
+  }
+
+  Future<void> _loadStatuses() async {
+    statusOptions.value = await TaskStatusApi.getTaskStatuses();
+    final exists = statusOptions.any((s) => s.name == selectedStatus.value);
+    if (!exists && statusOptions.isNotEmpty) {
+      selectedStatus.value = statusOptions.first.name;
+    }
   }
 
   void _parsePriority(String? priority) {
@@ -142,7 +155,7 @@ class EditTaskController extends GetxController {
         taskId: '',
         projectId: task.projectId,
         taskTitle: title.trim(),
-        taskStatus: 'Todo',
+        taskStatus: statusOptions.isNotEmpty ? statusOptions.first.name : 'Todo',
         parentTaskId: task.taskId,
       );
 

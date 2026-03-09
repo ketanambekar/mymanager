@@ -4,6 +4,7 @@ import 'package:mymanager/database/apis/task_api.dart';
 import 'package:mymanager/database/tables/tasks/models/task_model.dart';
 import 'package:mymanager/screen/dashboard/dashboard_controller.dart';
 import 'package:mymanager/screen/tasks/tasks_controller.dart';
+import 'package:mymanager/theme/app_colors.dart';
 import 'dart:developer' as developer;
 
 class TrashController extends GetxController {

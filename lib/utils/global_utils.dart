@@ -11,7 +11,7 @@ final uuid = Uuid();
 
 String formatDate(String dateString) {
   try {
-    DateTime parsedDate = DateTime.parse(dateString);
+    final DateTime parsedDate = DateTime.parse(dateString).toLocal();
     final formatter = DateFormat('d MMM yyyy HH:mm');
     return formatter.format(parsedDate);
   } catch (e) {
@@ -24,7 +24,7 @@ String formatDate(String dateString) {
 
 String timeAgo(String dateString) {
   try {
-    final DateTime parsedDate = DateTime.parse(dateString);
+    final DateTime parsedDate = DateTime.parse(dateString).toLocal();
     final Duration diff = DateTime.now().difference(parsedDate);
 
     if (diff.inSeconds < 60) {

@@ -18,8 +18,10 @@ import 'package:mymanager/screen/create_edit_habit/create_edit_habit_view.dart';
 import 'package:mymanager/screen/create_edit_habit/create_edit_habit_binding.dart';
 import 'package:mymanager/screen/habit_detail/habit_detail_view.dart';
 import 'package:mymanager/screen/habit_detail/habit_detail_binding.dart';
+import 'package:mymanager/screen/auth/email_otp_auth_view.dart';
 
 class AppRoutes {
+  static const auth = '/auth';
   static const dashboard = '/dashboard';
   static const tasks = '/tasks';
   static const calender = '/calender';
@@ -39,6 +41,10 @@ class AppPages {
   static const initial = AppRoutes.dashboard;
 
   static final routes = [
+    GetPage(
+      name: AppRoutes.auth,
+      page: () => const EmailOtpAuthView(),
+    ),
     GetPage(
       name: AppRoutes.dashboard,
       page: () => DashboardView(),
