@@ -1,6 +1,7 @@
 const Joi = require('joi');
 
 const statusCode = Joi.string().trim().min(2).max(64).pattern(/^[A-Za-z0-9_\-\s]+$/);
+const dueDateSchema = Joi.date().iso().min('now').allow(null);
 
 const createTaskSchema = Joi.object({
   title: Joi.string().max(220).required(),
@@ -10,7 +11,7 @@ const createTaskSchema = Joi.object({
   project_id: Joi.number().integer().required(),
   column_id: Joi.number().integer().required(),
   assigned_to: Joi.number().integer().allow(null).optional(),
-  due_date: Joi.date().iso().allow(null).optional(),
+  due_date: dueDateSchema.optional(),
   order_index: Joi.number().integer().min(0).default(0)
 });
 
@@ -21,7 +22,7 @@ const updateTaskSchema = Joi.object({
   status: statusCode.optional(),
   column_id: Joi.number().integer().optional(),
   assigned_to: Joi.number().integer().allow(null).optional(),
-  due_date: Joi.date().iso().allow(null).optional(),
+  due_date: dueDateSchema.optional(),
   order_index: Joi.number().integer().min(0).optional()
 });
 

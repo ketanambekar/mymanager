@@ -7,8 +7,9 @@ async function bootstrap() {
   await connectDatabase();
   await initModels();
 
-  app.listen(env.port, () => {
-    console.log(`Backend started on port ${env.port}`);
+  app.listen(env.port, '0.0.0.0', () => {
+    console.log(`Backend started on http://0.0.0.0:${env.port}`);
+    console.log(`Access from another system: http://192.168.0.241:${env.port}`);
   });
 }
 

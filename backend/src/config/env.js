@@ -2,6 +2,13 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
+const defaultJwtSecret = 'change_this_in_production';
+const jwtSecret = process.env.JWT_SECRET || defaultJwtSecret;
+
+if (process.env.NODE_ENV === 'production' && jwtSecret === defaultJwtSecret) {
+  throw new Error('JWT_SECRET must be set in production');
+}
+
 module.exports = {
   port: Number(process.env.PORT || 5000),
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -14,7 +21,7 @@ module.exports = {
     dialect: 'mysql'
   },
   jwt: {
-    secret: process.env.JWT_SECRET || 'change_this_in_production',
+    secret: jwtSecret,
     accessExpires: process.env.JWT_ACCESS_EXPIRES || '15m',
     refreshExpires: process.env.JWT_REFRESH_EXPIRES || '7d'
   },

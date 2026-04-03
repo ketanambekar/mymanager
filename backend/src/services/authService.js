@@ -7,10 +7,11 @@ const env = require('../config/env');
 const models = require('../models');
 const authRepository = require('../repositories/authRepository');
 const { createAccessToken, createRefreshToken } = require('../utils/jwt');
+const { hashToken } = require('../utils/tokenDigest');
 const { toMilliseconds } = require('../utils/time');
 
 function createOtpCode() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return crypto.randomInt(100000, 1000000).toString();
 }
 
 async function issueSession(user) {
@@ -19,8 +20,8 @@ async function issueSession(user) {
 
   await authRepository.createSession({
     user_id: user.id,
-    token: accessToken,
-    refresh_token: refreshToken,
+    token: hashToken(accessToken),
+    refresh_token: hashToken(refreshToken),
     expires_at: new Date(Date.now() + toMilliseconds(env.jwt.refreshExpires))
   });
 
@@ -121,6 +122,10 @@ async function refreshToken(refreshToken) {
   if (!session || String(session.user_id) !== String(payload.sub)) {
     throw createError(401, 'Invalid refresh token');
   }
+  if (new Date(session.expires_at).getTime() <= Date.now()) {
+    await session.destroy();
+    throw createError(401, 'Refresh token expired');
+  }
 
   const user = await models.User.findByPk(payload.sub);
   if (!user) throw createError(401, 'Invalid user');
@@ -129,8 +134,8 @@ async function refreshToken(refreshToken) {
   const newRefresh = createRefreshToken(user);
 
   await session.update({
-    token: accessToken,
-    refresh_token: newRefresh,
+    token: hashToken(accessToken),
+    refresh_token: hashToken(newRefresh),
     expires_at: new Date(Date.now() + toMilliseconds(env.jwt.refreshExpires))
   });
 

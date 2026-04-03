@@ -1,5 +1,5 @@
 const Joi = require('joi');
-const emailSchema = Joi.string().email({ tlds: { allow: false } });
+const emailSchema = Joi.string().trim().lowercase().email();
 
 const registerSchema = Joi.object({
   name: Joi.string().min(2).max(120).required(),

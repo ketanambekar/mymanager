@@ -1,23 +1,35 @@
 const fs = require('fs');
-const path = require('path');
 const multer = require('multer');
+const createError = require('http-errors');
 
-const uploadDir = path.join(process.cwd(), 'uploads', 'tasks');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+const {
+  allowedTaskFileMimeTypes,
+  maxTaskFileSizeBytes,
+  taskUploadDir,
+  buildStoredTaskFileName
+} = require('../utils/taskFiles');
+
+if (!fs.existsSync(taskUploadDir)) {
+  fs.mkdirSync(taskUploadDir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
-  destination: uploadDir,
+  destination: taskUploadDir,
   filename: (req, file, cb) => {
-    const safeName = `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`;
-    cb(null, safeName);
+    cb(null, buildStoredTaskFileName(file.originalname));
   }
 });
 
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }
+  limits: { fileSize: maxTaskFileSizeBytes },
+  fileFilter: (req, file, cb) => {
+    if (!allowedTaskFileMimeTypes.includes(file.mimetype)) {
+      cb(createError(415, 'Unsupported file type'));
+      return;
+    }
+    cb(null, true);
+  }
 });
 
 module.exports = upload;

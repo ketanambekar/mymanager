@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const env = require('../config/env');
 const models = require('../models');
+const authRepository = require('../repositories/authRepository');
 
 async function auth(req, res, next) {
   try {
@@ -10,10 +11,15 @@ async function auth(req, res, next) {
     }
 
     const payload = jwt.verify(token, env.jwt.secret);
-    const session = await models.Session.findOne({ where: { token, user_id: payload.sub } });
+    const session = await authRepository.findSessionByAccessToken(token);
 
-    if (!session) {
+    if (!session || String(session.user_id) !== String(payload.sub)) {
       return res.status(401).json({ success: false, message: 'Invalid session' });
+    }
+
+    if (new Date(session.expires_at).getTime() <= Date.now()) {
+      await session.destroy();
+      return res.status(401).json({ success: false, message: 'Session expired' });
     }
 
     const user = await models.User.findByPk(payload.sub);

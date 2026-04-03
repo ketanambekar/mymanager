@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 class ApiClient {
   ApiClient._();
   static final ApiClient instance = ApiClient._();
+  static const _configuredBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
 
   static const _accessTokenKey = 'api_access_token';
   static const _refreshTokenKey = 'api_refresh_token';
@@ -15,9 +16,15 @@ class ApiClient {
   final GetStorage _storage = GetStorage();
   String? _sessionAccessToken;
   String? _sessionRefreshToken;
+  Future<bool>? _refreshInFlight;
 
   String get baseUrl {
-    if (kIsWeb) return 'http://localhost:5000/api/v1';
+    if (_configuredBaseUrl.isNotEmpty) return _configuredBaseUrl;
+    if (kIsWeb) {
+      final host = Uri.base.host.isEmpty ? 'localhost' : Uri.base.host;
+      final scheme = Uri.base.scheme == 'https' ? 'https' : 'http';
+      return '$scheme://$host:5000/api/v1';
+    }
     try {
       if (Platform.isAndroid) return 'http://10.0.2.2:5000/api/v1';
     } catch (_) {
@@ -121,6 +128,22 @@ class ApiClient {
   }
 
   Future<bool> _refreshAccessToken() async {
+    final inFlight = _refreshInFlight;
+    if (inFlight != null) return inFlight;
+
+    final refreshFuture = _performRefreshAccessToken();
+    _refreshInFlight = refreshFuture;
+
+    try {
+      return await refreshFuture;
+    } finally {
+      if (identical(_refreshInFlight, refreshFuture)) {
+        _refreshInFlight = null;
+      }
+    }
+  }
+
+  Future<bool> _performRefreshAccessToken() async {
     final token = refreshToken;
     if (token == null || token.isEmpty) return false;
 

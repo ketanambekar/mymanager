@@ -14,20 +14,29 @@ const { notFound, errorHandler } = require('./middlewares/errorHandler');
 
 const app = express();
 
+const privateNetworkPattern = /^(127\.0\.0\.1|localhost|192\.168\.|10\.|172\.(1[6-9]|2\d|3[0-1])\.)/;
+
+function isPrivateNetworkHost(hostname) {
+  return privateNetworkPattern.test(hostname);
+}
+
 function isAllowedOrigin(origin) {
   if (!origin) return true;
 
-  if (env.corsOrigin.includes('*')) return true;
-  if (env.corsOrigin.includes(origin)) return true;
+  try {
+    const parsed = new URL(origin);
 
-  if (env.nodeEnv !== 'production') {
-    try {
-      const parsed = new URL(origin);
-      const isLocalHost = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
-      if (isLocalHost) return true;
-    } catch (_) {
-      return false;
+    if (env.corsOrigin.includes(origin)) return true;
+
+    if (env.corsOrigin.includes('*')) {
+      return env.nodeEnv === 'production' ? true : isPrivateNetworkHost(parsed.hostname);
     }
+
+    if (env.nodeEnv !== 'production' && isPrivateNetworkHost(parsed.hostname)) {
+      return true;
+    }
+  } catch (_) {
+    return false;
   }
 
   return false;
@@ -40,11 +49,12 @@ app.use(cors({
       callback(null, true);
       return;
     }
-    callback(new Error(`CORS blocked for origin: ${origin}`));
+    console.warn(`CORS blocked for origin: ${origin}`);
+    callback(null, false);
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  optionsSuccessStatus: 204,
+  optionsSuccessStatus: 200,
   credentials: true
 }));
 app.use(morgan('combined'));

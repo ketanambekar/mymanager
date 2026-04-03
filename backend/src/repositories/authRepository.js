@@ -1,5 +1,6 @@
 const models = require('../models');
 const { Op } = require('sequelize');
+const { hashToken } = require('../utils/tokenDigest');
 
 async function findUserByEmail(email) {
   return models.User.findOne({ where: { email } });
@@ -13,12 +14,16 @@ async function createSession(payload, transaction) {
   return models.Session.create(payload, { transaction });
 }
 
+async function findSessionByAccessToken(token) {
+  return models.Session.findOne({ where: { token: hashToken(token) } });
+}
+
 async function findSessionByRefreshToken(refresh_token) {
-  return models.Session.findOne({ where: { refresh_token } });
+  return models.Session.findOne({ where: { refresh_token: hashToken(refresh_token) } });
 }
 
 async function deleteSessionByToken(token) {
-  return models.Session.destroy({ where: { token } });
+  return models.Session.destroy({ where: { token: hashToken(token) } });
 }
 
 async function findLatestSessionByUserId(userId) {
@@ -57,6 +62,7 @@ module.exports = {
   findUserByEmail,
   createUser,
   createSession,
+  findSessionByAccessToken,
   findSessionByRefreshToken,
   deleteSessionByToken,
   findLatestSessionByUserId,

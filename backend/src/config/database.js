@@ -9,6 +9,9 @@ async function getSequelize() {
 
   let effectivePassword = process.env.DB_PASSWORD || '';
   if (!effectivePassword) {
+    if (env.nodeEnv === 'production') {
+      throw new Error('DB_PASSWORD must be set in production');
+    }
     effectivePassword = await promptMySqlPassword();
     process.env.DB_PASSWORD = effectivePassword;
   }

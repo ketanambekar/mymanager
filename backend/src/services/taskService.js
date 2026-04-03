@@ -12,6 +12,11 @@ const { logActivity } = require('./activityService');
 const { ensureProjectAccess } = require('./projectService');
 const { ensureDefaultStatuses, ensureStatusExists } = require('./taskStatusService');
 const { normalizeStatusCode } = require('../utils/taskStatus');
+const {
+  allowedTaskFileMimeTypes,
+  maxTaskFileSizeBytes,
+  resolveTaskUploadPath
+} = require('../utils/taskFiles');
 
 async function createTask(payload, user) {
   await ensureProjectAccess(payload.project_id, user.id);
@@ -184,6 +189,14 @@ async function uploadTaskFile(taskId, file, user) {
 
   await ensureProjectAccess(task.project_id, user.id);
 
+  if (!allowedTaskFileMimeTypes.includes(file.mimetype)) {
+    throw createError(415, 'Unsupported file type');
+  }
+
+  if (file.size > maxTaskFileSizeBytes) {
+    throw createError(413, 'File exceeds 10MB limit');
+  }
+
   const row = await taskRepository.createTaskFile({
     task_id: taskId,
     uploaded_by: user.id,
@@ -203,12 +216,20 @@ async function deleteTaskFile(fileId, user) {
   const task = await models.Task.findByPk(file.task_id);
   await ensureProjectAccess(task.project_id, user.id);
 
-  const absPath = path.join(process.cwd(), 'uploads', 'tasks', file.file_name);
-  if (fs.existsSync(absPath)) {
-    fs.unlinkSync(absPath);
-  }
+  const absPath = resolveTaskUploadPath(file.file_name);
+  const tx = await models.sequelize.transaction();
 
-  await file.destroy();
+  try {
+    if (fs.existsSync(absPath)) {
+      fs.unlinkSync(absPath);
+    }
+
+    await file.destroy({ transaction: tx });
+    await tx.commit();
+  } catch (error) {
+    await tx.rollback();
+    throw error;
+  }
 }
 
 async function downloadTaskFile(fileId, user) {
@@ -220,7 +241,7 @@ async function downloadTaskFile(fileId, user) {
 
   return {
     file,
-    absPath: path.join(process.cwd(), 'uploads', 'tasks', file.file_name)
+    absPath: resolveTaskUploadPath(file.file_name)
   };
 }
 

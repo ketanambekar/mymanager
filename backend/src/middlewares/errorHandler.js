@@ -1,3 +1,5 @@
+const multer = require('multer');
+
 function notFound(req, res, next) {
   const err = new Error(`Route not found: ${req.originalUrl}`);
   err.status = 404;
@@ -5,7 +7,12 @@ function notFound(req, res, next) {
 }
 
 function errorHandler(err, req, res, next) {
-  const status = err.status || 500;
+  let status = err.status || err.statusCode || 500;
+
+  if (err instanceof multer.MulterError) {
+    status = err.code === 'LIMIT_FILE_SIZE' ? 413 : 400;
+  }
+
   const payload = {
     success: false,
     message: err.message || 'Internal Server Error'
