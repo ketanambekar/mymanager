@@ -1,0 +1,217 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProjectStatus {
+  ACTIVE
+  HOLD
+  COMPLETED
+  ARCHIVED
+}
+
+enum AuthProvider {
+  GOOGLE
+}
+
+enum MasterScope {
+  SYSTEM
+  USER
+}
+
+enum TaskFrequency {
+  ONCE
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum TaskStatus {
+  ACTIVE
+  IN_PROGRESS
+  COMPLETED
+  HOLD
+  IN_REVIEW
+  PENDING
+}
+
+model User {
+  id               Int              @id @default(autoincrement())
+  googleId         String           @unique
+  email            String           @unique
+  name             String
+  avatarUrl        String?
+  authProvider     AuthProvider     @default(GOOGLE)
+  emailVerifiedAt  DateTime?
+  timezone         String?
+  locale           String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  lastLoginAt      DateTime?
+  isActive         Boolean          @default(true)
+  refreshSessions  RefreshSession[]
+  projects         Project[]
+  tasks            Task[]
+  subtasks         SubTask[]
+  projectTypes     ProjectType[]
+  priorities       Priority[]
+  projectColors    ProjectColor[]
+
+  @@index([isActive])
+}
+
+model RefreshSession {
+  id                  Int             @id @default(autoincrement())
+  userId              Int
+  tokenHash           String          @db.VarChar(255)
+  familyId            String          @db.VarChar(120)
+  replacedBySessionId Int?
+  userAgent           String?
+  ipAddress           String?
+  createdAt           DateTime        @default(now())
+  expiresAt           DateTime
+  revokedAt           DateTime?
+  revokeReason        String?
+  user                User            @relation(fields: [userId], references: [id])
+  replacedBySession   RefreshSession? @relation("RefreshSessionRotation", fields: [replacedBySessionId], references: [id])
+  previousSessions    RefreshSession[] @relation("RefreshSessionRotation")
+
+  @@index([userId, expiresAt])
+  @@index([familyId])
+  @@index([revokedAt])
+}
+
+model ProjectType {
+  id          Int       @id @default(autoincrement())
+  name        String
+  iconUrl     String?
+  scope       MasterScope @default(USER)
+  ownerUserId Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+  ownerUser   User?     @relation(fields: [ownerUserId], references: [id])
+  projects    Project[]
+
+  @@index([ownerUserId, isDeleted])
+  @@index([scope, isDeleted])
+}
+
+model Priority {
+  id          Int       @id @default(autoincrement())
+  code        String
+  title       String
+  scope       MasterScope @default(USER)
+  ownerUserId Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+  ownerUser   User?     @relation(fields: [ownerUserId], references: [id])
+  projects    Project[]
+  tasks       Task[]
+
+  @@index([ownerUserId, isDeleted])
+  @@index([scope, isDeleted])
+}
+
+model ProjectColor {
+  id          Int       @id @default(autoincrement())
+  name        String
+  hexCode     String
+  scope       MasterScope @default(USER)
+  ownerUserId Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+  ownerUser   User?     @relation(fields: [ownerUserId], references: [id])
+  projects    Project[]
+
+  @@index([ownerUserId, isDeleted])
+  @@index([scope, isDeleted])
+}
+
+model Project {
+  id          Int          @id @default(autoincrement())
+  userId      Int
+  name        String
+  description String?
+  typeId      Int
+  colorId     Int
+  priorityId  Int
+  status      ProjectStatus @default(ACTIVE)
+  dpImage     String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  isDeleted   Boolean       @default(false)
+  deletedAt   DateTime?
+
+  user        User          @relation(fields: [userId], references: [id])
+  type        ProjectType   @relation(fields: [typeId], references: [id])
+  color       ProjectColor  @relation(fields: [colorId], references: [id])
+  priority    Priority      @relation(fields: [priorityId], references: [id])
+  tasks       Task[]
+
+  @@index([userId, isDeleted, updatedAt])
+  @@index([userId, status, isDeleted])
+  @@index([typeId])
+  @@index([colorId])
+  @@index([priorityId])
+}
+
+model Task {
+  id                 Int           @id @default(autoincrement())
+  userId             Int
+  projectId          Int
+  name               String
+  description        String?
+  priorityId         Int
+  frequency          TaskFrequency @default(ONCE)
+  alertEnabled       Boolean       @default(false)
+  alertBeforeMinutes Int?
+  startDateTime      DateTime?
+  endDateTime        DateTime?
+  durationMinutes    Int?
+  status             TaskStatus    @default(PENDING)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  isDeleted          Boolean       @default(false)
+  deletedAt          DateTime?
+
+  user               User          @relation(fields: [userId], references: [id])
+  project            Project       @relation(fields: [projectId], references: [id])
+  priority           Priority      @relation(fields: [priorityId], references: [id])
+  subtasks           SubTask[]
+
+  @@index([userId, projectId, isDeleted])
+  @@index([userId, status, isDeleted])
+  @@index([projectId])
+  @@index([priorityId])
+}
+
+model SubTask {
+  id          Int        @id @default(autoincrement())
+  userId      Int
+  taskId      Int
+  name        String
+  description String?
+  status      TaskStatus @default(PENDING)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  isDeleted   Boolean    @default(false)
+  deletedAt   DateTime?
+
+  user        User       @relation(fields: [userId], references: [id])
+  task        Task       @relation(fields: [taskId], references: [id])
+
+  @@index([userId, taskId, isDeleted])
+  @@index([userId, status, isDeleted])
+  @@index([taskId])
+}

@@ -1,0 +1,340 @@
+{
+  "info": {
+    "_postman_id": "6f6d35a0-66ec-4af6-85df-6c8dd6f5c9e1",
+    "name": "MyManager Phase 1 API",
+    "description": "Postman collection for the current MyManager REST API. Base URL defaults to the local Express server.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://localhost:5000/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Project Types",
+      "item": [
+        {
+          "name": "List Project Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/project-types"
+          }
+        },
+        {
+          "name": "Create Project Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Personal\"\n}"
+            },
+            "url": "{{baseUrl}}/project-types"
+          }
+        },
+        {
+          "name": "Get Project Type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/project-types/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Priorities",
+      "item": [
+        {
+          "name": "List Priorities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/priorities"
+          }
+        },
+        {
+          "name": "Create Priority",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"P5\",\n  \"title\": \"Backlog\"\n}"
+            },
+            "url": "{{baseUrl}}/priorities"
+          }
+        },
+        {
+          "name": "Get Priority",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/priorities/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Project Colors",
+      "item": [
+        {
+          "name": "List Project Colors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/project-colors"
+          }
+        },
+        {
+          "name": "Create Project Color",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ocean Blue\",\n  \"hexCode\": \"#1E88E5\"\n}"
+            },
+            "url": "{{baseUrl}}/project-colors"
+          }
+        },
+        {
+          "name": "Get Project Color",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/project-colors/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "List Projects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/projects"
+          }
+        },
+        {
+          "name": "Create Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ship auth shell\",\n  \"description\": \"Prepare phase 2 auth wiring\",\n  \"typeId\": 1,\n  \"colorId\": 1,\n  \"priorityId\": 1,\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": "{{baseUrl}}/projects"
+          }
+        },
+        {
+          "name": "Get Project",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/projects/1"
+          }
+        },
+        {
+          "name": "Update Project",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Launch MyManager MVP\",\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": "{{baseUrl}}/projects/1"
+          }
+        },
+        {
+          "name": "Delete Project",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/projects/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "List Tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/tasks"
+          }
+        },
+        {
+          "name": "Tasks By Project",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/tasks/project/1"
+          }
+        },
+        {
+          "name": "Create Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": 1,\n  \"name\": \"Wire live dashboard\",\n  \"description\": \"Connect the UI to the backend API\",\n  \"priorityId\": 1,\n  \"frequency\": \"ONCE\",\n  \"alertEnabled\": true,\n  \"alertBeforeMinutes\": 15,\n  \"status\": \"IN_PROGRESS\"\n}"
+            },
+            "url": "{{baseUrl}}/tasks"
+          }
+        },
+        {
+          "name": "Get Task",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/tasks/1"
+          }
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Design core API modules\",\n  \"status\": \"IN_PROGRESS\"\n}"
+            },
+            "url": "{{baseUrl}}/tasks/1"
+          }
+        },
+        {
+          "name": "Delete Task",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/tasks/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subtasks",
+      "item": [
+        {
+          "name": "List Subtasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/subtasks"
+          }
+        },
+        {
+          "name": "Create Subtask",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taskId\": 1,\n  \"name\": \"Review dashboard loading state\",\n  \"description\": \"Confirm the UI pulls live data\",\n  \"status\": \"PENDING\"\n}"
+            },
+            "url": "{{baseUrl}}/subtasks"
+          }
+        },
+        {
+          "name": "Get Subtask",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/subtasks/1"
+          }
+        },
+        {
+          "name": "Update Subtask",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Review dashboard loading state\",\n  \"status\": \"COMPLETED\"\n}"
+            },
+            "url": "{{baseUrl}}/subtasks/1"
+          }
+        },
+        {
+          "name": "Delete Subtask",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/subtasks/1"
+          }
+        }
+      ]
+    }
+  ]
+}

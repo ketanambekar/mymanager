@@ -1,0 +1,195 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  --brand-red: #db2d28;
+  --brand-orange: #f47f1f;
+  --brand-amber: #f8be52;
+  --brand-ink: #f2e8d7;
+  --ink: #f6f1e8;
+  --paper: #12110f;
+  --paper-elevated: #171614;
+  --surface: #1f1c19;
+  --surface-strong: #2a2520;
+  --surface-muted: #25211d;
+  --border: #3a332d;
+  --border-strong: #4b4138;
+  --muted: #b9ad9f;
+  --muted-soft: #8d7e70;
+  --success: #5eaa73;
+  --danger: #ff6a58;
+  --scene-gradient:
+    radial-gradient(circle at 11% 8%, rgba(244, 127, 31, 0.2) 0%, transparent 30%),
+    radial-gradient(circle at 84% 10%, rgba(219, 45, 40, 0.2) 0%, transparent 34%),
+    radial-gradient(circle at 24% 86%, rgba(248, 190, 82, 0.12) 0%, transparent 35%),
+    linear-gradient(155deg, #100f0e 0%, #151311 42%, #171311 100%);
+  --paper-grid:
+    linear-gradient(rgba(248, 190, 82, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(248, 190, 82, 0.05) 1px, transparent 1px);
+}
+
+:root[data-tone="anime"] {
+  --tone-name: "Anime";
+}
+
+:root[data-tone="zen"] {
+  --tone-name: "Zen";
+  --brand-red: #8f3d2d;
+  --brand-orange: #be7e46;
+  --brand-amber: #d8b074;
+  --brand-ink: #ede4d7;
+  --ink: #efe9de;
+  --paper: #111211;
+  --paper-elevated: #151715;
+  --surface: #1d211d;
+  --surface-strong: #252a24;
+  --surface-muted: #212520;
+  --border: #3a4139;
+  --border-strong: #4a5349;
+  --muted: #acb5a7;
+  --muted-soft: #7d897b;
+  --scene-gradient:
+    radial-gradient(circle at 15% 12%, rgba(190, 126, 70, 0.14) 0%, transparent 28%),
+    radial-gradient(circle at 80% 14%, rgba(143, 61, 45, 0.12) 0%, transparent 30%),
+    radial-gradient(circle at 20% 82%, rgba(216, 176, 116, 0.09) 0%, transparent 32%),
+    linear-gradient(158deg, #0f1210 0%, #141915 44%, #161b17 100%);
+  --paper-grid:
+    linear-gradient(rgba(216, 176, 116, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(216, 176, 116, 0.035) 1px, transparent 1px);
+}
+
+@theme inline {
+  --font-sans: var(--font-body), "IBM Plex Sans", "Trebuchet MS", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--paper);
+  font-size: 15px;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--scene-gradient);
+  background-size: cover;
+  font-family: var(--font-body), "IBM Plex Sans", "Trebuchet MS", sans-serif;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display), "Bricolage Grotesque", "Franklin Gothic Medium", sans-serif;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: rgba(248, 190, 82, 0.34);
+  color: #fff6ea;
+}
+
+.grain-layer {
+  position: relative;
+}
+
+.grain-layer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--paper-grid);
+  background-size: 18px 18px;
+  opacity: 0.42;
+}
+
+.tactile-panel {
+  border: 1px solid var(--border);
+  background: linear-gradient(160deg, rgba(42, 37, 32, 0.92) 0%, rgba(31, 28, 25, 0.96) 70%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+.accent-stroke {
+  position: relative;
+}
+
+.accent-stroke::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--brand-orange), var(--brand-red));
+  opacity: 0.75;
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseWarm {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(244, 127, 31, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(244, 127, 31, 0);
+  }
+}
+
+.enter-rise {
+  animation: riseIn 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.warm-pulse {
+  animation: pulseWarm 2.2s ease-in-out infinite;
+}
+
+.shortcut-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  padding: 0 0.35rem;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-muted);
+  color: var(--brand-ink);
+  border-radius: 0.25rem;
+  font-size: 0.69rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+}
