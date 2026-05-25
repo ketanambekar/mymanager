@@ -3,6 +3,10 @@ import { z } from "zod";
 
 dotenv.config();
 
+if (!process.env.DATABASE_URL && process.env.MYSQL_URL) {
+  process.env.DATABASE_URL = process.env.MYSQL_URL;
+}
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().default(5000),
