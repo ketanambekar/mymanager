@@ -1,6 +1,7 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
+import type { Request, Response } from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -45,7 +46,7 @@ function isOriginAllowed(origin: string): boolean {
 app.use(helmet());
 app.use(
   cors({
-    origin: (origin, callback) => {
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
       if (!origin || isOriginAllowed(origin)) {
         callback(null, true);
         return;
@@ -69,7 +70,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(attachAuthContext);
 
-app.get("/health", (_req, res) => {
+app.get("/health", (_req: Request, res: Response) => {
   res.status(200).json({ success: true, message: "Backend is running" });
 });
 
