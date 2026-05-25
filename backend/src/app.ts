@@ -16,6 +16,13 @@ const allowedOrigins = env.FRONTEND_URL.split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+const hardcodedProductionOrigins = [
+  "https://mymanger.in",
+  "https://www.mymanger.in",
+  "https://mymanager.in",
+  "https://www.mymanager.in",
+];
+
 function normalizeOriginValue(origin: string): string {
   return origin.trim().replace(/\/$/, "").toLowerCase();
 }
@@ -25,6 +32,7 @@ function normalizeHostname(hostname: string): string {
 }
 
 const allowedOriginsNormalized = allowedOrigins.map(normalizeOriginValue);
+const hardcodedOriginsNormalized = hardcodedProductionOrigins.map(normalizeOriginValue);
 
 const allowedOriginHosts = allowedOrigins
   .map((origin) => {
@@ -37,11 +45,25 @@ const allowedOriginHosts = allowedOrigins
   .filter((hostname): hostname is string => Boolean(hostname));
 
 const allowedOriginHostnamesNormalized = allowedOriginHosts.map(normalizeHostname);
+const hardcodedOriginHostnamesNormalized = hardcodedProductionOrigins
+  .map((origin) => {
+    try {
+      return new URL(origin).hostname;
+    } catch {
+      return null;
+    }
+  })
+  .filter((hostname): hostname is string => Boolean(hostname))
+  .map(normalizeHostname);
+
+function isAllowedHostname(requestHostname: string, allowedHostname: string): boolean {
+  return requestHostname === allowedHostname || requestHostname.endsWith(`.${allowedHostname}`);
+}
 
 function isOriginAllowed(origin: string): boolean {
   const normalizedOrigin = normalizeOriginValue(origin);
 
-  if (allowedOriginsNormalized.includes(normalizedOrigin)) {
+  if (allowedOriginsNormalized.includes(normalizedOrigin) || hardcodedOriginsNormalized.includes(normalizedOrigin)) {
     return true;
   }
 
@@ -49,7 +71,14 @@ function isOriginAllowed(origin: string): boolean {
     const parsedOrigin = new URL(origin);
     const normalizedRequestHostname = normalizeHostname(parsedOrigin.hostname);
 
-    if (allowedOriginHostnamesNormalized.includes(normalizedRequestHostname)) {
+    if (
+      allowedOriginHostnamesNormalized.some((allowedHostname) =>
+        isAllowedHostname(normalizedRequestHostname, allowedHostname),
+      ) ||
+      hardcodedOriginHostnamesNormalized.some((allowedHostname) =>
+        isAllowedHostname(normalizedRequestHostname, allowedHostname),
+      )
+    ) {
       return true;
     }
   } catch {
@@ -71,6 +100,8 @@ app.use(
         callback(null, true);
         return;
       }
+
+      console.warn("CORS rejected origin:", origin, "Allowed FRONTEND_URL:", env.FRONTEND_URL);
 
       callback(new Error("Origin not allowed by CORS"));
     },
