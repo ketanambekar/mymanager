@@ -16,6 +16,16 @@ const allowedOrigins = env.FRONTEND_URL.split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+function normalizeOriginValue(origin: string): string {
+  return origin.trim().replace(/\/$/, "").toLowerCase();
+}
+
+function normalizeHostname(hostname: string): string {
+  return hostname.trim().toLowerCase().replace(/^www\./, "");
+}
+
+const allowedOriginsNormalized = allowedOrigins.map(normalizeOriginValue);
+
 const allowedOriginHosts = allowedOrigins
   .map((origin) => {
     try {
@@ -26,21 +36,31 @@ const allowedOriginHosts = allowedOrigins
   })
   .filter((hostname): hostname is string => Boolean(hostname));
 
+const allowedOriginHostnamesNormalized = allowedOriginHosts.map(normalizeHostname);
+
 function isOriginAllowed(origin: string): boolean {
-  if (allowedOrigins.includes(origin)) {
+  const normalizedOrigin = normalizeOriginValue(origin);
+
+  if (allowedOriginsNormalized.includes(normalizedOrigin)) {
     return true;
+  }
+
+  try {
+    const parsedOrigin = new URL(origin);
+    const normalizedRequestHostname = normalizeHostname(parsedOrigin.hostname);
+
+    if (allowedOriginHostnamesNormalized.includes(normalizedRequestHostname)) {
+      return true;
+    }
+  } catch {
+    return false;
   }
 
   if (env.NODE_ENV !== "development") {
     return false;
   }
 
-  try {
-    const parsedOrigin = new URL(origin);
-    return allowedOriginHosts.includes(parsedOrigin.hostname);
-  } catch {
-    return false;
-  }
+  return false;
 }
 
 app.use(helmet());
