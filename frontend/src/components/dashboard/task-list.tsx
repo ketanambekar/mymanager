@@ -226,7 +226,7 @@ export function TaskList({
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-2">
         {tasks.map((task) => {
           const completedSubTaskCount = task.subTasks.filter((subtask) => subtask.status === "COMPLETED").length;
 

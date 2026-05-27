@@ -84,7 +84,7 @@ export default function ProfilePage() {
 
   return (
     <main className="grain-layer min-h-screen px-3 py-4 text-[var(--ink)] sm:px-4 lg:px-6">
-      <div className="relative mx-auto flex w-full max-w-none flex-col gap-4 lg:flex-row lg:items-start">
+      <div className="relative mx-auto flex w-full max-w-[1600px] flex-col gap-4 lg:flex-row lg:items-start">
         <div className="w-full lg:w-[220px] lg:flex-none">
           <Sidebar
             activeSection={sidebarActiveSection}
@@ -97,7 +97,7 @@ export default function ProfilePage() {
         </div>
 
         <section className="min-w-0 flex-1 space-y-4">
-          <header className="rounded-2xl border border-[var(--border)] bg-[var(--paper-elevated)] p-4">
+          <header className="rounded-2xl border border-[var(--border-strong)] bg-[linear-gradient(165deg,rgba(42,37,32,0.9),rgba(23,22,20,0.96))] p-5 shadow-[0_14px_34px_rgba(0,0,0,0.28)]">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-1 text-[11px] uppercase tracking-[0.14em] text-[var(--muted)]">
@@ -105,7 +105,7 @@ export default function ProfilePage() {
                   {todayLabel}
                 </div>
                 <p className="mt-2 text-xs uppercase tracking-[0.12em] text-[var(--muted)]">Account</p>
-                <h1 className="mt-1 text-2xl font-extrabold">Profile</h1>
+                <h1 className="mt-1 text-[2rem] font-extrabold">Profile</h1>
               </div>
               <Button type="button" variant="secondary" onClick={() => router.push("/")}>
                 <ArrowLeft className="mr-1.5 h-4 w-4" /> Back to dashboard
@@ -152,7 +152,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="mt-6 grid gap-2 sm:grid-cols-2">
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-3">
                 <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--muted-soft)]">Created At</p>
                 <p className="mt-1 text-sm font-semibold text-[var(--ink)]">{formatDateTime(user.createdAt)}</p>
@@ -161,7 +161,7 @@ export default function ProfilePage() {
                 <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--muted-soft)]">Last Updated</p>
                 <p className="mt-1 text-sm font-semibold text-[var(--ink)]">{formatDateTime(user.updatedAt)}</p>
               </div>
-              <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-3 sm:col-span-2">
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-3 sm:col-span-2 lg:col-span-1">
                 <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--muted-soft)]">authProvider</p>
                 <p className="mt-1 text-sm font-semibold text-[var(--ink)]">{user.authProvider ?? user.provider ?? "GOOGLE"}</p>
               </div>

@@ -30,13 +30,13 @@ export function Sidebar({
   onOpenProject,
 }: SidebarProps) {
   return (
-    <aside className="enter-rise w-full rounded-xl border border-[var(--border)] bg-[var(--paper-elevated)] p-3 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:min-w-[220px] lg:overflow-y-auto">
+    <aside className="enter-rise w-full rounded-2xl border border-[var(--border-strong)] bg-[linear-gradient(170deg,rgba(42,37,32,0.9),rgba(23,22,20,0.96))] p-3.5 shadow-[0_14px_34px_rgba(0,0,0,0.28)] lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:min-w-[220px] lg:overflow-y-auto">
       <div className="mb-3 px-1 py-1">
         <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--muted)]">Workspace</p>
         <p className="mt-1 text-base font-extrabold">MyManager</p>
       </div>
 
-      <nav className="space-y-1.5">
+      <nav className="space-y-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/30 p-1.5">
         {menu.map((item) => (
           <button
             key={item.label}

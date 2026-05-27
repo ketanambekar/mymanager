@@ -18,8 +18,8 @@ type ProjectCardProps = {
 
 export function ProjectCard({ project, selected = false, onClick, accentIndex = 0 }: ProjectCardProps) {
   const cardClassName = selected
-    ? "cursor-pointer rounded-xl border-[var(--border-strong)] bg-[var(--surface)] p-4 transition-all duration-200 hover:-translate-y-0.5"
-    : "cursor-pointer rounded-xl p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:bg-[var(--surface)]";
+    ? "cursor-pointer rounded-xl border-[var(--border-strong)] bg-[linear-gradient(160deg,rgba(42,37,32,0.94),rgba(31,28,25,0.96))] p-4 transition-all duration-200 hover:-translate-y-0.5"
+    : "cursor-pointer rounded-xl bg-[linear-gradient(160deg,rgba(42,37,32,0.88),rgba(31,28,25,0.94))] p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:bg-[linear-gradient(160deg,rgba(49,43,37,0.92),rgba(34,30,26,0.96))]";
 
   return (
     <Card

@@ -26,7 +26,7 @@ export function ProjectsPage() {
 
   return (
     <div className="grain-layer min-h-screen px-3 py-4 text-[var(--ink)] sm:px-4 lg:px-6">
-      <div className="relative mx-auto flex w-full max-w-none flex-col gap-4 lg:flex-row lg:items-start">
+      <div className="relative mx-auto flex w-full max-w-[1600px] flex-col gap-4 lg:flex-row lg:items-start">
         <div className="w-full lg:w-[220px] lg:flex-none">
           <Sidebar
             activeSection="projects"
@@ -39,16 +39,16 @@ export function ProjectsPage() {
         </div>
 
         <main className="min-w-0 flex-1 space-y-4">
-          <header className="enter-rise rounded-xl border border-[var(--border)] bg-[var(--paper-elevated)] p-4">
+          <header className="enter-rise rounded-2xl border border-[var(--border-strong)] bg-[linear-gradient(165deg,rgba(42,37,32,0.9),rgba(23,22,20,0.96))] p-5 shadow-[0_14px_34px_rgba(0,0,0,0.28)]">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
               <div className="min-w-0 max-w-2xl">
                 <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-1 text-[11px] uppercase tracking-[0.14em] text-[var(--muted)]">
                   <CalendarDays className="h-3.5 w-3.5" />
                   Projects directory
                 </div>
-                <h1 className="text-[1.6rem] font-extrabold sm:text-[2.2rem]">Projects</h1>
+                <h1 className="text-[1.8rem] font-extrabold sm:text-[2.4rem]">Projects</h1>
                 <p className="mt-1 max-w-xl text-sm leading-6 text-[var(--muted)]">
-                  Open a project to edit its details, manage tasks, and keep the full lifecycle in one place.
+                  Browse active workspaces and jump straight into planning, execution, and tracking.
                 </p>
               </div>
 
@@ -62,6 +62,21 @@ export function ProjectsPage() {
               </div>
             </div>
           </header>
+
+          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--paper-elevated)] p-3.5">
+              <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--muted)]">Total projects</p>
+              <p className="mt-1 text-2xl font-extrabold">{projects.length}</p>
+            </div>
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--paper-elevated)] p-3.5">
+              <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--muted)]">With tasks</p>
+              <p className="mt-1 text-2xl font-extrabold">{projects.filter((project) => project.taskCount > 0).length}</p>
+            </div>
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--paper-elevated)] p-3.5">
+              <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--muted)]">High priority</p>
+              <p className="mt-1 text-2xl font-extrabold">{projects.filter((project) => project.priority === "P1").length}</p>
+            </div>
+          </section>
 
           {error ? (
             <div className="rounded-md border border-[color:var(--danger)]/60 bg-[#3d1f1b] px-3 py-2.5 text-sm text-[#ffb0a2]">

@@ -2,13 +2,14 @@ import { notFound } from "next/navigation";
 import { ProjectDetailsPage } from "@/components/projects/project-details-page";
 
 type ProjectDetailsRouteProps = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
-export default function ProjectDetailsRoute({ params }: ProjectDetailsRouteProps) {
-  const projectId = Number(params.id);
+export default async function ProjectDetailsRoute({ params }: ProjectDetailsRouteProps) {
+  const resolvedParams = await params;
+  const projectId = Number(resolvedParams.id);
 
   if (!Number.isFinite(projectId) || projectId <= 0) {
     notFound();

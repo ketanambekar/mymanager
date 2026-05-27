@@ -45,49 +45,7 @@ export default function LoginPage() {
         </div>
       </header>
 
-      <section id="login-panel" className="mx-auto mb-6 w-full max-w-6xl rounded-3xl border border-[var(--border)] bg-[var(--paper-elevated)] p-6 shadow-[0_12px_40px_rgba(0,0,0,0.32)] sm:p-8">
-        <h2 className="text-2xl font-bold text-[var(--ink)]">Login with Google</h2>
-        <p className="mt-2 text-sm text-[var(--muted)]">Secure sign-in to access your projects and task dashboard.</p>
-
-        <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
-          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-[var(--ink)]">
-            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs font-bold">
-              G
-            </span>
-            <span>Sign in with Google</span>
-          </div>
-
-          <div className="min-h-12">
-            {hasValidClientId ? (
-              <GoogleOAuthProvider clientId={clientId}>
-                <div className="flex justify-start">
-                  <GoogleLogin
-                    onSuccess={handleSuccess}
-                    onError={() => setLoginError("Google sign-in could not be initialized. Please refresh and try again.")}
-                    useOneTap={false}
-                    text="signin_with"
-                    shape="pill"
-                    size="large"
-                    width="280"
-                  />
-                </div>
-              </GoogleOAuthProvider>
-            ) : (
-              <div className="rounded-xl border border-[var(--danger)]/70 bg-[#3f1f1b] p-3 text-xs text-[#ffb0a2]">
-                Missing NEXT_PUBLIC_GOOGLE_CLIENT_ID in frontend environment.
-              </div>
-            )}
-          </div>
-        </div>
-
-        {loginError ? (
-          <div className="mt-3 rounded-xl border border-[var(--danger)]/70 bg-[#3f1f1b] p-3 text-xs text-[#ffb0a2]">{loginError}</div>
-        ) : null}
-
-        {loginDisabled ? <p className="mt-3 text-xs text-[var(--muted)]">Preparing secure sign-in...</p> : null}
-      </section>
-
-      <section className="mx-auto grid min-h-[calc(100vh-16rem)] w-full max-w-6xl grid-cols-1 items-start gap-6">
+      <section className="mx-auto grid min-h-[calc(100vh-16rem)] w-full max-w-6xl grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1.15fr),minmax(0,0.85fr)]">
         <div className="space-y-5 rounded-3xl border border-[var(--border)] bg-[var(--paper-elevated)] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.28)] sm:p-8">
           <p className="inline-flex rounded-full border border-[var(--border-strong)] bg-[var(--surface-muted)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--brand-ink)]">
             Smart Work Console
@@ -128,6 +86,48 @@ export default function LoginPage() {
               <p>• Fast Google sign-in for secure access</p>
             </div>
           </div>
+        </div>
+
+        <div id="login-panel" className="rounded-3xl border border-[var(--border-strong)] bg-[linear-gradient(165deg,rgba(42,37,32,0.9),rgba(23,22,20,0.96))] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.28)] sm:p-8">
+          <h2 className="text-2xl font-bold text-[var(--ink)]">Login with Google</h2>
+          <p className="mt-2 text-sm text-[var(--muted)]">Secure sign-in to access your projects and task dashboard.</p>
+
+          <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-[var(--ink)]">
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs font-bold">
+                G
+              </span>
+              <span>Sign in with Google</span>
+            </div>
+
+            <div className="min-h-12">
+              {hasValidClientId ? (
+                <GoogleOAuthProvider clientId={clientId}>
+                  <div className="flex justify-start">
+                    <GoogleLogin
+                      onSuccess={handleSuccess}
+                      onError={() => setLoginError("Google sign-in could not be initialized. Please refresh and try again.")}
+                      useOneTap={false}
+                      text="signin_with"
+                      shape="pill"
+                      size="large"
+                      width="280"
+                    />
+                  </div>
+                </GoogleOAuthProvider>
+              ) : (
+                <div className="rounded-xl border border-[var(--danger)]/70 bg-[#3f1f1b] p-3 text-xs text-[#ffb0a2]">
+                  Missing NEXT_PUBLIC_GOOGLE_CLIENT_ID in frontend environment.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {loginError ? (
+            <div className="mt-3 rounded-xl border border-[var(--danger)]/70 bg-[#3f1f1b] p-3 text-xs text-[#ffb0a2]">{loginError}</div>
+          ) : null}
+
+          {loginDisabled ? <p className="mt-3 text-xs text-[var(--muted)]">Preparing secure sign-in...</p> : null}
         </div>
       </section>
 

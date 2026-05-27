@@ -92,6 +92,10 @@ function formatDateTime(value: string | null): string {
   }).format(date);
 }
 
+function formatStatusLabel(value: string): string {
+  return value.replace(/_/g, " ");
+}
+
 export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
   const router = useRouter();
   const { projects, loadDashboard } = useDashboardStore();
@@ -344,7 +348,7 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
 
   return (
     <div className="grain-layer min-h-screen px-3 py-4 text-[var(--ink)] sm:px-4 lg:px-6">
-      <div className="relative mx-auto flex w-full max-w-none flex-col gap-4 lg:flex-row lg:items-start">
+      <div className="relative mx-auto flex w-full max-w-[1600px] flex-col gap-4 lg:flex-row lg:items-start">
         <div className="w-full lg:w-[220px] lg:flex-none">
           <Sidebar
             activeSection={sidebarSection}
@@ -357,7 +361,7 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
         </div>
 
         <main className="min-w-0 flex-1 space-y-4">
-          <header className="enter-rise rounded-xl border border-[var(--border)] bg-[var(--paper-elevated)] p-4">
+          <header className="enter-rise rounded-2xl border border-[var(--border-strong)] bg-[linear-gradient(165deg,rgba(42,37,32,0.9),rgba(23,22,20,0.96))] p-5 shadow-[0_14px_34px_rgba(0,0,0,0.28)]">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
               <div className="min-w-0 max-w-2xl">
                 <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-1 text-[11px] uppercase tracking-[0.14em] text-[var(--muted)]">
@@ -394,221 +398,256 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
 
           {project ? (
             <>
-              <Card className="rounded-xl border border-[var(--border)] bg-[var(--paper-elevated)] p-4">
-                <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h2 className="text-lg font-extrabold">Project CRUD</h2>
-                    <p className="text-xs text-[var(--muted)]">Update the project or delete it when it is finished.</p>
+              <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--paper-elevated)] p-3.5">
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--muted)]">Status</p>
+                  <p className="mt-1 text-base font-bold">{formatStatusLabel(project.status)}</p>
+                </div>
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--paper-elevated)] p-3.5">
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--muted)]">Priority</p>
+                  <p className="mt-1 text-base font-bold">{project.priority.code} - {project.priority.title}</p>
+                </div>
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--paper-elevated)] p-3.5">
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--muted)]">Task coverage</p>
+                  <p className="mt-1 text-base font-bold">{taskSummary.completed}/{taskSummary.total} completed</p>
+                </div>
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--paper-elevated)] p-3.5">
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--muted)]">Last update</p>
+                  <p className="mt-1 text-base font-bold">{formatDateTime(project.updatedAt)}</p>
+                </div>
+              </section>
+
+              <section className="grid gap-4 xl:grid-cols-5">
+                <Card className="xl:col-span-2 rounded-xl border border-[var(--border)] bg-[var(--paper-elevated)] p-4">
+                  <div className="mb-4 flex flex-col gap-3 border-b border-[var(--border)] pb-3">
+                    <div>
+                      <h2 className="text-lg font-extrabold">Project settings</h2>
+                      <p className="text-xs text-[var(--muted)]">Keep metadata consistent so your team can scan this project quickly.</p>
+                    </div>
+                    <Button type="button" variant="secondary" onClick={handleDeleteProject} disabled={isSavingProject}>
+                      <Trash2 className="mr-1.5 h-4 w-4" /> Delete project
+                    </Button>
                   </div>
-                  <Button type="button" variant="secondary" onClick={handleDeleteProject} disabled={isSavingProject}>
-                    <Trash2 className="mr-1.5 h-4 w-4" /> Delete project
-                  </Button>
+
+                  <form onSubmit={handleProjectSubmit} className="grid gap-3 md:grid-cols-2">
+                    <label className="grid gap-1 text-sm md:col-span-2">
+                      <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Name</span>
+                      <input
+                        className="h-10 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 outline-none focus:border-[var(--brand-orange)]"
+                        value={projectForm.name}
+                        onChange={(event) => setProjectForm((current) => ({ ...current, name: event.target.value }))}
+                      />
+                    </label>
+
+                    <label className="grid gap-1 text-sm md:col-span-2">
+                      <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Description</span>
+                      <textarea
+                        className="min-h-24 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 outline-none focus:border-[var(--brand-orange)]"
+                        value={projectForm.description}
+                        onChange={(event) => setProjectForm((current) => ({ ...current, description: event.target.value }))}
+                        placeholder="What is this project trying to achieve?"
+                      />
+                    </label>
+
+                    <label className="grid gap-1 text-sm">
+                      <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Type</span>
+                      <select
+                        className="h-10 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 outline-none focus:border-[var(--brand-orange)]"
+                        value={projectForm.typeId}
+                        onChange={(event) => setProjectForm((current) => ({ ...current, typeId: event.target.value }))}
+                      >
+                        <option value="">Choose type</option>
+                        {masters?.projectTypes.map((type) => (
+                          <option key={type.id} value={type.id}>
+                            {type.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="grid gap-1 text-sm">
+                      <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Status</span>
+                      <select
+                        className="h-10 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 outline-none focus:border-[var(--brand-orange)]"
+                        value={projectForm.status}
+                        onChange={(event) => setProjectForm((current) => ({ ...current, status: event.target.value as ProjectDetail["status"] }))}
+                      >
+                        <option value="ACTIVE">Active</option>
+                        <option value="HOLD">Hold</option>
+                        <option value="COMPLETED">Completed</option>
+                        <option value="ARCHIVED">Archived</option>
+                      </select>
+                    </label>
+
+                    <div className="grid gap-1 text-sm md:col-span-2">
+                      <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Priority</span>
+                      <div className="flex flex-wrap gap-2">
+                        {masters?.priorities.map((priority) => {
+                          const isSelected = String(priority.id) === projectForm.priorityId;
+
+                          return (
+                            <button
+                              key={priority.id}
+                              type="button"
+                              onClick={() => setProjectForm((current) => ({ ...current, priorityId: String(priority.id) }))}
+                              className={
+                                isSelected
+                                  ? "rounded-md border border-[var(--brand-orange)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold text-[var(--ink)]"
+                                  : "rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--ink)]"
+                              }
+                            >
+                              {priority.code}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="text-xs text-[var(--muted)]">
+                        {selectedProjectPriority
+                          ? `Selected: ${selectedProjectPriority.code} - ${selectedProjectPriority.title}`
+                          : "Select one priority flag"}
+                      </p>
+                    </div>
+
+                    <label className="grid gap-1 text-sm md:col-span-2">
+                      <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Color</span>
+                      <select
+                        className="h-10 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 outline-none focus:border-[var(--brand-orange)]"
+                        value={projectForm.colorId}
+                        onChange={(event) => setProjectForm((current) => ({ ...current, colorId: event.target.value }))}
+                      >
+                        <option value="">Choose color</option>
+                        {masters?.colors.map((color) => (
+                          <option key={color.id} value={color.id}>
+                            {color.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <div className="md:col-span-2 flex justify-end">
+                      <Button type="submit" disabled={isSavingProject || !masters}>
+                        Save project
+                      </Button>
+                    </div>
+                  </form>
+                </Card>
+
+                <Card className="xl:col-span-3 rounded-xl border border-[var(--border)] bg-[var(--paper-elevated)] p-4">
+                  <div className="mb-4 flex flex-col gap-3 border-b border-[var(--border)] pb-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h2 className="text-lg font-extrabold">Task planner</h2>
+                      <p className="text-xs text-[var(--muted)]">Create or update a task, then manage subtasks from the list below.</p>
+                    </div>
+                    {editingTaskId ? (
+                      <Button type="button" variant="secondary" onClick={cancelTaskEdit}>
+                        Cancel edit
+                      </Button>
+                    ) : null}
+                  </div>
+
+                  <form onSubmit={handleTaskSubmit} className="grid gap-3 md:grid-cols-2">
+                    <label className="grid gap-1 text-sm md:col-span-2">
+                      <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Task name</span>
+                      <input
+                        className="h-10 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 outline-none focus:border-[var(--brand-orange)]"
+                        value={taskForm.name}
+                        onChange={(event) => setTaskForm((current) => ({ ...current, name: event.target.value }))}
+                      />
+                    </label>
+
+                    <label className="grid gap-1 text-sm md:col-span-2">
+                      <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Description</span>
+                      <textarea
+                        className="min-h-20 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 outline-none focus:border-[var(--brand-orange)]"
+                        value={taskForm.description}
+                        onChange={(event) => setTaskForm((current) => ({ ...current, description: event.target.value }))}
+                        placeholder="Context or acceptance criteria"
+                      />
+                    </label>
+
+                    <div className="grid gap-1 text-sm">
+                      <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Priority</span>
+                      <div className="flex flex-wrap gap-2">
+                        {masters?.priorities.map((priority) => {
+                          const isSelected = String(priority.id) === taskForm.priorityId;
+
+                          return (
+                            <button
+                              key={priority.id}
+                              type="button"
+                              onClick={() => setTaskForm((current) => ({ ...current, priorityId: String(priority.id) }))}
+                              className={
+                                isSelected
+                                  ? "rounded-md border border-[var(--brand-orange)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold text-[var(--ink)]"
+                                  : "rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--ink)]"
+                              }
+                            >
+                              {priority.code}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="text-xs text-[var(--muted)]">
+                        {selectedTaskPriority ? `Selected: ${selectedTaskPriority.code} - ${selectedTaskPriority.title}` : "Select one priority flag"}
+                      </p>
+                    </div>
+
+                    <label className="grid gap-1 text-sm">
+                      <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Status</span>
+                      <select
+                        className="h-10 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 outline-none focus:border-[var(--brand-orange)]"
+                        value={taskForm.status}
+                        onChange={(event) => setTaskForm((current) => ({ ...current, status: event.target.value as TaskStatus }))}
+                      >
+                        <option value="PENDING">Pending</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="IN_PROGRESS">In Progress</option>
+                        <option value="IN_REVIEW">In Review</option>
+                        <option value="HOLD">Hold</option>
+                        <option value="COMPLETED">Completed</option>
+                      </select>
+                    </label>
+
+                    <div className="md:col-span-2 flex justify-end">
+                      <Button type="submit" disabled={isSavingTask || !masters}>
+                        {editingTaskId ? (
+                          <>
+                            <PencilLine className="mr-1.5 h-4 w-4" /> Update task
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="mr-1.5 h-4 w-4" /> Create task
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </Card>
+              </section>
+
+              <Card className="rounded-xl border border-[var(--border)] bg-[var(--paper-elevated)] p-4">
+                <div className="mb-4 flex items-center justify-between border-b border-[var(--border)] pb-3">
+                  <div>
+                    <h2 className="text-lg font-extrabold">Tasks</h2>
+                    <p className="text-xs text-[var(--muted)]">Detailed view of all tasks and their subtasks.</p>
+                  </div>
+                  <span className="rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-1 text-xs text-[var(--muted)]">
+                    {tasks.length} total
+                  </span>
                 </div>
 
-                <form onSubmit={handleProjectSubmit} className="grid gap-3 md:grid-cols-2">
-                  <label className="grid gap-1 text-sm md:col-span-2">
-                    <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Name</span>
-                    <input
-                      className="h-10 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 outline-none focus:border-[var(--brand-orange)]"
-                      value={projectForm.name}
-                      onChange={(event) => setProjectForm((current) => ({ ...current, name: event.target.value }))}
-                    />
-                  </label>
-
-                  <label className="grid gap-1 text-sm md:col-span-2">
-                    <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Description</span>
-                    <textarea
-                      className="min-h-24 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 outline-none focus:border-[var(--brand-orange)]"
-                      value={projectForm.description}
-                      onChange={(event) => setProjectForm((current) => ({ ...current, description: event.target.value }))}
-                    />
-                  </label>
-
-                  <label className="grid gap-1 text-sm">
-                    <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Type</span>
-                    <select
-                      className="h-10 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 outline-none focus:border-[var(--brand-orange)]"
-                      value={projectForm.typeId}
-                      onChange={(event) => setProjectForm((current) => ({ ...current, typeId: event.target.value }))}
-                    >
-                      <option value="">Choose type</option>
-                      {masters?.projectTypes.map((type) => (
-                        <option key={type.id} value={type.id}>
-                          {type.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <div className="grid gap-1 text-sm">
-                    <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Priority</span>
-                    <div className="flex flex-wrap gap-2">
-                      {masters?.priorities.map((priority) => {
-                        const isSelected = String(priority.id) === projectForm.priorityId;
-
-                        return (
-                          <button
-                            key={priority.id}
-                            type="button"
-                            onClick={() => setProjectForm((current) => ({ ...current, priorityId: String(priority.id) }))}
-                            className={
-                              isSelected
-                                ? "rounded-md border border-[var(--brand-orange)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold text-[var(--ink)]"
-                                : "rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--ink)]"
-                            }
-                          >
-                            {priority.code}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <p className="text-xs text-[var(--muted)]">
-                      {selectedProjectPriority
-                        ? `Selected: ${selectedProjectPriority.code} - ${selectedProjectPriority.title}`
-                        : "Select one priority flag"}
-                    </p>
-                  </div>
-
-                  <label className="grid gap-1 text-sm">
-                    <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Color</span>
-                    <select
-                      className="h-10 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 outline-none focus:border-[var(--brand-orange)]"
-                      value={projectForm.colorId}
-                      onChange={(event) => setProjectForm((current) => ({ ...current, colorId: event.target.value }))}
-                    >
-                      <option value="">Choose color</option>
-                      {masters?.colors.map((color) => (
-                        <option key={color.id} value={color.id}>
-                          {color.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="grid gap-1 text-sm">
-                    <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Status</span>
-                    <select
-                      className="h-10 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 outline-none focus:border-[var(--brand-orange)]"
-                      value={projectForm.status}
-                      onChange={(event) => setProjectForm((current) => ({ ...current, status: event.target.value as ProjectDetail["status"] }))}
-                    >
-                      <option value="ACTIVE">Active</option>
-                      <option value="HOLD">Hold</option>
-                      <option value="COMPLETED">Completed</option>
-                      <option value="ARCHIVED">Archived</option>
-                    </select>
-                  </label>
-
-                  <div className="md:col-span-2 flex justify-end">
-                    <Button type="submit" disabled={isSavingProject || !masters}>
-                      Save project
-                    </Button>
-                  </div>
-                </form>
-              </Card>
-
-              <Card className="rounded-xl border border-[var(--border)] bg-[var(--paper-elevated)] p-4">
-                <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h2 className="text-lg font-extrabold">Task CRUD</h2>
-                    <p className="text-xs text-[var(--muted)]">Create a task, edit it in place, or remove it entirely.</p>
-                  </div>
-                  {editingTaskId ? (
-                    <Button type="button" variant="secondary" onClick={cancelTaskEdit}>
-                      Cancel edit
-                    </Button>
-                  ) : null}
-                </div>
-
-                <form onSubmit={handleTaskSubmit} className="grid gap-3 md:grid-cols-2">
-                  <label className="grid gap-1 text-sm md:col-span-2">
-                    <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Name</span>
-                    <input
-                      className="h-10 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 outline-none focus:border-[var(--brand-orange)]"
-                      value={taskForm.name}
-                      onChange={(event) => setTaskForm((current) => ({ ...current, name: event.target.value }))}
-                    />
-                  </label>
-
-                  <label className="grid gap-1 text-sm md:col-span-2">
-                    <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Description</span>
-                    <textarea
-                      className="min-h-20 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 outline-none focus:border-[var(--brand-orange)]"
-                      value={taskForm.description}
-                      onChange={(event) => setTaskForm((current) => ({ ...current, description: event.target.value }))}
-                    />
-                  </label>
-
-                  <div className="grid gap-1 text-sm">
-                    <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Priority</span>
-                    <div className="flex flex-wrap gap-2">
-                      {masters?.priorities.map((priority) => {
-                        const isSelected = String(priority.id) === taskForm.priorityId;
-
-                        return (
-                          <button
-                            key={priority.id}
-                            type="button"
-                            onClick={() => setTaskForm((current) => ({ ...current, priorityId: String(priority.id) }))}
-                            className={
-                              isSelected
-                                ? "rounded-md border border-[var(--brand-orange)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold text-[var(--ink)]"
-                                : "rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--ink)]"
-                            }
-                          >
-                            {priority.code}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <p className="text-xs text-[var(--muted)]">
-                      {selectedTaskPriority ? `Selected: ${selectedTaskPriority.code} - ${selectedTaskPriority.title}` : "Select one priority flag"}
-                    </p>
-                  </div>
-
-                  <label className="grid gap-1 text-sm">
-                    <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Status</span>
-                    <select
-                      className="h-10 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 outline-none focus:border-[var(--brand-orange)]"
-                      value={taskForm.status}
-                      onChange={(event) => setTaskForm((current) => ({ ...current, status: event.target.value as TaskStatus }))}
-                    >
-                      <option value="PENDING">Pending</option>
-                      <option value="ACTIVE">Active</option>
-                      <option value="IN_PROGRESS">In Progress</option>
-                      <option value="IN_REVIEW">In Review</option>
-                      <option value="HOLD">Hold</option>
-                      <option value="COMPLETED">Completed</option>
-                    </select>
-                  </label>
-
-                  <div className="md:col-span-2 flex justify-end">
-                    <Button type="submit" disabled={isSavingTask || !masters}>
-                      {editingTaskId ? (
-                        <>
-                          <PencilLine className="mr-1.5 h-4 w-4" /> Update task
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="mr-1.5 h-4 w-4" /> Create task
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </form>
-
-                <div className="mt-4 space-y-2">
+                <div className="grid gap-3 lg:grid-cols-2">
                   {tasks.map((task) => (
-                    <div key={task.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-3">
+                    <div key={task.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-3.5">
                       {(() => {
                         const subTaskForm = getSubTaskForm(task.id);
 
                         return (
                           <>
-                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                               <div className="min-w-0">
-                                <p className="text-sm font-semibold text-[var(--ink)]">{task.name}</p>
-                                <p className="mt-0.5 text-xs text-[var(--muted)]">{task.description ?? "No description yet."}</p>
+                                <p className="text-base font-bold text-[var(--ink)]">{task.name}</p>
+                                <p className="mt-1 text-sm text-[var(--muted)]">{task.description ?? "No description yet."}</p>
                               </div>
 
                               <div className="flex flex-wrap items-center gap-2">
@@ -623,7 +662,7 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
 
                             <div className="mt-3 flex flex-wrap gap-2 text-xs text-[var(--muted)]">
                               <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1">
-                                Status: {task.status.replace("_", " ")}
+                                Status: {formatStatusLabel(task.status)}
                               </span>
                               <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1">
                                 Priority: {task.priority.code} - {task.priority.title}
@@ -637,7 +676,7 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
                             </div>
 
                             <div className="mt-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
-                              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Add subtask</p>
+                              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Quick add subtask</p>
                               <div className="mt-2 grid gap-2 md:grid-cols-[minmax(0,1fr),180px,auto]">
                                 <input
                                   value={subTaskForm.name}
@@ -676,11 +715,11 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
                             {task.subtasks.length ? (
                               <div className="mt-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
                                 <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Subtasks</p>
-                                <div className="mt-2 space-y-1 text-sm text-[var(--ink)]">
+                                <div className="mt-2 space-y-1.5 text-sm text-[var(--ink)]">
                                   {task.subtasks.map((subtask) => (
-                                    <div key={subtask.id} className="flex items-center justify-between gap-2">
+                                    <div key={subtask.id} className="flex items-center justify-between gap-2 rounded-md bg-[var(--surface-muted)] px-2.5 py-1.5">
                                       <span className="truncate">{subtask.name}</span>
-                                      <span className="shrink-0 text-xs text-[var(--muted)]">{subtask.status.replace("_", " ")}</span>
+                                      <span className="shrink-0 text-xs text-[var(--muted)]">{formatStatusLabel(subtask.status)}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -693,8 +732,8 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
                   ))}
 
                   {!tasks.length ? (
-                    <div className="rounded-md border border-dashed border-[var(--border-strong)] bg-[var(--surface-muted)] p-4 text-sm text-[var(--muted)]">
-                      No tasks have been added to this project yet.
+                    <div className="rounded-md border border-dashed border-[var(--border-strong)] bg-[var(--surface-muted)] p-5 text-sm text-[var(--muted)]">
+                      No tasks yet. Create your first task from the Task planner above.
                     </div>
                   ) : null}
                 </div>
