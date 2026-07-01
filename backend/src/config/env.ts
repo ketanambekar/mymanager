@@ -10,6 +10,7 @@ if (!process.env.DATABASE_URL && process.env.MYSQL_URL) {
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().default(5000),
+  HOST: z.string().default("0.0.0.0"),
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   FRONTEND_URL: z.string().min(1, "FRONTEND_URL is required").default("http://localhost:3000"),
   GOOGLE_CLIENT_ID: z.string().min(1, "GOOGLE_CLIENT_ID is required"),

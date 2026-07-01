@@ -2,6 +2,16 @@
 
 Base URL: /api/v1
 
+## Authentication
+- POST /auth/google
+- POST /auth/refresh
+- POST /auth/logout
+- GET /auth/me
+
+## Auth Requirement
+- All routes except /auth/google and /auth/refresh require a valid Bearer access token.
+- Refresh uses an HTTP-only cookie set by /auth/google.
+
 ## Project Types
 - POST /project-types
 - GET /project-types

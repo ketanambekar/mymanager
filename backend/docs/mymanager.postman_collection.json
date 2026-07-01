@@ -2,13 +2,37 @@
   "info": {
     "_postman_id": "6f6d35a0-66ec-4af6-85df-6c8dd6f5c9e1",
     "name": "MyManager Phase 1 API",
-    "description": "Postman collection for the current MyManager REST API. Base URL defaults to the local Express server.",
+    "description": "Updated Postman collection aligned with current API routes and auth flow.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
+      "key": "scheme",
+      "value": "http"
+    },
+    {
+      "key": "host",
+      "value": "localhost"
+    },
+    {
+      "key": "port",
+      "value": "5000"
+    },
+    {
       "key": "baseUrl",
-      "value": "http://localhost:5000/api/v1"
+      "value": "{{scheme}}://{{host}}:{{port}}/api/v1"
+    },
+    {
+      "key": "healthUrl",
+      "value": "{{scheme}}://{{host}}:{{port}}/health"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "googleCredential",
+      "value": ""
     }
   ],
   "item": [
@@ -18,15 +42,93 @@
         {
           "name": "Health Check",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
-            "url": "http://localhost:5000/health"
+            "url": "{{healthUrl}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login With Google",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"credential\": \"{{googleCredential}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/google"
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/auth/refresh"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/auth/logout"
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/me"
           }
         }
       ]
     },
     {
       "name": "Project Types",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{accessToken}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "List Project Types",
@@ -60,11 +162,46 @@
             "header": [],
             "url": "{{baseUrl}}/project-types/1"
           }
+        },
+        {
+          "name": "Update Project Type",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Work\"\n}"
+            },
+            "url": "{{baseUrl}}/project-types/1"
+          }
+        },
+        {
+          "name": "Delete Project Type",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/project-types/1"
+          }
         }
       ]
     },
     {
       "name": "Priorities",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{accessToken}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "List Priorities",
@@ -98,11 +235,46 @@
             "header": [],
             "url": "{{baseUrl}}/priorities/1"
           }
+        },
+        {
+          "name": "Update Priority",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Urgent\"\n}"
+            },
+            "url": "{{baseUrl}}/priorities/1"
+          }
+        },
+        {
+          "name": "Delete Priority",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/priorities/1"
+          }
         }
       ]
     },
     {
       "name": "Project Colors",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{accessToken}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "List Project Colors",
@@ -136,11 +308,46 @@
             "header": [],
             "url": "{{baseUrl}}/project-colors/1"
           }
+        },
+        {
+          "name": "Update Project Color",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Forest Green\",\n  \"hexCode\": \"#2E7D32\"\n}"
+            },
+            "url": "{{baseUrl}}/project-colors/1"
+          }
+        },
+        {
+          "name": "Delete Project Color",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/project-colors/1"
+          }
         }
       ]
     },
     {
       "name": "Projects",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{accessToken}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "List Projects",
@@ -204,6 +411,16 @@
     },
     {
       "name": "Tasks",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{accessToken}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "List Tasks",
@@ -275,6 +492,16 @@
     },
     {
       "name": "Subtasks",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{accessToken}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "List Subtasks",
