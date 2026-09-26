@@ -11,13 +11,15 @@ npm run dev
 
 ## Deploy
 
-Build the static site with:
+The `release` branch deploys to Hostinger through GitHub Actions. In the GitHub repository, open **Settings → Secrets and variables → Actions**, then add these repository secrets using the FTP details from Hostinger hPanel:
 
-```sh
-npm install
-npm run build
-```
+- `FTP_SERVER`: Hostinger FTP hostname, without `ftp://`
+- `FTP_USERNAME`: FTP account username
+- `FTP_PASSWORD`: FTP account password
+- `FTP_SERVER_DIR`: destination directory, usually `public_html/` for the domain's document root
 
-Upload the generated `dist/` directory to a static hosting provider, then attach `mymanager.in` and `www.mymanager.in` in that provider's domain settings. Configure the DNS records it supplies at your domain registrar and enable HTTPS after verification.
+Once those secrets are saved, each push to `release` builds the site and uploads `dist/`. You can also start a deploy manually from **Actions → Deploy to Hostinger → Run workflow**.
+
+In Hostinger hPanel, make sure `mymanager.in` is assigned to the hosting plan and points to the directory used for `FTP_SERVER_DIR`. Configure DNS at Hostinger if the domain uses Hostinger nameservers. Enable SSL in hPanel after DNS points to the hosting account.
 
 The previous application is preserved on the `legacy` branch.
