@@ -1,41 +1,21 @@
-# MyManager
+# MyManager Coming Soon
 
-Phase 1 implementation for a simplified and scalable project and task management system.
+A lightweight React landing page built with Vite.
 
-## Tech Stack
-- Frontend: Next.js (App Router), TypeScript, Tailwind CSS, Zustand
-- Backend: Node.js, Express.js, TypeScript
-- Database: MySQL
-- ORM: Prisma
+## Run locally
 
-## Quick Start
+```sh
+npm install
+npm run dev
+```
 
-### 1) Backend
-1. Go to backend folder
-2. Copy .env.example to .env
-3. Set DATABASE_URL (password contains @ so it is URL-encoded as %40 in the example)
-4. Run:
-   - npm install
-   - npm run prisma:generate
-   - npm run prisma:migrate
-   - npm run prisma:seed
-   - npm run dev
+## Deploy to Render
 
-### 2) Frontend
-1. Go to frontend folder
-2. Run:
-   - npm install
-   - npm run dev
+Create a **Static Site** connected to this repository, using the `main` branch. Render can read the build and publish settings from `render.yaml`; otherwise use:
 
-## Phase 1 Deliverables
-- Prisma schema with relations and soft delete fields
-- CRUD REST APIs for masters, projects, tasks, and subtasks
-- Validation schemas and DTOs
-- Centralized error middleware
-- Seed data
-- Basic responsive dashboard UI
+- Build command: `npm install && npm run build`
+- Publish directory: `dist`
 
-See docs in:
-- docs/phase-1-structure.md
-- backend/docs/api-routes.md
-- backend/docs/mysql-table-structure.sql
+After deploy, add `mymanager.in` and `www.mymanager.in` under the service's Custom Domains settings and configure the DNS records Render provides at your domain registrar. DNS changes can take time to propagate. Enable HTTPS in Render once the domain verifies.
+
+The previous application is preserved on the `legacy` branch.

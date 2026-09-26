@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.vite/
+**/.next/
+**/next-env.d.ts
+*.log
+.env
+.env.*
+!.env.example
