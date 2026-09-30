@@ -4,7 +4,7 @@ import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-import { frontendOrigins } from "./config/env.js";
+import { env, frontendOrigins } from "./config/env.js";
 import { attachAuthContext } from "./features/auth/auth_context.js";
 import { authRouter } from "./features/auth/auth_routes.js";
 import { requireAuth } from "./features/auth/auth_context.js";
@@ -17,6 +17,7 @@ import { errorMiddleware } from "./shared/error_middleware.js";
 export const app = express();
 
 app.disable("x-powered-by");
+app.set("trust proxy", env.NODE_ENV === "production" ? 1 : false);
 app.use((request, response, next) => {
   request.requestId = request.header("x-request-id")?.slice(0, 100) || crypto.randomUUID();
   response.setHeader("x-request-id", request.requestId);
