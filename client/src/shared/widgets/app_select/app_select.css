@@ -1,0 +1,2 @@
+.app-select { width: 100%; min-height: 42px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: var(--radius-control); background: var(--field-surface); color: var(--ink); font: inherit; font-size: 12px; }
+.app-select:focus { border-color: var(--green); outline: 0; box-shadow: 0 0 0 3px var(--button-glow); }

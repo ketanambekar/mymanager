@@ -1,0 +1,6 @@
+.workspace-footer { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr); align-items: center; gap: 8px; margin-top: 17px; padding-top: 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: 9px; }
+.footer-copyright { min-width: 0; justify-self: center; font-size: 10px; line-height: 1.5; text-align: center; }
+.footer-copyright strong { color: var(--ink); font-weight: 600; }
+.footer-version { justify-self: end; color: var(--green); font-family: var(--font-mono); font-size: 9px; white-space: nowrap; }
+.workspace-footer b { margin-left: 7px; color: var(--muted); font-weight: 500; }
+@media (max-width: 900px) { .workspace-footer { grid-template-columns: minmax(0, 1fr) auto; }.footer-copyright { grid-column: 1 / -1; grid-row: 2; } }

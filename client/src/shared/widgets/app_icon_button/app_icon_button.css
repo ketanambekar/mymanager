@@ -1,0 +1,6 @@
+.app-icon-button { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border: 1px solid var(--line-strong); border-radius: var(--radius-control); background: var(--surface-raised); color: var(--text-secondary); cursor: pointer; font: inherit; font-size: 16px; transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease; }.app-icon-button:hover { border-color: var(--green); background: var(--surface-hover); color: var(--green); box-shadow: 0 0 17px var(--button-glow); transform: translateY(-1px); }
+.app-icon-button--dialog-close { width: 29px; height: 29px; color: var(--muted); font-size: 22px; }
+.app-icon-button--task-check { width: 20px; height: 20px; border: 1px solid var(--line-strong); border-radius: 50%; background: var(--surface-raised); color: var(--button-primary-text); font-size: 11px; }.app-icon-button--task-check:hover { border-color: var(--green); }.app-icon-button--task-check[aria-pressed="true"] { border-color: var(--green); background: var(--green); box-shadow: 0 0 13px var(--button-glow); }
+.app-icon-button--theme { color: var(--green); }
+.app-icon-button:disabled { cursor: not-allowed; opacity: .6; transform: none; }
+@media (prefers-reduced-motion: reduce) { .app-icon-button { transition-duration: .01ms; } }

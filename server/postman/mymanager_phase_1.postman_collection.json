@@ -1,0 +1,216 @@
+{
+  "info": {
+    "_postman_id": "413b2967-fabe-4acd-a8b6-c9286ba752ad",
+    "name": "MyManger Phase 1 API",
+    "description": "Run Google Login first. The collection captures access tokens, resource IDs, and optimistic versions automatically. Environment-specific values are collection variables.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api/v1" },
+    { "key": "googleCredential", "value": "", "type": "secret" },
+    { "key": "accessToken", "value": "", "type": "secret" },
+    { "key": "projectId", "value": "" },
+    { "key": "projectVersion", "value": "1" },
+    { "key": "taskId", "value": "" },
+    { "key": "taskVersion", "value": "1" },
+    { "key": "subtaskId", "value": "" },
+    { "key": "subtaskVersion", "value": "1" },
+    { "key": "preferenceVersion", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Google Login",
+          "auth": { "type": "noauth" },
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"credential\": \"{{googleCredential}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/auth/google"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Login succeeded', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.collectionVariables.set('accessToken', body.data.accessToken);",
+            "pm.collectionVariables.set('preferenceVersion', body.data.user.preference.version);"
+          ] } }]
+        },
+        {
+          "name": "Refresh Session",
+          "auth": { "type": "noauth" },
+          "request": { "method": "POST", "url": "{{baseUrl}}/auth/refresh" },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Refresh succeeded', () => pm.response.to.have.status(200));",
+            "pm.collectionVariables.set('accessToken', pm.response.json().data.accessToken);"
+          ] } }]
+        },
+        {
+          "name": "Current Session",
+          "request": { "method": "GET", "url": "{{baseUrl}}/auth/session" }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard and Preferences",
+      "item": [
+        {
+          "name": "Dashboard Bootstrap",
+          "request": { "method": "GET", "url": "{{baseUrl}}/dashboard" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Dashboard loaded', () => pm.response.to.have.status(200));"] } }]
+        },
+        {
+          "name": "Update Preferences",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"theme\": \"dark\",\n  \"timezone\": \"Asia/Kolkata\",\n  \"version\": {{preferenceVersion}}\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/me/preferences"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Preferences updated', () => pm.response.to.have.status(200));",
+            "pm.collectionVariables.set('preferenceVersion', pm.response.json().data.version);"
+          ] } }]
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "Create Project",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Postman Project\",\n  \"parentProjectId\": null,\n  \"color\": \"#4F86C6\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/projects"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Project created', () => pm.response.to.have.status(201));",
+            "const project = pm.response.json().data;",
+            "pm.collectionVariables.set('projectId', project.id);",
+            "pm.collectionVariables.set('projectVersion', project.version);"
+          ] } }]
+        },
+        { "name": "List Projects", "request": { "method": "GET", "url": "{{baseUrl}}/projects" } },
+        { "name": "Get Project", "request": { "method": "GET", "url": "{{baseUrl}}/projects/{{projectId}}" } },
+        {
+          "name": "Update Project",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Postman Project Updated\",\n  \"version\": {{projectVersion}}\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/projects/{{projectId}}"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.collectionVariables.set('projectVersion', pm.response.json().data.version);"] } }]
+        }
+      ]
+    },
+    {
+      "name": "Tasks and Subtasks",
+      "item": [
+        {
+          "name": "Create Task",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Postman recurring task\",\n  \"projectId\": {{projectId}},\n  \"dueDate\": null,\n  \"recurrence\": { \"frequency\": \"weekly\" }\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/tasks"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Task created', () => pm.response.to.have.status(201));",
+            "const task = pm.response.json().data;",
+            "pm.collectionVariables.set('taskId', task.id);",
+            "pm.collectionVariables.set('taskVersion', task.version);"
+          ] } }]
+        },
+        { "name": "List Recent Tasks", "request": { "method": "GET", "url": "{{baseUrl}}/tasks?status=all&dateScope=recent&limit=50" } },
+        { "name": "Search Tasks", "request": { "method": "GET", "url": "{{baseUrl}}/tasks?search=Postman&dateScope=all&limit=50" } },
+        { "name": "Get Task", "request": { "method": "GET", "url": "{{baseUrl}}/tasks/{{taskId}}" } },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Postman recurring task updated\",\n  \"version\": {{taskVersion}}\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/tasks/{{taskId}}"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.collectionVariables.set('taskVersion', pm.response.json().data.version);"] } }]
+        },
+        {
+          "name": "Add Subtask",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Postman subtask\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/tasks/{{taskId}}/subtasks"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const subtask = pm.response.json().data;",
+            "pm.collectionVariables.set('subtaskId', subtask.id);",
+            "pm.collectionVariables.set('subtaskVersion', subtask.version);"
+          ] } }]
+        },
+        {
+          "name": "Update Subtask",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Postman subtask updated\",\n  \"version\": {{subtaskVersion}}\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/tasks/{{taskId}}/subtasks/{{subtaskId}}"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.collectionVariables.set('subtaskVersion', pm.response.json().data.version);"] } }]
+        },
+        {
+          "name": "Complete Subtask",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"version\": {{subtaskVersion}} }", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/tasks/{{taskId}}/subtasks/{{subtaskId}}/complete"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const task = pm.response.json().data;",
+            "const subtask = task.subtasks.find((item) => String(item.id) === String(pm.collectionVariables.get('subtaskId')));",
+            "pm.collectionVariables.set('taskVersion', task.version);",
+            "pm.collectionVariables.set('subtaskVersion', subtask.version);"
+          ] } }]
+        },
+        {
+          "name": "Complete Task",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"version\": {{taskVersion}} }", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/tasks/{{taskId}}/complete"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.collectionVariables.set('taskVersion', pm.response.json().data.version);"] } }]
+        },
+        {
+          "name": "Reopen Task",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"version\": {{taskVersion}} }", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/tasks/{{taskId}}/reopen"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.collectionVariables.set('taskVersion', pm.response.json().data.version);"] } }]
+        },
+        { "name": "Delete Subtask", "request": { "method": "DELETE", "url": "{{baseUrl}}/tasks/{{taskId}}/subtasks/{{subtaskId}}" } },
+        { "name": "Delete Task", "request": { "method": "DELETE", "url": "{{baseUrl}}/tasks/{{taskId}}" } }
+      ]
+    },
+    {
+      "name": "Cleanup",
+      "item": [
+        { "name": "Delete Project", "request": { "method": "DELETE", "url": "{{baseUrl}}/projects/{{projectId}}" } },
+        { "name": "Logout", "request": { "method": "POST", "url": "{{baseUrl}}/auth/logout" } }
+      ]
+    }
+  ]
+}

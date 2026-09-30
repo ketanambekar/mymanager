@@ -1,0 +1,12 @@
+.upcoming-section { display: flex; min-width: 0; min-height: 0; flex: 1; flex-direction: column; }
+.upcoming-section h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 13px; font-family: var(--font-display); font-size: 16px; font-weight: 600; }
+.upcoming-section h2 svg { flex: 0 0 auto; color: var(--orange); }
+.upcoming-list { display: grid; min-height: 0; flex: 1; align-content: start; gap: 0; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
+.upcoming-day { min-width: 0; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.upcoming-day:first-child { border-top: 1px solid var(--line); }
+.upcoming-day > time { color: var(--orange); font-family: var(--font-mono); font-size: 10px; font-weight: 600; white-space: nowrap; }
+.upcoming-day-tasks { display: grid; min-width: 0; gap: 4px; margin: 6px 0 0; padding: 0; list-style: none; }
+.upcoming-day-tasks li { display: flex; min-width: 0; align-items: baseline; justify-content: space-between; gap: 8px; padding: 3px 0 3px 9px; border-left: 2px solid var(--upcoming-project-color); }
+.upcoming-task-title { min-width: 0; overflow: hidden; color: var(--ink); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.upcoming-project { max-width: 48%; min-width: 0; flex: 0 1 auto; overflow: hidden; color: var(--upcoming-project-color); font-size: 10px; font-weight: 600; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 760px) { .upcoming-section { max-height: 240px; } }

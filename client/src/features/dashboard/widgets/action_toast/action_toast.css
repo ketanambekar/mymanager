@@ -1,0 +1,26 @@
+.action-toast:popover-open { position: fixed; inset: 76px 20px auto auto; display: flex; width: min(350px, calc(100vw - 24px)); min-height: 50px; align-items: center; gap: 10px; margin: 0; padding: 10px 12px; border: 1px solid var(--line-strong); border-left: 3px solid var(--green); border-radius: 6px; background: var(--surface-raised); color: var(--ink); box-shadow: var(--dialog-shadow); animation: toast-arrive .2s ease-out both; }
+.action-toast.is-error { border-left-color: var(--orange); }
+.action-toast > svg { flex: 0 0 auto; color: var(--green); }
+.action-toast.is-error > svg { color: var(--orange); }
+.action-toast-message { min-width: 0; flex: 1; font-size: 12px; font-weight: 600; line-height: 1.4; }
+.action-toast .app-icon-button--toast-close { width: 28px; height: 28px; border: 0; background: transparent; color: var(--muted); }
+.action-toast .app-icon-button--toast-close:hover { background: var(--surface-hover); color: var(--ink); }
+.toast-confetti { position: absolute; top: 50%; left: 50%; width: 0; height: 0; pointer-events: none; }
+.toast-confetti i { --burst-x: 0px; --burst-y: -64px; position: absolute; width: 6px; height: 9px; border-radius: 1px; background: var(--celebration-color); animation: confetti-pop 950ms ease-out both; }
+.toast-confetti i:nth-child(3n) { background: var(--lime); }
+.toast-confetti i:nth-child(4n) { background: var(--orange); }
+.toast-confetti i:nth-child(2) { --burst-x: 32px; --burst-y: -70px; }
+.toast-confetti i:nth-child(3) { --burst-x: 60px; --burst-y: -45px; }
+.toast-confetti i:nth-child(4) { --burst-x: 75px; --burst-y: -12px; }
+.toast-confetti i:nth-child(5) { --burst-x: 59px; --burst-y: 32px; }
+.toast-confetti i:nth-child(6) { --burst-x: 33px; --burst-y: 52px; }
+.toast-confetti i:nth-child(7) { --burst-x: -15px; --burst-y: 56px; }
+.toast-confetti i:nth-child(8) { --burst-x: -45px; --burst-y: 36px; }
+.toast-confetti i:nth-child(9) { --burst-x: -72px; --burst-y: 12px; }
+.toast-confetti i:nth-child(10) { --burst-x: -68px; --burst-y: -35px; }
+.toast-confetti i:nth-child(11) { --burst-x: -48px; --burst-y: -60px; }
+.toast-confetti i:nth-child(12) { --burst-x: -20px; --burst-y: -72px; }
+@keyframes toast-arrive { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes confetti-pop { from { opacity: 1; transform: translate(0, 0) rotate(0); } to { opacity: 0; transform: translate(var(--burst-x), var(--burst-y)) rotate(310deg); } }
+@media (max-width: 520px) { .action-toast:popover-open { inset: 60px 12px auto auto; } }
+@media (prefers-reduced-motion: reduce) { .action-toast:popover-open { animation: none; } .toast-confetti { display: none; } }

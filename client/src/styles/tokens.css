@@ -1,0 +1,15 @@
+:root {
+  --font-body: 'DM Sans', sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-mono: 'DM Mono', monospace;
+  --radius-control: 6px;
+  --radius-panel: 8px;
+
+  --palette-ink: #222923;
+  --palette-muted: #6a716a;
+  --palette-green: #1f6249;
+  --palette-green-hover: #174d38;
+  --palette-lime: #e7bd55;
+  --palette-orange: #c9553f;
+  --palette-blue: #3f7e8a;
+}

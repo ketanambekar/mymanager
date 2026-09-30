@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuthProvider {
+  GOOGLE
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum ThemePreference {
+  DARK
+  LIGHT
+}
+
+enum TaskStatus {
+  OPEN
+  COMPLETED
+}
+
+enum RecurrenceFrequency {
+  ONE_TIME
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+  CUSTOM
+}
+
+enum RecurrenceUnit {
+  DAY
+  WEEK
+  MONTH
+  YEAR
+}
+
+enum ImportStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id              Int                @id @default(autoincrement())
+  googleSubject   String             @unique(map: "User_googleSubject_key") @db.VarChar(255)
+  email           String             @unique(map: "User_email_key") @db.VarChar(320)
+  displayName     String             @db.VarChar(120)
+  avatarUrl       String?            @db.Text
+  authProvider    AuthProvider       @default(GOOGLE)
+  emailVerifiedAt DateTime?
+  status          UserStatus         @default(ACTIVE)
+  lastLoginAt     DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  workspace       Workspace?
+  preference      UserPreference?
+  sessions        RefreshSession[]
+  imports         DataImport[]
+
+  @@map("user")
+}
+
+model RefreshSession {
+  id                  Int             @id @default(autoincrement())
+  userId              Int
+  tokenHash           String          @unique(map: "RefreshSession_tokenHash_key") @db.Char(64)
+  familyId            String          @db.VarChar(64)
+  replacedBySessionId Int?
+  expiresAt           DateTime
+  revokedAt           DateTime?
+  revokeReason        String?         @db.VarChar(40)
+  createdAt           DateTime        @default(now())
+  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade, map: "RefreshSession_userId_fkey")
+  replacedBySession   RefreshSession? @relation("SessionRotation", fields: [replacedBySessionId], references: [id], map: "RefreshSession_replacedBySessionId_fkey")
+  previousSessions    RefreshSession[] @relation("SessionRotation")
+
+  @@index([userId, expiresAt], map: "RefreshSession_userId_expiresAt_idx")
+  @@index([familyId], map: "RefreshSession_familyId_idx")
+  @@map("refreshsession")
+}
+
+model Workspace {
+  id        Int       @id @default(autoincrement())
+  ownerId   Int       @unique(map: "Workspace_ownerId_key")
+  name      String    @default("My workspace") @db.VarChar(80)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade, map: "Workspace_ownerId_fkey")
+  projects  Project[]
+  tasks     Task[]
+
+  @@map("workspace")
+}
+
+model UserPreference {
+  userId    Int             @id
+  theme     ThemePreference @default(DARK)
+  timezone  String          @default("UTC") @db.VarChar(64)
+  version   Int             @default(1)
+  updatedAt DateTime        @updatedAt
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade, map: "UserPreference_userId_fkey")
+
+  @@map("userpreference")
+}
+
+model Project {
+  id              Int       @id @default(autoincrement())
+  workspaceId     Int
+  parentProjectId Int?
+  name            String    @db.VarChar(60)
+  color           String    @db.Char(7)
+  version         Int       @default(1)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade, map: "Project_workspaceId_fkey")
+  parentProject   Project?  @relation("ProjectTree", fields: [parentProjectId], references: [id], onDelete: SetNull, map: "Project_parentProjectId_fkey")
+  childProjects   Project[] @relation("ProjectTree")
+  tasks           Task[]
+
+  @@unique([workspaceId, color], map: "Project_workspaceId_color_key")
+  @@index([workspaceId, parentProjectId], map: "Project_workspaceId_parentProjectId_idx")
+  @@map("project")
+}
+
+model Task {
+  id                  Int                 @id @default(autoincrement())
+  workspaceId         Int
+  projectId           Int?
+  title               String              @db.VarChar(120)
+  dueDate              DateTime?           @db.Date
+  status               TaskStatus          @default(OPEN)
+  completedAt          DateTime?
+  recurrenceFrequency RecurrenceFrequency @default(ONE_TIME)
+  recurrenceInterval  Int?
+  recurrenceUnit      RecurrenceUnit?
+  recurrenceSeriesId  String?              @db.VarChar(36)
+  previousOccurrenceId Int?
+  occurrenceNumber    Int                 @default(1)
+  version              Int                 @default(1)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  workspace            Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade, map: "Task_workspaceId_fkey")
+  project              Project?            @relation(fields: [projectId], references: [id], onDelete: SetNull, map: "Task_projectId_fkey")
+  previousOccurrence   Task?               @relation("TaskOccurrence", fields: [previousOccurrenceId], references: [id], onDelete: SetNull, map: "Task_previousOccurrenceId_fkey")
+  nextOccurrences      Task[]              @relation("TaskOccurrence")
+  subtasks             Subtask[]
+
+  @@unique([recurrenceSeriesId, dueDate], map: "Task_recurrenceSeriesId_dueDate_key")
+  @@index([workspaceId, status, dueDate], map: "Task_workspaceId_status_dueDate_idx")
+  @@index([workspaceId, projectId, status, dueDate], map: "Task_workspaceId_projectId_status_dueDate_idx")
+  @@map("task")
+}
+
+model Subtask {
+  id          Int        @id @default(autoincrement())
+  taskId      Int
+  title       String     @db.VarChar(120)
+  status      TaskStatus @default(OPEN)
+  completedAt DateTime?
+  position    Int        @default(0)
+  version     Int        @default(1)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  task        Task       @relation(fields: [taskId], references: [id], onDelete: Cascade, map: "Subtask_taskId_fkey")
+
+  @@index([taskId, position], map: "Subtask_taskId_position_idx")
+  @@map("subtask")
+}
+
+model DataImport {
+  id             Int          @id @default(autoincrement())
+  userId         Int
+  idempotencyKey String       @db.VarChar(100)
+  source         String       @db.VarChar(40)
+  status         ImportStatus @default(PROCESSING)
+  projectCount   Int          @default(0)
+  taskCount      Int          @default(0)
+  createdAt      DateTime     @default(now())
+  completedAt    DateTime?
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade, map: "DataImport_userId_fkey")
+
+  @@unique([userId, idempotencyKey], map: "DataImport_userId_idempotencyKey_key")
+  @@map("dataimport")
+}

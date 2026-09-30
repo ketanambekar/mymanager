@@ -1,0 +1,98 @@
+import crypto from "node:crypto";
+import { OAuth2Client } from "google-auth-library";
+import { UserStatus, type Prisma } from "@prisma/client";
+import { env } from "../../config/env.js";
+import { prisma } from "../../database/prisma.js";
+import { AppError } from "../../shared/app_error.js";
+import { generateRefreshToken, hashRefreshToken, signAccessToken } from "./auth_token.js";
+
+const googleClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
+const userView = {
+  id: true,
+  email: true,
+  displayName: true,
+  avatarUrl: true,
+  status: true,
+  lastLoginAt: true,
+  workspace: true,
+  preference: true,
+} satisfies Prisma.UserSelect;
+
+function addDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setUTCDate(result.getUTCDate() + days);
+  return result;
+}
+
+async function issueSession(user: { id: number; email: string; displayName: string; workspace: { id: number } | null }, familyId: string = crypto.randomUUID()) {
+  if (!user.workspace) throw new AppError("WORKSPACE_NOT_FOUND", "Workspace not found", 500);
+  const refreshToken = generateRefreshToken();
+  const session = await prisma.refreshSession.create({
+    data: { userId: user.id, tokenHash: hashRefreshToken(refreshToken), familyId, expiresAt: addDays(new Date(), env.REFRESH_TOKEN_EXPIRES_DAYS) },
+  });
+  const accessToken = signAccessToken({ sub: user.id, email: user.email, displayName: user.displayName, workspaceId: user.workspace.id });
+  return { sessionId: session.id, accessToken, refreshToken, accessTokenExpiresIn: env.JWT_ACCESS_EXPIRES_IN };
+}
+
+export const authService = {
+  async loginWithGoogle(credential: string) {
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({ idToken: credential, audience: env.GOOGLE_CLIENT_ID });
+      payload = ticket.getPayload();
+    } catch {
+      throw new AppError("GOOGLE_TOKEN_INVALID", "Google token verification failed", 401);
+    }
+    if (!payload?.sub || !payload.email || !payload.name || !payload.email_verified) {
+      throw new AppError("GOOGLE_PROFILE_INVALID", "A verified Google profile is required", 401);
+    }
+    const email = payload.email.trim().toLowerCase();
+    const now = new Date();
+    const existing = await prisma.user.findFirst({ where: { OR: [{ googleSubject: payload.sub }, { email }] } });
+    const user = existing
+      ? await prisma.user.update({
+          where: { id: existing.id },
+          data: { googleSubject: payload.sub, email, displayName: payload.name, avatarUrl: payload.picture ?? null, emailVerifiedAt: now, lastLoginAt: now },
+          select: userView,
+        })
+      : await prisma.user.create({
+          data: {
+            googleSubject: payload.sub,
+            email,
+            displayName: payload.name,
+            avatarUrl: payload.picture ?? null,
+            emailVerifiedAt: now,
+            lastLoginAt: now,
+            workspace: { create: {} },
+            preference: { create: {} },
+          },
+          select: userView,
+        });
+    if (user.status !== UserStatus.ACTIVE) throw new AppError("ACCOUNT_DISABLED", "Account is disabled", 403);
+    return { user, tokens: await issueSession(user) };
+  },
+
+  async refresh(rawToken: string) {
+    const tokenHash = hashRefreshToken(rawToken);
+    const session = await prisma.refreshSession.findUnique({ where: { tokenHash }, include: { user: { select: userView } } });
+    if (!session || session.expiresAt <= new Date()) throw new AppError("SESSION_EXPIRED", "Session expired", 401);
+    if (session.revokedAt) {
+      await prisma.refreshSession.updateMany({ where: { familyId: session.familyId, revokedAt: null }, data: { revokedAt: new Date(), revokeReason: "REUSE_DETECTED" } });
+      throw new AppError("SESSION_REUSE_DETECTED", "Session expired", 401);
+    }
+    const next = await issueSession(session.user, session.familyId);
+    await prisma.refreshSession.update({ where: { id: session.id }, data: { revokedAt: new Date(), revokeReason: "ROTATED", replacedBySessionId: next.sessionId } });
+    return { user: session.user, tokens: next };
+  },
+
+  async logout(rawToken?: string) {
+    if (!rawToken) return;
+    await prisma.refreshSession.updateMany({ where: { tokenHash: hashRefreshToken(rawToken), revokedAt: null }, data: { revokedAt: new Date(), revokeReason: "LOGOUT" } });
+  },
+
+  async currentUser(userId: number) {
+    const user = await prisma.user.findFirst({ where: { id: userId, status: UserStatus.ACTIVE }, select: userView });
+    if (!user) throw new AppError("USER_NOT_FOUND", "User not found", 404);
+    return user;
+  },
+};
