@@ -12,7 +12,7 @@ function formatCreatedDate(createdAt) {
   return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(createdDate);
 }
 
-export default function TaskList({ activeFilter, onAddTask, onAddSubtask, onDeleteProject, onDeleteTask, onEditProject, onEditTask, onEditSubtask, onFilterChange, onToggleTask, onToggleSubtask, projectName, projectColor, selectedProject, tasks, isPending }) {
+export default function TaskList({ activeFilter, asOfDate, onAddTask, onAddSubtask, onDeleteProject, onDeleteTask, onEditProject, onEditTask, onEditSubtask, onFilterChange, onMissTask, onSkipTask, onToggleTask, onToggleSubtask, projectName, projectColor, selectedProject, tasks, isPending }) {
   return (
     <section aria-labelledby="tasks-heading" className="tasks-section">
       <div className="task-section-header">
@@ -45,7 +45,7 @@ export default function TaskList({ activeFilter, onAddTask, onAddSubtask, onDele
       </div>
       {tasks.length ? (
         <ul className="task-list">
-          {tasks.map((task) => <TaskRow isPending={isPending} key={task.id} onAddSubtask={onAddSubtask} onDeleteTask={onDeleteTask} onEditSubtask={onEditSubtask} onEditTask={onEditTask} onToggle={onToggleTask} onToggleSubtask={onToggleSubtask} projectColor={projectColor} projectName={projectName} task={task} />)}
+          {tasks.map((task) => <TaskRow asOfDate={asOfDate} isPending={isPending} key={task.id} onAddSubtask={onAddSubtask} onDeleteTask={onDeleteTask} onEditSubtask={onEditSubtask} onEditTask={onEditTask} onMissTask={onMissTask} onSkipTask={onSkipTask} onToggle={onToggleTask} onToggleSubtask={onToggleSubtask} projectColor={projectColor} projectName={projectName} task={task} />)}
         </ul>
       ) : (
         <div className="empty-state"><CircleCheck aria-hidden="true" className="empty-state-icon" size={26} /><h3>No tasks here</h3><p>Create a task to start filling this list.</p></div>

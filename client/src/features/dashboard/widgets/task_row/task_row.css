@@ -4,6 +4,9 @@
 .task-row.is-complete { --task-note-paper: color-mix(in srgb, var(--surface-subtle) 87%, var(--project-accent)); --task-note-fold: color-mix(in srgb, var(--surface-subtle) 66%, var(--project-accent)); border-style: dashed; box-shadow: inset 3px 0 0 var(--project-accent); }
 .task-row.is-complete:hover { box-shadow: inset 3px 0 0 var(--project-accent), 0 4px 12px rgb(0 0 0 / 10%); }
 .task-row.is-complete .task-copy, .task-row.is-complete .task-date { opacity: .7; }
+.task-row.is-skipped { --task-note-paper: color-mix(in srgb, var(--surface-raised) 94%, var(--project-blue)); --task-note-edge: color-mix(in srgb, var(--project-blue) 38%, var(--line)); border-left: 3px solid var(--project-blue); box-shadow: inset 2px 0 0 color-mix(in srgb, var(--project-blue) 16%, transparent), 0 2px 0 color-mix(in srgb, var(--task-note-edge) 35%, transparent), 0 5px 13px rgb(0 0 0 / 6%); }
+.task-row.is-missed { --task-note-paper: color-mix(in srgb, var(--surface-raised) 94%, var(--orange)); --task-note-edge: color-mix(in srgb, var(--orange) 38%, var(--line)); border-left: 3px solid var(--orange); box-shadow: inset 2px 0 0 color-mix(in srgb, var(--orange) 14%, transparent), 0 2px 0 color-mix(in srgb, var(--task-note-edge) 35%, transparent), 0 5px 13px rgb(0 0 0 / 6%); }
+.task-row.is-skipped .task-copy, .task-row.is-skipped .task-date, .task-row.is-missed .task-copy, .task-row.is-missed .task-date { opacity: .78; }
 .task-row.is-overdue { --task-note-paper: color-mix(in srgb, var(--surface-raised) 91%, var(--orange)); --task-note-edge: color-mix(in srgb, var(--orange) 48%, var(--line)); border-left: 3px solid var(--orange); }
 .task-row.is-overdue:hover { border-color: var(--orange); }
 .task-row:has(.task-subtasks[open]) { z-index: 8; }
@@ -19,10 +22,20 @@
 .task-recurrence svg { flex: 0 0 auto; }
 .task-date { display: grid; grid-column: 3; grid-row: 1; justify-items: end; gap: 3px; color: var(--muted); font-family: var(--font-mono); font-size: 9px; white-space: nowrap; }
 .task-overdue-label { display: inline-flex; align-items: center; gap: 3px; color: var(--orange); font-family: var(--font-body); font-size: 10px; font-weight: 700; }
+.task-closed-mark { display: grid; width: 21px; height: 21px; place-items: center; border: 1px solid currentColor; border-radius: 50%; background: var(--surface-raised); }
+.task-closed-mark.is-skipped { border-color: color-mix(in srgb, var(--project-blue) 35%, var(--line)); background: color-mix(in srgb, var(--surface-raised) 88%, var(--project-blue)); color: var(--project-blue); }
+.task-closed-mark.is-missed { border-color: color-mix(in srgb, var(--orange) 35%, var(--line)); background: color-mix(in srgb, var(--surface-raised) 88%, var(--orange)); color: var(--orange); }
+.task-closed-label { width: fit-content; max-width: 100%; padding: 2px 6px; border: 1px solid currentColor; border-radius: 99px; font-family: var(--font-mono); font-size: 8px; font-weight: 700; letter-spacing: .04em; line-height: 1.4; overflow-wrap: anywhere; text-transform: uppercase; }
+.task-closed-label.is-skipped { border-color: color-mix(in srgb, var(--project-blue) 32%, var(--line)); background: color-mix(in srgb, var(--surface-raised) 87%, var(--project-blue)); color: var(--project-blue); }
+.task-closed-label.is-missed { border-color: color-mix(in srgb, var(--orange) 32%, var(--line)); background: color-mix(in srgb, var(--surface-raised) 87%, var(--orange)); color: var(--orange); }
 .task-row-actions, .subtask-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 2px; }
 .task-row-actions { grid-column: 3; grid-row: 2; justify-self: end; }
 .task-row .app-icon-button--task-action { width: 30px; height: 30px; border-color: transparent; background: transparent; color: var(--muted); }
 .task-row .app-icon-button--task-action:hover { background: var(--surface-hover); color: var(--ink); }
+.task-row .task-state-icon--skip { color: var(--project-blue); }
+.task-row .task-state-icon--skip:hover { color: var(--project-blue); }
+.task-row .task-state-icon--miss { color: var(--orange); }
+.task-row .task-state-icon--miss:hover, .task-row .task-state-icon--miss:focus-visible { color: var(--orange); }
 .task-row .app-icon-button--task-action[aria-label^="Delete"]:hover { color: var(--orange); }
 .task-subtasks { margin-left: 33px; border-top: 1px solid var(--task-note-edge); }
 .task-subtasks summary { display: flex; min-height: 30px; align-items: center; gap: 8px; color: var(--muted); cursor: pointer; font-size: 10px; font-weight: 600; list-style-position: inside; }

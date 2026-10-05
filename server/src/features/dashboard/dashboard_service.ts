@@ -16,8 +16,14 @@ export const dashboardService = {
       prisma.task.findMany({ where: { workspaceId }, include: taskInclude, orderBy: [{ dueDate: "asc" }, { id: "desc" }] }),
     ]);
     const items = tasks.map(taskView);
-    const completedCount = tasks.filter((task) => task.status === TaskStatus.COMPLETED).length;
-    const upcomingTasks = items.filter((task) => !task.completed && task.dueDate && task.dueDate > today);
+    const countOf = (status: TaskStatus) => tasks.filter((task) => task.status === status).length;
+    const completedCount = countOf(TaskStatus.COMPLETED);
+    const openCount = countOf(TaskStatus.OPEN);
+    const skippedCount = countOf(TaskStatus.SKIPPED);
+    const missedCount = countOf(TaskStatus.MISSED);
+    const ratedCount = tasks.length - skippedCount;
+    const isOpen = (task: (typeof items)[number]) => task.status === TaskStatus.OPEN;
+    const upcomingTasks = items.filter((task) => isOpen(task) && task.dueDate && task.dueDate > today);
     const recentTasks = items.filter((task) => !task.dueDate || task.dueDate <= today);
     return {
       asOfDate: today,
@@ -25,11 +31,13 @@ export const dashboardService = {
       summary: {
         totalCount: tasks.length,
         completedCount,
-        openCount: tasks.length - completedCount,
-        completionRate: tasks.length ? Math.round((completedCount / tasks.length) * 100) : 0,
-        overdueCount: items.filter((task) => !task.completed && task.dueDate && task.dueDate < today).length,
+        openCount,
+        skippedCount,
+        missedCount,
+        completionRate: ratedCount ? Math.round((completedCount / ratedCount) * 100) : 0,
+        overdueCount: items.filter((task) => isOpen(task) && task.dueDate && task.dueDate < today).length,
         dueTodayCount: items.filter((task) => task.dueDate === today).length,
-        pendingTodayCount: items.filter((task) => !task.completed && task.dueDate === today).length,
+        pendingTodayCount: items.filter((task) => isOpen(task) && task.dueDate === today).length,
         completedTodayCount: tasks.filter((task) => task.status === TaskStatus.COMPLETED && task.completedAt && dateInTimeZone(task.completedAt, timezone) === today).length,
       },
       projects,

@@ -2,13 +2,17 @@ import crypto from "node:crypto";
 import { Prisma, RecurrenceFrequency, RecurrenceUnit, TaskStatus } from "@prisma/client";
 import { prisma } from "../../database/prisma.js";
 import { AppError } from "../../shared/app_error.js";
-import { dateInTimeZone, latestOccurrenceDate, nextOccurrenceDate, type RecurrenceRule } from "./recurrence.js";
+import { dateInTimeZone, followingOccurrenceDate, latestOccurrenceDate, nextOccurrenceDate, type RecurrenceRule } from "./recurrence.js";
+import { assertCanReopen, closureOutcome, closureStatus, isClosedStatus, type ClosureAction } from "./task_closure.js";
 import { taskInclude, taskRepository } from "./task_repository.js";
 
 type RecurrenceInput = RecurrenceRule;
 type TaskInput = { title: string; projectId?: number | null; dueDate?: string | null; recurrence?: RecurrenceInput };
 type TaskUpdate = Partial<TaskInput> & { version: number };
-type ListInput = { status: "all" | "open" | "completed"; projectId?: number; search?: string; dateScope: "recent" | "upcoming" | "all"; cursor?: number; limit: number };
+type ListInput = { status: "all" | "open" | "completed" | "skipped" | "missed"; projectId?: number; search?: string; dateScope: "recent" | "upcoming" | "all"; cursor?: number; limit: number };
+
+const listStatus = { open: TaskStatus.OPEN, completed: TaskStatus.COMPLETED, skipped: TaskStatus.SKIPPED, missed: TaskStatus.MISSED } as const;
+const taskNotOpen = () => new AppError("TASK_NOT_OPEN", "Skipped or missed tasks cannot be changed", 409);
 
 const frequencyToDb: Record<RecurrenceRule["frequency"], RecurrenceFrequency> = {
   one_time: RecurrenceFrequency.ONE_TIME,
@@ -64,6 +68,24 @@ function recurrenceData(rule: RecurrenceInput | undefined) {
   };
 }
 
+type OccurrenceSource = Prisma.TaskGetPayload<{ include: { subtasks: true } }>;
+
+function nextOccurrenceData(task: OccurrenceSource, dueDate: string): Prisma.TaskUncheckedCreateInput {
+  return {
+    workspaceId: task.workspaceId,
+    projectId: task.projectId,
+    title: task.title,
+    dueDate: asDatabaseDate(dueDate),
+    recurrenceFrequency: task.recurrenceFrequency,
+    recurrenceInterval: task.recurrenceInterval,
+    recurrenceUnit: task.recurrenceUnit,
+    recurrenceSeriesId: task.recurrenceSeriesId,
+    previousOccurrenceId: task.id,
+    occurrenceNumber: task.occurrenceNumber + 1,
+    subtasks: { create: task.subtasks.map((subtask) => ({ title: subtask.title, position: subtask.position })) },
+  };
+}
+
 export const taskService = {
   async list(userId: number, workspaceId: number, input: ListInput) {
     const today = dateInTimeZone(new Date(), await timezoneForUser(userId));
@@ -75,7 +97,7 @@ export const taskService = {
         workspaceId,
         id: input.cursor ? { lt: input.cursor } : undefined,
         projectId: input.projectId,
-        status: input.status === "all" ? undefined : input.status === "open" ? TaskStatus.OPEN : TaskStatus.COMPLETED,
+        status: input.status === "all" ? undefined : listStatus[input.status],
         title: input.search ? { contains: input.search } : undefined,
         ...dateFilter,
       },
@@ -143,29 +165,39 @@ export const taskService = {
       const task = await transaction.task.findFirst({ where: { id, workspaceId }, include: { subtasks: true, nextOccurrences: { select: { id: true } } } });
       if (!task) throw new AppError("TASK_NOT_FOUND", "Task not found", 404);
       if (task.version !== version) throw new AppError("VERSION_CONFLICT", "Task changed since it was loaded", 409);
+      if (!completed) assertCanReopen(task.status);
+      if (completed && isClosedStatus(task.status)) throw taskNotOpen();
       const dueDate = asDateString(task.dueDate);
       if (completed && dueDate && dueDate > today) throw new AppError("TASK_FUTURE_DATED", "A future task cannot be completed early", 409);
       if (completed && task.subtasks.some((subtask) => subtask.status !== TaskStatus.COMPLETED)) throw new AppError("TASK_SUBTASKS_INCOMPLETE", "Complete all subtasks before finishing this task", 409);
-      await transaction.task.update({ where: { id }, data: { status: completed ? TaskStatus.COMPLETED : TaskStatus.OPEN, completedAt: completed ? new Date() : null, version: { increment: 1 } } });
+      await transaction.task.update({ where: { id }, data: { status: completed ? TaskStatus.COMPLETED : TaskStatus.OPEN, completedAt: completed ? new Date() : null, closedAt: null, closeReason: null, version: { increment: 1 } } });
       if (!completed || !dueDate || task.nextOccurrences.length) return;
       const rule = recurrenceFromTask(task);
       const nextDueDate = nextOccurrenceDate(dueDate, rule, today);
       if (!nextDueDate) return;
-      await transaction.task.create({
-        data: {
-          workspaceId,
-          projectId: task.projectId,
-          title: task.title,
-          dueDate: asDatabaseDate(nextDueDate),
-          recurrenceFrequency: task.recurrenceFrequency,
-          recurrenceInterval: task.recurrenceInterval,
-          recurrenceUnit: task.recurrenceUnit,
-          recurrenceSeriesId: task.recurrenceSeriesId,
-          previousOccurrenceId: task.id,
-          occurrenceNumber: task.occurrenceNumber + 1,
-          subtasks: { create: task.subtasks.map((subtask) => ({ title: subtask.title, position: subtask.position })) },
-        },
-      });
+      await transaction.task.create({ data: nextOccurrenceData(task, nextDueDate) });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    return this.get(workspaceId, id);
+  },
+
+  async closeOccurrence(userId: number, workspaceId: number, id: number, action: ClosureAction, version: number, reason: string) {
+    const today = dateInTimeZone(new Date(), await timezoneForUser(userId));
+    await prisma.$transaction(async (transaction) => {
+      const task = await transaction.task.findFirst({ where: { id, workspaceId }, include: { subtasks: true, nextOccurrences: { select: { id: true } } } });
+      if (!task) throw new AppError("TASK_NOT_FOUND", "Task not found", 404);
+      const dueDate = asDateString(task.dueDate);
+      const rule = recurrenceFromTask(task);
+      const outcome = closureOutcome({ status: task.status, dueDate, recurring: rule.frequency !== "one_time" }, action, today);
+      if (outcome === "replay") return;
+      if (task.version !== version) throw new AppError("VERSION_CONFLICT", "Task changed since it was loaded", 409);
+      await transaction.task.update({ where: { id }, data: { status: closureStatus[action], closedAt: new Date(), closeReason: reason, completedAt: null, version: { increment: 1 } } });
+      if (!dueDate || task.nextOccurrences.length) return;
+      const nextDueDate = followingOccurrenceDate(dueDate, rule, today);
+      if (!nextDueDate) return;
+      const existing = task.recurrenceSeriesId
+        ? await transaction.task.findFirst({ where: { recurrenceSeriesId: task.recurrenceSeriesId, dueDate: asDatabaseDate(nextDueDate)! }, select: { id: true } })
+        : null;
+      if (!existing) await transaction.task.create({ data: nextOccurrenceData(task, nextDueDate) });
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     return this.get(workspaceId, id);
   },
@@ -173,6 +205,7 @@ export const taskService = {
   async addSubtask(workspaceId: number, taskId: number, title: string) {
     const task = await taskRepository.find(workspaceId, taskId);
     if (!task) throw new AppError("TASK_NOT_FOUND", "Task not found", 404);
+    if (isClosedStatus(task.status)) throw taskNotOpen();
     const subtask = await prisma.$transaction(async (transaction) => {
       const created = await transaction.subtask.create({ data: { taskId, title, position: task.subtasks.length } });
       if (task.status === TaskStatus.COMPLETED) await transaction.task.update({ where: { id: taskId }, data: { status: TaskStatus.OPEN, completedAt: null, version: { increment: 1 } } });
@@ -195,6 +228,8 @@ export const taskService = {
 
   async setSubtaskCompletion(workspaceId: number, taskId: number, subtaskId: number, completed: boolean, version: number) {
     await prisma.$transaction(async (transaction) => {
+      const parent = await transaction.task.findFirst({ where: { id: taskId, workspaceId }, select: { status: true } });
+      if (parent && isClosedStatus(parent.status)) throw taskNotOpen();
       const result = await transaction.subtask.updateMany({
         where: { id: subtaskId, taskId, version, task: { workspaceId } },
         data: { status: completed ? TaskStatus.COMPLETED : TaskStatus.OPEN, completedAt: completed ? new Date() : null, version: { increment: 1 } },
@@ -217,12 +252,7 @@ export const taskService = {
       const latest = latestOccurrenceDate(dueDate, recurrenceFromTask(task), today);
       if (!latest || latest <= dueDate) continue;
       try {
-        await prisma.task.create({ data: {
-          workspaceId, projectId: task.projectId, title: task.title, dueDate: asDatabaseDate(latest), recurrenceFrequency: task.recurrenceFrequency,
-          recurrenceInterval: task.recurrenceInterval, recurrenceUnit: task.recurrenceUnit, recurrenceSeriesId: task.recurrenceSeriesId,
-          previousOccurrenceId: task.id, occurrenceNumber: task.occurrenceNumber + 1,
-          subtasks: { create: task.subtasks.map((subtask) => ({ title: subtask.title, position: subtask.position })) },
-        } });
+        await prisma.task.create({ data: nextOccurrenceData(task, latest) });
       } catch (error) {
         if (!(error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002")) throw error;
       }

@@ -4,6 +4,7 @@ import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
+import { buildInfo } from "./config/build_info.js";
 import { env, frontendOrigins } from "./config/env.js";
 import { attachAuthContext } from "./features/auth/auth_context.js";
 import { authRouter } from "./features/auth/auth_routes.js";
@@ -21,6 +22,7 @@ app.set("trust proxy", env.NODE_ENV === "production" ? 1 : false);
 app.use((request, response, next) => {
   request.requestId = request.header("x-request-id")?.slice(0, 100) || crypto.randomUUID();
   response.setHeader("x-request-id", request.requestId);
+  response.setHeader("x-api-version", buildInfo.version);
   next();
 });
 app.use(helmet());
@@ -31,7 +33,7 @@ app.use(cookieParser());
 app.use(attachAuthContext);
 
 app.get("/health", (_request, response) => {
-  response.status(200).json({ success: true, data: { status: "ok" } });
+  response.status(200).json({ success: true, data: { status: "ok", ...buildInfo } });
 });
 
 app.use("/api/v1/auth", authRouter);

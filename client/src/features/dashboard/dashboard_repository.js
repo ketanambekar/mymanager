@@ -29,6 +29,8 @@ export const updateTask = (taskId, task) => resource(apiClient.patch(taskPath(ta
 export const deleteTask = (taskId) => resource(apiClient.delete(taskPath(taskId)));
 export const completeTask = (taskId, version) => resource(apiClient.post(`${taskPath(taskId)}/complete`, { version }));
 export const reopenTask = (taskId, version) => resource(apiClient.post(`${taskPath(taskId)}/reopen`, { version }));
+export const skipTask = (taskId, version, reason) => resource(apiClient.post(`${taskPath(taskId)}/skip`, { version, reason }));
+export const missTask = (taskId, version, reason) => resource(apiClient.post(`${taskPath(taskId)}/miss`, { version, reason }));
 
 export const createSubtask = (taskId, title) => resource(apiClient.post(`${taskPath(taskId)}/subtasks`, { title }));
 export const updateSubtask = (taskId, subtaskId, title, version) => resource(apiClient.patch(subtaskPath(taskId, subtaskId), { title, version }));

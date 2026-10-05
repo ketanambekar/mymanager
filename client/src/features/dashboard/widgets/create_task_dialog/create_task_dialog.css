@@ -1,4 +1,4 @@
-.task-dialog { width: min(440px, calc(100% - 32px)); padding: 23px; border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--surface-raised); color: var(--ink); box-shadow: var(--dialog-shadow); }
+.task-dialog { width: min(540px, calc(100% - 32px)); max-height: min(90dvh, 760px); padding: 23px; overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--surface-raised); color: var(--ink); box-shadow: var(--dialog-shadow); }
 .task-dialog::backdrop { background: var(--backdrop); backdrop-filter: blur(2px); }
 .task-dialog form { display: grid; gap: 10px; }
 .dialog-heading { display: flex; align-items: start; justify-content: space-between; margin-bottom: 7px; }
@@ -16,4 +16,22 @@
 .task-dialog .dialog-heading .section-kicker { color: var(--green); font-weight: 700; }
 .task-dialog .field-label { color: var(--text-secondary); font-size: 11px; }
 .task-dialog .dialog-actions { margin-top: 12px; }
+.task-dialog-subtasks { display: grid; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+.task-dialog-subtasks-heading { display: flex; align-items: center; justify-content: space-between; color: var(--muted); }
+.task-dialog-subtasks-heading h3 { display: flex; align-items: center; gap: 7px; margin: 0; color: var(--ink); font-size: 13px; font-weight: 650; }
+.task-dialog-subtasks-heading h3 svg { color: var(--green); }
+.task-dialog-subtasks-heading > span { color: var(--muted); font-family: var(--font-mono); font-size: 11px; }
+.task-dialog-subtask-list { display: grid; gap: 5px; max-height: 210px; margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.task-dialog-subtask { display: flex; min-width: 0; align-items: center; gap: 8px; padding: 5px 6px; border: 1px solid var(--line); border-radius: 5px; background: color-mix(in srgb, var(--surface-raised) 85%, var(--surface)); color: var(--text-secondary); font-size: 12px; }
+.task-dialog-subtask.is-complete .task-dialog-subtask-title { color: var(--muted); text-decoration: line-through; }
+.task-dialog-subtask-check { width: 18px; height: 18px; flex: 0 0 auto; }
+.task-dialog-subtask-title { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.task-dialog-subtask-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 2px; }
+.task-dialog-subtask-edit { display: flex !important; min-width: 0; flex: 1; align-items: center; gap: 3px !important; }
+.task-dialog-subtask-edit .app-input { min-width: 0; min-height: 32px; flex: 1; font-size: 12px; }
+.task-dialog-subtask-edit .app-icon-button--task-action { width: 30px; height: 30px; }
+.task-dialog-subtask-form { display: grid !important; grid-template-columns: minmax(0, 1fr) auto; gap: 7px !important; }
+.task-dialog-subtask-form .app-input { min-height: 36px; font-size: 12px; }
+.task-dialog-subtask-form .app-button { min-height: 36px; }
+.task-dialog-subtask-empty { margin: 0; color: var(--muted); font-size: 12px; }
 @keyframes dialog-arrive { from { opacity: 0; transform: translateY(8px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }

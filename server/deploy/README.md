@@ -34,16 +34,39 @@ The frontend production variable is:
 VITE_API_BASE_URL=https://api.mymanger.in/api/v1
 ```
 
-## Deploy
+## Release and Deploy
 
-Transfer a clean `server/` source bundle to `/opt/mymanager/server`, preserving the server-owned `.env.production`, then run:
+The backend version lives in `server/package.json` and follows semver; every change is recorded in [CHANGELOG.md](../CHANGELOG.md).
+
+1. Bump the version from the repository root with `npm --prefix server run version:patch` (or `version:minor`/`version:major`), add the release to `CHANGELOG.md`, and commit.
+2. Build the bundle from committed code on the workstation:
+
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File server\deploy\package_release.ps1 -Tag
+   git push origin server-v<version>
+   ```
+
+   The script refuses uncommitted `server/` changes and a version tag that already points at different code. It writes `mymanager-server-v<version>-<commit>.tar.gz` (in `%TEMP%` by default) with a `RELEASE_COMMIT` file, keeping LF line endings for Linux.
+3. Transfer and extract the bundle into `/opt/mymanager/server`, preserving the server-owned `.env.production`:
+
+   ```bash
+   tar -xzf mymanager-server-v<version>-<commit>.tar.gz -C /opt/mymanager/server
+   cd /opt/mymanager/server
+   bash deploy/deploy.sh
+   ```
+
+`deploy.sh` reads the version and commit, builds the image tagged `mymanager-api:<version>`, and waits for `/health` to report the new build. It then appends the result to `/opt/mymanager/server/deployments.log`; if the new version never reports healthy, it fails and prints the API logs. The API image runs `prisma migrate deploy` before starting. Do not use `prisma db push` in production. Back up the database (`sudo bash deploy/backup_database.sh`) before releases with migrations.
+
+## Which Version Is Running?
 
 ```bash
-cd /opt/mymanager/server
-bash deploy/deploy.sh
+curl -s https://api.mymanger.in/health      # {"status":"ok","version":"1.1.0","commit":"<sha>","builtAt":"<utc>"}
+curl -sI https://api.mymanger.in/health | grep -i x-api-version
+cat /opt/mymanager/server/deployments.log   # deployment history
+docker image ls mymanager-api               # images kept per version
 ```
 
-The API image runs `prisma migrate deploy` before starting. Do not use `prisma db push` in production.
+To roll back, re-extract the previous bundle and run `deploy.sh`; `docker image prune` removes old images when disk space is needed. Rolling back code does not roll back migrations, so keep migrations additive.
 
 ## Operations
 

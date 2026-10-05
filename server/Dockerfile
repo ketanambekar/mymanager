@@ -15,6 +15,16 @@ COPY src ./src
 
 RUN npm run build
 
+ARG APP_VERSION=dev
+ARG GIT_COMMIT=unknown
+ARG BUILD_TIME=
+LABEL org.opencontainers.image.title="mymanager-api" \
+      org.opencontainers.image.version="${APP_VERSION}" \
+      org.opencontainers.image.revision="${GIT_COMMIT}" \
+      org.opencontainers.image.created="${BUILD_TIME}"
+ENV GIT_COMMIT=${GIT_COMMIT} \
+    BUILD_TIME=${BUILD_TIME}
+
 ENV NODE_ENV=production
 EXPOSE 5000
 

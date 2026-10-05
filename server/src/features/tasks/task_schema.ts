@@ -21,10 +21,12 @@ export const updateTaskSchema = fields.partial().extend({ version: z.number().in
 export const taskIdSchema = z.object({ taskId: z.coerce.number().int().positive() });
 export const subtaskIdSchema = taskIdSchema.extend({ subtaskId: z.coerce.number().int().positive() });
 export const versionSchema = z.object({ version: z.number().int().positive() }).strict();
+export const skipTaskSchema = versionSchema.extend({ reason: z.string().trim().min(1).max(200) }).strict();
+export const missTaskSchema = skipTaskSchema;
 export const subtaskCreateSchema = z.object({ title: z.string().trim().min(1).max(120) }).strict();
 export const subtaskUpdateSchema = subtaskCreateSchema.extend({ version: z.number().int().positive() }).strict();
 export const taskListSchema = z.object({
-  status: z.enum(["all", "open", "completed"]).default("all"),
+  status: z.enum(["all", "open", "completed", "skipped", "missed"]).default("all"),
   projectId: z.coerce.number().int().positive().optional(),
   search: z.string().trim().max(120).optional(),
   dateScope: z.enum(["recent", "upcoming", "all"]).default("all"),

@@ -64,6 +64,12 @@ export function latestOccurrenceDate(dueDate: string, rule: RecurrenceRule, onDa
   return latest ? formatDate(latest) : null;
 }
 
+/** Occurrence that follows a closed overdue one: the latest already-due date when one exists, otherwise the next future date. */
+export function followingOccurrenceDate(dueDate: string, rule: RecurrenceRule, today: string): string | null {
+  const latest = latestOccurrenceDate(dueDate, rule, today);
+  return latest && latest > dueDate ? latest : nextOccurrenceDate(dueDate, rule, today);
+}
+
 export function dateInTimeZone(date: Date, timeZone: string): string {
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
   const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));

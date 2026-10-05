@@ -10,6 +10,7 @@ import CreateTaskDialog from "./widgets/create_task_dialog/create_task_dialog.js
 import DeleteProjectDialog from "./widgets/delete_project_dialog/delete_project_dialog.jsx";
 import DeleteTaskDialog from "./widgets/delete_task_dialog/delete_task_dialog.jsx";
 import ProjectList from "./widgets/project_list/project_list.jsx";
+import SkipTaskDialog from "./widgets/skip_task_dialog/skip_task_dialog.jsx";
 import SummaryStrip from "./widgets/summary_strip/summary_strip.jsx";
 import TaskList from "./widgets/task_list/task_list.jsx";
 import UpcomingTaskList from "./widgets/upcoming_task_list/upcoming_task_list.jsx";
@@ -75,7 +76,7 @@ export default function DashboardView({ theme, onToggleTheme, themeController, u
                 <time className="clock-time" dateTime={currentTime.toISOString()}>{timeLabel}</time>
               </div>
             </div>
-            <SummaryStrip completedCount={dashboard.completedCount} completedTodayCount={dashboard.completedTodayCount} dueTodayCount={dashboard.dueTodayCount} overdueCount={dashboard.overdueCount} pendingTodayCount={dashboard.pendingTodayCount} totalCount={dashboard.totalCount} />
+            <SummaryStrip completedCount={dashboard.completedCount} completedTodayCount={dashboard.completedTodayCount} completionRate={dashboard.completionRate} dueTodayCount={dashboard.dueTodayCount} missedCount={dashboard.missedCount} openCount={dashboard.openCount} overdueCount={dashboard.overdueCount} pendingTodayCount={dashboard.pendingTodayCount} skippedCount={dashboard.skippedCount} totalCount={dashboard.totalCount} />
           </div>
           {themeController.error && <p className="dashboard-preference-error" role="alert">{themeController.error}</p>}
           {themeController.timezoneMismatch && <div className="dashboard-timezone-notice"><span>Use {themeController.browserTimezone} for task dates?</span><AppButton disabled={themeController.isSaving} onClick={() => { void themeController.saveTimezone().then((saved) => { if (saved) return dashboard.retryLoad(); return undefined; }); }} variant="secondary">Use timezone</AppButton><AppButton onClick={themeController.dismissTimezone} variant="secondary">Not now</AppButton></div>}
@@ -89,6 +90,7 @@ export default function DashboardView({ theme, onToggleTheme, themeController, u
               {dashboard.isFiltering && <span className="dashboard-filter-loading" role="status">Updating tasks...</span>}
               <TaskList
                 activeFilter={dashboard.activeFilter}
+                asOfDate={dashboard.asOfDate}
                 isPending={dashboard.isMutating}
                 onAddTask={() => dashboard.openTaskDialog(dashboard.selectedProjectId)}
                 onAddSubtask={dashboard.addSubtask}
@@ -99,6 +101,8 @@ export default function DashboardView({ theme, onToggleTheme, themeController, u
                 onEditTask={dashboard.openEditTaskDialog}
                 onEditSubtask={dashboard.editSubtask}
                 onFilterChange={dashboard.setActiveFilter}
+                onMissTask={dashboard.openMissTaskDialog}
+                onSkipTask={dashboard.openTaskClosureDialogSkip}
                 onToggleTask={dashboard.toggleTask}
                 onToggleSubtask={dashboard.toggleSubtask}
                 projectColor={dashboard.projectColor}
@@ -109,7 +113,7 @@ export default function DashboardView({ theme, onToggleTheme, themeController, u
             </aside>
             {dashboard.upcomingTasks.length > 0 && (
               <aside className="dashboard-upcoming-column">
-                <UpcomingTaskList projectColor={dashboard.projectColor} projectName={dashboard.projectName} tasks={dashboard.upcomingTasks} />
+                <UpcomingTaskList onEditTask={dashboard.openEditTaskDialog} projectColor={dashboard.projectColor} projectName={dashboard.projectName} tasks={dashboard.upcomingTasks} />
               </aside>
             )}
           </div>
@@ -120,10 +124,24 @@ export default function DashboardView({ theme, onToggleTheme, themeController, u
       <AppIconButton aria-label="Add task" className="add-task-fab" onClick={dashboard.openTaskDialog} title="Add task" variant="floating-add">
         <Plus aria-hidden="true" size={24} strokeWidth={2.5} />
       </AppIconButton>
-      <CreateTaskDialog defaultProjectId={dashboard.taskDialogProjectId} isOpen={dashboard.isCreateDialogOpen} isPending={dashboard.isMutating} onClose={dashboard.closeTaskDialog} onCreate={dashboard.createTask} projects={dashboard.projects} task={dashboard.editingTask} today={dashboard.asOfDate} />
+      <CreateTaskDialog
+        defaultProjectId={dashboard.taskDialogProjectId}
+        isOpen={dashboard.isCreateDialogOpen}
+        isPending={dashboard.isMutating}
+        onAddSubtask={dashboard.addSubtask}
+        onClose={dashboard.closeTaskDialog}
+        onCreate={dashboard.createTask}
+        onDeleteSubtask={dashboard.requestDeleteTask}
+        onEditSubtask={dashboard.editSubtask}
+        onToggleSubtask={dashboard.toggleSubtask}
+        projects={dashboard.projects}
+        task={dashboard.editingTask}
+        today={dashboard.asOfDate}
+      />
       <CreateProjectDialog isOpen={dashboard.isCreateProjectDialogOpen} isPending={dashboard.isMutating} onClose={dashboard.closeProjectDialog} onCreate={dashboard.createProject} project={dashboard.editingProject} projects={dashboard.projects} />
       <DeleteProjectDialog isOpen={Boolean(dashboard.projectPendingDeletion)} isPending={dashboard.isMutating} onCancel={dashboard.cancelDeleteProject} onConfirm={dashboard.confirmDeleteProject} project={dashboard.projectPendingDeletion} />
       <DeleteTaskDialog isPending={dashboard.isMutating} item={dashboard.taskPendingDeletion} onCancel={dashboard.cancelDeleteTask} onConfirm={dashboard.confirmDeleteTask} />
+      <SkipTaskDialog action={dashboard.taskClosureDialog?.action} error={dashboard.taskClosureDialogError} isPending={dashboard.isMutating} onCancel={dashboard.cancelTaskClosureDialog} onConfirm={dashboard.confirmTaskClosure} onReasonChange={dashboard.clearTaskClosureDialogError} task={dashboard.taskClosureDialog?.task} />
       <ActionToast notification={dashboard.notification} onDismiss={dashboard.dismissNotification} />
     </div>
   );

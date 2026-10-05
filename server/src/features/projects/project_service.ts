@@ -27,7 +27,7 @@ function projectStats(projects: Awaited<ReturnType<typeof projectRepository.list
   const descendants = (id: number): number[] => (children.get(id) ?? []).flatMap((childId) => [childId, ...descendants(childId)]);
   return projects.map((project) => {
     const branch = new Set([project.id, ...descendants(project.id)]);
-    const tasks = projects.filter((candidate) => branch.has(candidate.id)).flatMap((candidate) => candidate.tasks);
+    const tasks = projects.filter((candidate) => branch.has(candidate.id)).flatMap((candidate) => candidate.tasks).filter((task) => task.status !== TaskStatus.SKIPPED);
     const taskCount = tasks.reduce((count, task) => count + 1 + task.subtasks.length, 0);
     const completedCount = tasks.reduce((count, task) => count + Number(task.status === TaskStatus.COMPLETED) + task.subtasks.filter((subtask) => subtask.status === TaskStatus.COMPLETED).length, 0);
     const { tasks: _tasks, ...view } = project;

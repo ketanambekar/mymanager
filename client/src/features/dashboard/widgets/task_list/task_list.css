@@ -34,6 +34,6 @@
 	.project-detail-metric:nth-child(2n) { border-right: 0; }
 	.project-detail-actions { grid-column: 1 / -1; justify-content: end; border-top: 1px solid var(--line); }
 }
-@container (max-width: 390px) {
+@container (max-width: 520px) {
 	.task-title-toolbar > .task-filters { flex-wrap: wrap; }
 }

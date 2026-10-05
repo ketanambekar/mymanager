@@ -1,0 +1,27 @@
+.skip-task-dialog { width: min(480px, calc(100% - 32px)); padding: 22px; border: 1px solid color-mix(in srgb, var(--project-blue) 38%, var(--line)); border-radius: 8px; background: var(--surface-raised); color: var(--ink); box-shadow: var(--dialog-shadow); }
+.skip-task-dialog::backdrop { background: var(--backdrop); backdrop-filter: blur(5px); }
+.skip-task-dialog form { display: grid; gap: 10px; }
+.skip-task-heading { display: flex; align-items: center; gap: 11px; }
+.skip-task-icon { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border: 1px solid color-mix(in srgb, var(--project-blue) 35%, var(--line)); border-radius: 50%; background: color-mix(in srgb, var(--project-blue) 12%, var(--surface-raised)); color: var(--project-blue); }
+.skip-task-heading > div { min-width: 0; flex: 1; }
+.skip-task-heading .section-kicker { margin-bottom: 4px; color: var(--project-blue); font-weight: 700; }
+.skip-task-heading h2 { margin: 0; font-family: var(--font-display); font-size: 19px; font-weight: 600; }
+.skip-task-name { overflow: hidden; margin: 3px 0 0; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.skip-task-reasons { display: flex; flex-wrap: wrap; gap: 7px; margin: 5px 0; }
+.skip-task-reason-chip { min-height: 30px; padding: 5px 9px; border: 1px solid var(--line); border-radius: 99px; background: var(--surface-subtle); color: var(--text-secondary); cursor: pointer; font: inherit; font-size: 10px; transition: border-color .16s ease, background-color .16s ease, color .16s ease; }
+.skip-task-reason-chip:hover, .skip-task-reason-chip[aria-pressed="true"] { border-color: var(--closure-action-color, var(--project-blue)); background: color-mix(in srgb, var(--closure-action-color, var(--project-blue)) 12%, var(--surface-raised)); color: var(--ink); }
+.skip-task-reason-chip:focus-visible { outline: 2px solid var(--project-blue); outline-offset: 2px; }
+.skip-task-reason-chip:disabled { cursor: not-allowed; opacity: .6; }
+.skip-task-reason-label { color: var(--text-secondary); font-size: 11px; font-weight: 600; }
+.skip-task-dialog .app-input[aria-invalid="true"] { border-color: var(--orange); }
+.skip-task-error { margin: -4px 0 0; color: var(--orange); font-size: 11px; }
+.skip-task-character-count { justify-self: end; margin-top: -7px; color: var(--muted); font-family: var(--font-mono); font-size: 9px; }
+.skip-task-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 5px; }
+.skip-task-confirm { background: var(--closure-action-color, var(--project-blue)); color: var(--button-primary-text); }
+.skip-task-dialog.is-miss { --closure-action-color: var(--orange); border-color: color-mix(in srgb, var(--orange) 38%, var(--line)); }
+.skip-task-dialog.is-miss .skip-task-icon { border-color: color-mix(in srgb, var(--orange) 35%, var(--line)); background: color-mix(in srgb, var(--orange) 12%, var(--surface-raised)); color: var(--orange); }
+.skip-task-dialog.is-miss .skip-task-heading .section-kicker { color: var(--orange); }
+.skip-task-dialog.is-miss .skip-task-reason-chip:focus-visible { outline-color: var(--orange); }
+.skip-task-confirm:hover:not(:disabled) { background: color-mix(in srgb, var(--closure-action-color, var(--project-blue)) 84%, var(--ink)); }
+@media (max-width: 420px) { .skip-task-dialog { padding: 17px; }.skip-task-heading h2 { font-size: 17px; } }
+@media (prefers-reduced-motion: reduce) { .skip-task-reason-chip { transition-duration: .01ms; } }

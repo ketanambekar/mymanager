@@ -28,7 +28,10 @@ Never place database, JWT, or Google server credentials in Vite variables. Adam 
 - `npm run build`: generate Prisma Client and compile TypeScript.
 - `npm test`: run focused business-rule tests.
 - `npm run db:deploy`: deploy committed migrations.
+- `npm run version:patch|minor|major`: bump the semver version in `package.json` and `package-lock.json`.
 
-Health check: `GET /health`. API base path: `/api/v1`.
+Health check: `GET /health` returns `status`, `version`, `commit`, and `builtAt`; every response also carries `x-api-version`. API base path: `/api/v1`.
+
+Versioning: `package.json` is the single source of truth. Record changes in [CHANGELOG.md](CHANGELOG.md), tag releases as `server-v<version>`, and follow [deploy/README.md](deploy/README.md) for the release flow.
 
 Postman: [postman/mymanager_phase_1.postman_collection.json](postman/mymanager_phase_1.postman_collection.json).

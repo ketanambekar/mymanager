@@ -1,11 +1,13 @@
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import "./task_completion_chart.css";
 
-export default function TaskCompletionChart({ completedCount, openCount, completionRate, totalCount }) {
+export default function TaskCompletionChart({ completedCount, openCount, skippedCount, missedCount, completionRate, totalCount }) {
   const chartData = totalCount
     ? [
       { name: "Completed", value: completedCount, color: "var(--green)" },
       { name: "Open", value: openCount, color: "var(--progress-track)" },
+      { name: "Skipped", value: skippedCount, color: "var(--project-blue)" },
+      { name: "Missed", value: missedCount, color: "var(--orange)" },
     ]
     : [{ name: "No tasks", value: 1, color: "var(--progress-track)" }];
 

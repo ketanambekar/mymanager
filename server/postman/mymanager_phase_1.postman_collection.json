@@ -201,6 +201,28 @@
           },
           "event": [{ "listen": "test", "script": { "exec": ["pm.collectionVariables.set('taskVersion', pm.response.json().data.version);"] } }]
         },
+        {
+          "name": "Skip Overdue Recurring Task",
+          "request": {
+            "description": "Requires an open recurring task due before today in the saved timezone; otherwise returns 409 TASK_NOT_OVERDUE or TASK_NOT_RECURRING. reason is required (1-200 chars). Retrying after success returns the same SKIPPED task.",
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"version\": {{taskVersion}}, \"reason\": \"Rest day\" }", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/tasks/{{taskId}}/skip"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 200) pm.collectionVariables.set('taskVersion', pm.response.json().data.version);"] } }]
+        },
+        {
+          "name": "Miss Overdue Task",
+          "request": {
+            "description": "Requires an open task due before today in the saved timezone; otherwise returns 409 TASK_NOT_OVERDUE. Retrying after success returns the same MISSED task.",
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw",             "raw": "{ \"version\": {{taskVersion}}, \"reason\": \"Forgot about it\" }", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/tasks/{{taskId}}/miss"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 200) pm.collectionVariables.set('taskVersion', pm.response.json().data.version);"] } }]
+        },
         { "name": "Delete Subtask", "request": { "method": "DELETE", "url": "{{baseUrl}}/tasks/{{taskId}}/subtasks/{{subtaskId}}" } },
         { "name": "Delete Task", "request": { "method": "DELETE", "url": "{{baseUrl}}/tasks/{{taskId}}" } }
       ]

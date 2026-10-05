@@ -24,6 +24,8 @@ enum ThemePreference {
 enum TaskStatus {
   OPEN
   COMPLETED
+  SKIPPED
+  MISSED
 }
 
 enum RecurrenceFrequency {
@@ -138,6 +140,8 @@ model Task {
   dueDate              DateTime?           @db.Date
   status               TaskStatus          @default(OPEN)
   completedAt          DateTime?
+  closedAt             DateTime?
+  closeReason          String?             @db.VarChar(200)
   recurrenceFrequency RecurrenceFrequency @default(ONE_TIME)
   recurrenceInterval  Int?
   recurrenceUnit      RecurrenceUnit?

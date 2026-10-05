@@ -3,6 +3,7 @@ import { TASK_FILTER_IDS } from "@/features/dashboard/widgets/task_list/constant
 import { getApiErrorMessage, isVersionConflict } from "@/services/api_client.js";
 import * as repository from "./dashboard_repository.js";
 import { resolveProjectColor } from "./project_color_utils.js";
+import { getTaskStatus, TASK_STATUSES } from "./task_status.js";
 import { normalizeRecurrence } from "./task_recurrence.js";
 
 function getDescendantProjectIds(projects, parentProjectId) {
@@ -29,6 +30,8 @@ export function useDashboardController() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState(null);
+  const [taskClosureDialog, setTaskClosureDialog] = useState(null);
+  const [taskClosureDialogError, setTaskClosureDialogError] = useState("");
   const [pendingTaskDeletion, setPendingTaskDeletion] = useState(null);
   const [isCreateProjectDialogOpen, setIsCreateProjectDialogOpen] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState(null);
@@ -102,7 +105,7 @@ export function useDashboardController() {
   const projectColor = (projectId) => resolveProjectColor(projectId, projects) ?? "var(--project-neutral)";
   const today = asOfDate;
   const upcomingTasks = tasks
-    .filter((task) => !task.completed && task.dueDate && task.dueDate > today)
+    .filter((task) => getTaskStatus(task) === TASK_STATUSES.OPEN && task.dueDate && task.dueDate > today)
     .sort((first, second) => first.dueDate.localeCompare(second.dueDate) || first.title.localeCompare(second.title));
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const selectedProjectIds = selectedProjectId
@@ -111,8 +114,10 @@ export function useDashboardController() {
   const visibleTasks = (filteredTasks ?? tasks).filter((task) => {
     const matchesDate = !task.dueDate || task.dueDate <= today;
     const matchesFilter = activeFilter === TASK_FILTER_IDS.ALL
-      || (activeFilter === TASK_FILTER_IDS.OPEN && !task.completed)
-      || (activeFilter === TASK_FILTER_IDS.COMPLETED && task.completed);
+      || (activeFilter === TASK_FILTER_IDS.OPEN && getTaskStatus(task) === TASK_STATUSES.OPEN)
+      || (activeFilter === TASK_FILTER_IDS.COMPLETED && getTaskStatus(task) === TASK_STATUSES.COMPLETED)
+      || (activeFilter === TASK_FILTER_IDS.SKIPPED && getTaskStatus(task) === TASK_STATUSES.SKIPPED)
+      || (activeFilter === TASK_FILTER_IDS.MISSED && getTaskStatus(task) === TASK_STATUSES.MISSED);
     const matchesProject = !selectedProjectIds || selectedProjectIds.includes(task.projectId);
     const matchesSearch = !normalizedSearch || task.title.toLowerCase().includes(normalizedSearch);
     return matchesDate && matchesFilter && matchesProject && matchesSearch;
@@ -126,7 +131,7 @@ export function useDashboardController() {
   const pendingTodayCount = summary?.pendingTodayCount ?? 0;
   const completedTodayCount = summary?.completedTodayCount ?? 0;
 
-  async function runMutation(action, message, { celebrate = false, color = null } = {}) {
+  async function runMutation(action, message, { celebrate = false, color = null, refreshTaskId = null, onError = null } = {}) {
     if (mutationPending.current) return false;
     mutationPending.current = true;
     setIsMutating(true);
@@ -135,9 +140,31 @@ export function useDashboardController() {
       try {
         result = await action();
       } catch (error) {
-        if (isVersionConflict(error)) await refreshDashboard().catch(() => {});
-        notify(isVersionConflict(error) ? "This item changed elsewhere. The latest version is loaded." : getApiErrorMessage(error), "error");
+        const errorCode = error.response?.data?.error?.code;
+        const shouldRefresh = isVersionConflict(error) || ["TASK_NOT_OVERDUE", "TASK_NOT_RECURRING", "TASK_NOT_OPEN", "TASK_NOT_REOPENABLE"].includes(errorCode);
+        if (shouldRefresh) {
+          try {
+            await refreshDashboard();
+          } catch {
+            setLoadError("Could not refresh the dashboard. Retry to load the latest data.");
+          }
+        }
+        const conflictMessage = isVersionConflict(error)
+          ? "This task changed elsewhere. The latest version is loaded."
+          : errorCode === "TASK_NOT_OVERDUE"
+            ? "This task is no longer overdue. The latest data is loaded."
+            : errorCode === "TASK_NOT_RECURRING"
+              ? "Only recurring tasks can be skipped."
+              : errorCode === "TASK_NOT_OPEN"
+                ? "This task is no longer open. The latest data is loaded."
+                : errorCode === "TASK_NOT_REOPENABLE"
+                  ? "Skipped and missed tasks cannot be reopened."
+                : getApiErrorMessage(error);
+        if (!onError?.(error)) notify(conflictMessage, "error");
         return false;
+      }
+      if (refreshTaskId && result?.id) {
+        setTasks((currentTasks) => currentTasks.map((task) => task.id === refreshTaskId ? result : task));
       }
       try {
         await refreshDashboard();
@@ -158,11 +185,72 @@ export function useDashboardController() {
       notify("Task not found.", "error");
       return false;
     }
+    const status = getTaskStatus(task);
+    if (status === TASK_STATUSES.SKIPPED || status === TASK_STATUSES.MISSED) {
+      notify("Skipped and missed tasks cannot be reopened.", "error");
+      return false;
+    }
+    if (status !== TASK_STATUSES.OPEN && status !== TASK_STATUSES.COMPLETED) {
+      notify("This task has an unsupported status.", "error");
+      return false;
+    }
+    const reopening = status === TASK_STATUSES.COMPLETED;
     return runMutation(
-      () => task.completed ? repository.reopenTask(taskId, task.version) : repository.completeTask(taskId, task.version),
-      task.completed ? "Task reopened." : "Task completed!",
-      { celebrate: !task.completed, color: projectColor(task.projectId) },
+      () => reopening ? repository.reopenTask(taskId, task.version) : repository.completeTask(taskId, task.version),
+      reopening ? "Task reopened." : "Task completed!",
+      { celebrate: !reopening, color: projectColor(task.projectId) },
     );
+  }
+
+  function closeOverdueTask(taskId, command, reason = "") {
+    const task = tasks.find((candidate) => candidate.id === taskId);
+    if (!task) {
+      notify("Task not found.", "error");
+      return false;
+    }
+    if (getTaskStatus(task) !== TASK_STATUSES.OPEN || !task.dueDate || !asOfDate || task.dueDate >= asOfDate) {
+      notify("This task is no longer overdue. The latest data is loaded.", "error");
+      void refreshDashboard().catch(() => setLoadError("Could not refresh the dashboard. Retry to load the latest data."));
+      return false;
+    }
+    if (command === "skip" && (!task.recurrence?.frequency || task.recurrence.frequency === "one_time")) {
+      notify("Only recurring tasks can be skipped.", "error");
+      return false;
+    }
+    const normalizedReason = reason.trim();
+    if (!normalizedReason || normalizedReason.length > 200) {
+      notify(`Enter a ${command} reason between 1 and 200 characters.`, "error");
+      return false;
+    }
+    const skip = command === "skip";
+    return runMutation(
+      () => skip ? repository.skipTask(taskId, task.version, normalizedReason) : repository.missTask(taskId, task.version, normalizedReason),
+      skip ? "Task skipped." : "Task marked as missed.",
+      {
+        refreshTaskId: taskId,
+        onError: (error) => {
+          if (error.response?.status !== 400 || error.response?.data?.error?.code !== "VALIDATION_ERROR") return false;
+          setTaskClosureDialogError("Enter a reason between 1 and 200 characters.");
+          return true;
+        },
+      },
+    );
+  }
+
+  async function confirmTaskClosure(reason) {
+    if (!taskClosureDialog) return false;
+    const result = await closeOverdueTask(taskClosureDialog.taskId, taskClosureDialog.action, reason);
+    if (result) setTaskClosureDialog(null);
+    return result;
+  }
+
+  function showTaskClosureDialog(taskId, action) {
+    setTaskClosureDialogError("");
+    setTaskClosureDialog({ taskId, action });
+  }
+
+  function clearTaskClosureDialogError() {
+    setTaskClosureDialogError("");
   }
 
   function addSubtask(taskId, title) {
@@ -172,14 +260,22 @@ export function useDashboardController() {
       notify(!task ? "Task not found." : "Enter a subtask name.", "error");
       return false;
     }
+    if ([TASK_STATUSES.SKIPPED, TASK_STATUSES.MISSED].includes(getTaskStatus(task))) {
+      notify("Reopen this task before adding subtasks.", "error");
+      return false;
+    }
     return runMutation(() => repository.createSubtask(taskId, normalizedTitle), task.completed ? "Subtask added. Task reopened." : "Subtask added.");
   }
 
   function toggleSubtask(taskId, subtaskId) {
     const task = tasks.find((candidate) => candidate.id === taskId);
     const subtask = task?.subtasks.find((candidate) => candidate.id === subtaskId);
-    if (!subtask) {
+    if (!subtask || !task) {
       notify("Subtask not found.", "error");
+      return false;
+    }
+    if ([TASK_STATUSES.SKIPPED, TASK_STATUSES.MISSED].includes(getTaskStatus(task))) {
+      notify("Reopen this task before changing subtask completion.", "error");
       return false;
     }
     return runMutation(
@@ -190,7 +286,8 @@ export function useDashboardController() {
 
   function editSubtask(taskId, subtaskId, title) {
     const normalizedTitle = title.trim();
-    const subtask = tasks.find((task) => task.id === taskId)?.subtasks.find((candidate) => candidate.id === subtaskId);
+    const parentTask = tasks.find((task) => task.id === taskId);
+    const subtask = parentTask?.subtasks.find((candidate) => candidate.id === subtaskId);
     if (!normalizedTitle || !subtask) {
       notify(!subtask ? "Subtask not found." : "Enter a subtask name.", "error");
       return false;
@@ -225,9 +322,12 @@ export function useDashboardController() {
       return true;
     }
 
-    if (!await runMutation(() => repository.createTask(body), "Task created.")) return false;
+    const createdTask = await runMutation(() => repository.createTask(body), "Task created.");
+    if (!createdTask) return false;
+    setTasks((currentTasks) => currentTasks.some((task) => task.id === createdTask.id) ? currentTasks : [createdTask, ...currentTasks]);
+    setEditingTaskId(createdTask.id);
+    setTaskDialogProjectId(createdTask.projectId ?? "");
     setActiveFilter(TASK_FILTER_IDS.OPEN);
-    setIsCreateDialogOpen(false);
     return true;
   }
 
@@ -360,6 +460,19 @@ export function useDashboardController() {
     requestDeleteTask,
     confirmDeleteTask,
     cancelDeleteTask: () => setPendingTaskDeletion(null),
+    taskClosureDialog: taskClosureDialog && {
+      task: tasks.find((task) => task.id === taskClosureDialog.taskId) ?? null,
+      action: taskClosureDialog.action,
+    },
+    taskClosureDialogError,
+    openTaskClosureDialogSkip: (taskId) => showTaskClosureDialog(taskId, "skip"),
+    openMissTaskDialog: (taskId) => showTaskClosureDialog(taskId, "miss"),
+    cancelTaskClosureDialog: () => {
+      setTaskClosureDialog(null);
+      setTaskClosureDialogError("");
+    },
+    clearTaskClosureDialogError,
+    confirmTaskClosure,
     taskPendingDeletion: pendingTaskDeletion && (() => {
       const task = tasks.find((candidate) => candidate.id === pendingTaskDeletion.taskId);
       const subtask = task?.subtasks.find((candidate) => candidate.id === pendingTaskDeletion.subtaskId);
@@ -405,7 +518,7 @@ export function useDashboardController() {
       setIsCreateDialogOpen(false);
       setEditingTaskId(null);
     },
-    openTaskCount: tasks.filter((task) => !task.completed).length,
+    openTaskCount: tasks.filter((task) => getTaskStatus(task) === TASK_STATUSES.OPEN).length,
     projectName,
     projectColor,
     projectStats,
@@ -423,5 +536,9 @@ export function useDashboardController() {
     toggleTask,
     toggleSubtask,
     totalCount: summary?.totalCount ?? 0,
+    openCount: summary?.openCount ?? 0,
+    skippedCount: summary?.skippedCount ?? 0,
+    missedCount: summary?.missedCount ?? 0,
+    completionRate: summary?.completionRate ?? 0,
   };
 }

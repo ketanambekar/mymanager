@@ -32,9 +32,14 @@ services:
     logging: *default-logging
 
   api:
+    image: mymanager-api:${APP_VERSION:-dev}
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION:-dev}
+        GIT_COMMIT: ${GIT_COMMIT:-unknown}
+        BUILD_TIME: ${BUILD_TIME:-}
     restart: unless-stopped
     env_file:
       - .env.production

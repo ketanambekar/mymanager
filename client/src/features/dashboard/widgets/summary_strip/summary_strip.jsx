@@ -4,9 +4,7 @@ import "./summary_strip.css";
 
 const TaskCompletionChart = lazy(() => import("../task_completion_chart/task_completion_chart.jsx"));
 
-export default function SummaryStrip({ completedCount, completedTodayCount, dueTodayCount, overdueCount, pendingTodayCount, totalCount }) {
-  const completionRate = totalCount ? Math.round((completedCount / totalCount) * 100) : 0;
-  const openCount = Math.max(totalCount - completedCount, 0);
+export default function SummaryStrip({ completedCount, completedTodayCount, completionRate, dueTodayCount, missedCount, openCount, overdueCount, pendingTodayCount, skippedCount, totalCount }) {
 
   return (
     <div aria-label="Task summary" className="summary-strip" role="group">
@@ -26,13 +24,13 @@ export default function SummaryStrip({ completedCount, completedTodayCount, dueT
         <span className="summary-metric-label"><CircleCheck aria-hidden="true" size={16} />DONE TODAY</span>
         <strong>{completedTodayCount}</strong>
       </div>
-      <div aria-label={`${completionRate}% complete, ${completedCount} of ${totalCount} tasks`} className="completion-card">
+      <div aria-label={`${completionRate}% complete, ${completedCount} of ${Math.max(totalCount - skippedCount, 0)} counted tasks`} className="completion-card">
         <Suspense fallback={<div aria-label="Loading completion chart" className="completion-chart chart-loading" role="status" />}>
-          <TaskCompletionChart completedCount={completedCount} completionRate={completionRate} openCount={openCount} totalCount={totalCount} />
+          <TaskCompletionChart completedCount={completedCount} completionRate={completionRate} missedCount={missedCount} openCount={openCount} skippedCount={skippedCount} totalCount={totalCount} />
         </Suspense>
         <div className="completion-copy">
           <span>COMPLETION</span>
-          <strong>{completedCount} <i>/ {totalCount}</i></strong>
+          <strong>{completedCount} <i>/ {Math.max(totalCount - skippedCount, 0)}</i></strong>
           <small>tasks finished</small>
         </div>
       </div>

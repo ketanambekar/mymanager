@@ -6,7 +6,7 @@ function formatUpcomingDate(dueDate) {
     .format(new Date(`${dueDate}T00:00:00`));
 }
 
-export default function UpcomingTaskList({ tasks, projectColor, projectName }) {
+export default function UpcomingTaskList({ tasks, projectColor, projectName, onEditTask }) {
   const days = tasks.reduce((groups, task) => {
     let day = groups[groups.length - 1];
     if (day?.date !== task.dueDate) {
@@ -27,8 +27,16 @@ export default function UpcomingTaskList({ tasks, projectColor, projectName }) {
             <ul className="upcoming-day-tasks">
               {day.tasks.map((task) => (
                 <li key={task.id} style={{ "--upcoming-project-color": projectColor(task.projectId) }}>
-                  <span className="upcoming-task-title" title={task.title}>{task.title}</span>
-                  <span className="upcoming-project" title={projectName(task.projectId)}>{projectName(task.projectId)}</span>
+                  <button
+                    aria-label={`Edit task: ${task.title}`}
+                    className="upcoming-task-button"
+                    onClick={() => onEditTask(task.id)}
+                    title={`Edit task: ${task.title}`}
+                    type="button"
+                  >
+                    <span className="upcoming-task-title">{task.title}</span>
+                    <span className="upcoming-project" title={projectName(task.projectId)}>{projectName(task.projectId)}</span>
+                  </button>
                 </li>
               ))}
             </ul>
