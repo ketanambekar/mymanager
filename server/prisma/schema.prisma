@@ -196,6 +196,7 @@ model Task {
 
   @@unique([recurrenceSeriesId, dueDate], map: "Task_recurrenceSeriesId_dueDate_key")
   @@index([workspaceId, status, dueDate], map: "Task_workspaceId_status_dueDate_idx")
+  @@index([workspaceId, recurrenceSeriesId, occurrenceNumber, id], map: "Task_workspaceId_series_occurrence_idx")
   @@index([workspaceId, projectId, status, dueDate], map: "Task_workspaceId_projectId_status_dueDate_idx")
   @@map("task")
 }

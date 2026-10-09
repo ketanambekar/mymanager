@@ -28,6 +28,7 @@ Never place database, JWT, or Google server credentials in Vite variables. Adam 
 - `npm run build`: generate Prisma Client and compile TypeScript.
 - `npm test`: run focused business-rule tests.
 - `npm run test:auth:integration`: verify QR login/device sessions and populated migration on a disposable local MySQL database; needs local create/drop database permission.
+- `npm run test:habits:integration`: verify daily-series pagination, monthly history, task-command parity, and tenant isolation on a disposable local MySQL database.
 - `npm run cleanup:auth`: remove QR requests expired over 24 hours ago (requires a built server); schedule daily.
 - `npm run db:deploy`: deploy committed migrations.
 - `npm run version:patch|minor|major`: bump the semver version in `package.json` and `package-lock.json`.
@@ -39,3 +40,5 @@ Versioning: `package.json` is the single source of truth. Record changes in [CHA
 Postman: [postman/mymanager_phase_1.postman_collection.json](postman/mymanager_phase_1.postman_collection.json).
 
 Authentication contracts: [Google/session authentication](../docs/ben/api-contracts/auth.md) and [QR login, device management, and Adam/Dartji integration](../docs/ben/api-contracts/qr_sessions.md). QR login needs explicit approval from a signed-in device; device logout invalidates both access and refresh credentials.
+
+Habits: [daily-task calendar contract and page handoff](../docs/ben/api-contracts/habits.md). Habits are read-only views of daily task series; missing history is not inferred as missed or skipped.

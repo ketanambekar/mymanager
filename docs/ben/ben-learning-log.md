@@ -28,6 +28,7 @@ Persistent, project-specific memory for Ben. Keep entries factual, concise, and 
 
 - The owner requested QR scanning or numeric-code login to another browser/device from an already authenticated device, plus device management with active-session count, sign-in/last-use timestamps, and per-session remote logout. Adam owns the login-page and signed-in device/settings UI integration.
 - QR login uses explicit authenticated approval, five-minute expiry, requester-only poll/claim secrets, and atomic one-time consumption. Stable device sessions preserve refresh-family identity; revocation is enforced on subsequent protected requests, including existing access tokens.
+- The owner requested a separate Habits page showing daily tasks as habits, with a calendar of performed/skipped days; backend and Adam handoff come first. Implementation also distinguishes explicit Miss, overdue open days, and unrecorded gaps using existing task data, not a second habit store.
 
 ## Mistakes and Corrections
 
@@ -41,6 +42,11 @@ Persistent, project-specific memory for Ben. Keep entries factual, concise, and 
 ### 2026-10-05
 
 - On Windows, `core.autocrlf=true` made `git archive` emit CRLF shell scripts, which would fail under bash on the Linux host. Release bundles are now built with `git -c core.autocrlf=false archive`; verified zero carriage returns in bundled `.sh`, Dockerfile, Caddyfile, and compose files.
+
+### 2026-10-09
+
+- A focused test invocation via `npm exec node` resolved an npm package rather than the installed system runtime; switched to the existing `npm test`/integration scripts. Use repository scripts for runner resolution and avoid `npm exec node`.
+- The shared running local backend locked Prisma's Windows engine DLL during generation. Preserved the running process, verified a standard build using an isolated source/dependency copy, and removed only temporary engine files created by this task.
 
 ## Verified Achievements
 
@@ -69,3 +75,4 @@ Persistent, project-specific memory for Ben. Keep entries factual, concise, and 
 
 - Implemented backend 1.2.0 QR/code login, stable device sessions, account-scoped remote revocation, atomic refresh rotation, and bounded expired-challenge cleanup. Verified strict TypeScript build, 21 unit/regression tests, and disposable-MySQL scenarios covering populated migration preservation, Google-response compatibility, HTTP login/claim, expiry/deny/cancel, competing approvals/claims, refresh reuse/concurrency, disabled/revoked approvers, activity/logout, rate/origin/validation boundaries, and retention cleanup. The dedicated test database was removed; production deployment and native cookie verification are not included.
 - Deployed backend 1.2.0 from commit `6e586e990638` (tag `server-v1.2.0`) after creating and restoring a production backup with six completed migrations. Verified healthy API/MySQL containers, all seven migrations current, public HTTPS release metadata, QR create/status/cancel, rejection of premature claims and unauthenticated approval/device requests, and untrusted-Origin rejection. Installed the daily 02:30 UTC cleanup cron and successfully ran its wrapper. Backend and handoff changes were pushed to `features/enhancements` and fast-forward merged/pushed to `main`; concurrent uncommitted frontend changes were preserved. Native cookie verification and real-user browser acceptance remain client work.
+- Implemented backend 1.3.0 habit list/monthly calendar from existing daily recurrence data, with explicit unrecorded gaps, due-date outcomes/reasons, exact monthly counts, pagination, account isolation, and an additive lookup index. Verified strict types, 25 unit/regression tests, nine disposable-MySQL habit scenarios (including populated-index preservation and real task-command history), and all 11 auth integration scenarios. A standard build passed in an isolated copy without stopping the shared local backend; deployment and frontend implementation are not included.

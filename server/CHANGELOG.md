@@ -8,6 +8,18 @@ All notable backend changes are recorded here. The version in `package.json` is 
 
 Each deployed release is tagged `server-v<version>`. Check the running version with `GET /health` or the `x-api-version` response header.
 
+## 1.3.0 - 2026-10-09
+
+### Added
+
+- Read-only `GET /habits` for paginated daily recurrence series (including Custom every one day), with latest-occurrence title/project filters.
+- `GET /habits/:habitId/calendar?month=YYYY-MM` for complete monthly due-date grids, stored completion/skip/miss history and reasons, timezone-aware open-day states, exact month counts, and explicit unrecorded/non-daily states.
+- Habits contract with separate-page React and Flutter integration handoffs, calendar unit tests, and disposable-MySQL HTTP/task-history verification.
+
+### Migrations
+
+- `20261009093000_habit_series_lookup`: additive workspace/series/occurrence lookup index; no task/history mutation or backfill.
+
 ## 1.2.0 - 2026-10-09
 
 ### Added

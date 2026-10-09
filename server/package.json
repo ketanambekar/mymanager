@@ -1,6 +1,6 @@
 {
   "name": "mymanager-server",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "private": true,
   "description": "MyManger REST API",
   "main": "dist/src/server.js",
@@ -10,6 +10,7 @@
     "start": "node dist/src/server.js",
     "test": "node --import tsx --test tests/**/*.test.ts",
     "test:auth:integration": "node --import tsx --test tests/auth.integration.ts",
+    "test:habits:integration": "node --import tsx --test tests/habits.integration.ts",
     "cleanup:auth": "node dist/src/scripts/cleanup_auth.js",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
