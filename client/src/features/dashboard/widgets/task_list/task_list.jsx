@@ -12,7 +12,7 @@ function formatCreatedDate(createdAt) {
   return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(createdDate);
 }
 
-export default function TaskList({ activeFilter, asOfDate, onAddTask, onAddSubtask, onDeleteProject, onDeleteTask, onEditProject, onEditTask, onEditSubtask, onFilterChange, onMissTask, onSkipTask, onToggleTask, onToggleSubtask, projectName, projectColor, selectedProject, tasks, isPending }) {
+export default function TaskList({ activeFilter, asOfDate, filterCounts, onAddTask, onAddSubtask, onDeleteProject, onDeleteTask, onEditProject, onEditTask, onEditSubtask, onFilterChange, onMissTask, onSkipTask, onToggleTask, onToggleSubtask, projectName, projectColor, selectedProject, tasks, isPending }) {
   return (
     <section aria-labelledby="tasks-heading" className="tasks-section">
       <div className="task-section-header">
@@ -23,7 +23,7 @@ export default function TaskList({ activeFilter, asOfDate, onAddTask, onAddSubta
           <div aria-label="Filter tasks" className="task-filters" role="group">
             <ListFilter aria-hidden="true" className="task-filter-icon" size={15} />
             {TASK_FILTERS.map((filter) => (
-              <AppButton aria-pressed={activeFilter === filter.id} className={activeFilter === filter.id ? "selected" : ""} key={filter.id} onClick={() => onFilterChange(filter.id)} variant="filter">{filter.label}</AppButton>
+              <AppButton aria-pressed={activeFilter === filter.id} className={activeFilter === filter.id ? "selected" : ""} key={filter.id} onClick={() => onFilterChange(filter.id)} variant="filter">{filter.label}{Number.isInteger(filterCounts?.[filter.id]) && <span className="task-filter-count">({filterCounts[filter.id]})</span>}</AppButton>
             ))}
           </div>
           <div className="task-list-toolbar">

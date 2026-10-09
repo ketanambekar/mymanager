@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { CalendarDays, LogOut, Moon, MonitorSmartphone, Plus, Search, Sun } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import AppFooter from "@/shared/widgets/app_footer/app_footer.jsx";
 import AppButton from "@/shared/widgets/app_button/app_button.jsx";
 import AppIconButton from "@/shared/widgets/app_icon_button/app_icon_button.jsx";
 import AppInput from "@/shared/widgets/app_input/app_input.jsx";
 import ActionToast from "./widgets/action_toast/action_toast.jsx";
+import AccountDrawer from "./widgets/account_drawer/account_drawer.jsx";
 import CreateProjectDialog from "./widgets/create_project_dialog/create_project_dialog.jsx";
 import CreateTaskDialog from "./widgets/create_task_dialog/create_task_dialog.jsx";
 import DeleteProjectDialog from "./widgets/delete_project_dialog/delete_project_dialog.jsx";
@@ -26,7 +27,7 @@ export default function DashboardView({ theme, onToggleTheme, themeController, u
     return () => window.clearInterval(intervalId);
   }, []);
 
-  const monthLabel = new Intl.DateTimeFormat("en-GB", { month: "short" }).format(currentTime).replace(/^Sep$/, "Sept");
+  const dateLabel = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(currentTime);
   const weekdayLabel = new Intl.DateTimeFormat("en-GB", { weekday: "long" }).format(currentTime);
   const timeLabel = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).format(currentTime);
 
@@ -39,22 +40,26 @@ export default function DashboardView({ theme, onToggleTheme, themeController, u
             <span className="brand-copy">My<span>Manger</span></span>
           </a>
         </div>
-        <div className="topbar-actions">
-          <AppIconButton aria-label="Devices and sessions" className="device-sessions-shortcut" onClick={onOpenDevices} title="Devices & sessions" variant="theme"><MonitorSmartphone aria-hidden="true" size={16} /></AppIconButton>
+        <div className="sidebar-overview-header">
+          <div aria-label="Current date and local time" className="dashboard-clock dashboard-clock--topbar">
+            <div className="header-date-row">
+              <time className="header-date" dateTime={currentTime.toISOString()}>{dateLabel}</time>
+              <span className="header-weekday">{weekdayLabel}</span>
+            </div>
+            <div className="header-time-row">
+              <span className="header-year">{currentTime.getFullYear()}</span>
+              <time className="header-time" dateTime={currentTime.toISOString()}>{timeLabel}</time>
+            </div>
+          </div>
           <label className="search-box">
             <Search aria-hidden="true" size={17} strokeWidth={2} />
             <span className="visually-hidden">Search tasks</span>
             <AppInput className="app-input--search" onChange={(event) => dashboard.setSearchTerm(event.target.value)} placeholder="Search tasks" type="search" value={dashboard.searchTerm} />
             <kbd>/</kbd>
           </label>
-          <AppIconButton aria-label={`Switch to ${theme === "light" ? "dark" : "light"} theme`} className="theme-toggle" onClick={onToggleTheme} title={`Switch to ${theme === "light" ? "dark" : "light"} theme`} variant="theme">{theme === "light" ? <Moon aria-hidden="true" size={17} /> : <Sun aria-hidden="true" size={17} />}</AppIconButton>
+          <SummaryStrip className="summary-strip--topbar" completedCount={dashboard.completedCount} completedTodayCount={dashboard.completedTodayCount} completionRate={dashboard.completionRate} dueTodayCount={dashboard.dueTodayCount} missedCount={dashboard.missedCount} openCount={dashboard.openCount} overdueCount={dashboard.overdueCount} pendingTodayCount={dashboard.pendingTodayCount} skippedCount={dashboard.skippedCount} totalCount={dashboard.totalCount} />
         </div>
-        <div className="sidebar-bottom">
-          {user?.avatarUrl ? <img alt="" className="account-avatar" referrerPolicy="no-referrer" src={user.avatarUrl} /> : <span className="account-avatar" aria-hidden="true">{(user?.displayName ?? user?.email ?? "M").charAt(0).toUpperCase()}</span>}
-          <span className="account-copy"><strong>{user?.displayName ?? "My workspace"}</strong><small>{user?.email}</small></span>
-          <AppIconButton aria-label="Devices and sessions" onClick={onOpenDevices} title="Devices & sessions" variant="theme"><MonitorSmartphone aria-hidden="true" size={16} /></AppIconButton>
-          <AppIconButton aria-label="Sign out" disabled={isLoggingOut} onClick={onLogout} title="Sign out" variant="theme"><LogOut aria-hidden="true" size={16} /></AppIconButton>
-        </div>
+        <AccountDrawer isLoggingOut={isLoggingOut} onLogout={onLogout} onOpenDevices={onOpenDevices} onToggleTheme={onToggleTheme} theme={theme} themeController={themeController} user={user} />
       </aside>
 
       <main className="workspace">
@@ -65,25 +70,10 @@ export default function DashboardView({ theme, onToggleTheme, themeController, u
               <AppButton onClick={dashboard.retryLoad} variant="secondary">Retry</AppButton>
             </div>
           ) : <>
-          <div className="page-heading">
-            <div aria-label="Current date and local time" className="dashboard-clock">
-              <div className="clock-date">
-                <CalendarDays aria-hidden="true" size={18} strokeWidth={1.8} />
-                <span className="clock-day">{currentTime.getDate()}</span>
-                <span className="clock-month-year"><strong>{monthLabel}</strong><span>{currentTime.getFullYear()}</span></span>
-              </div>
-              <span aria-hidden="true" className="clock-divider" />
-              <div className="clock-live">
-                <span className="clock-weekday">{weekdayLabel}</span>
-                <time className="clock-time" dateTime={currentTime.toISOString()}>{timeLabel}</time>
-              </div>
-            </div>
-            <SummaryStrip completedCount={dashboard.completedCount} completedTodayCount={dashboard.completedTodayCount} completionRate={dashboard.completionRate} dueTodayCount={dashboard.dueTodayCount} missedCount={dashboard.missedCount} openCount={dashboard.openCount} overdueCount={dashboard.overdueCount} pendingTodayCount={dashboard.pendingTodayCount} skippedCount={dashboard.skippedCount} totalCount={dashboard.totalCount} />
-          </div>
           {themeController.error && <p className="dashboard-preference-error" role="alert">{themeController.error}</p>}
           {themeController.timezoneMismatch && <div className="dashboard-timezone-notice"><span>Use {themeController.browserTimezone} for task dates?</span><AppButton disabled={themeController.isSaving} onClick={() => { void themeController.saveTimezone().then((saved) => { if (saved) return dashboard.retryLoad(); return undefined; }); }} variant="secondary">Use timezone</AppButton><AppButton onClick={themeController.dismissTimezone} variant="secondary">Not now</AppButton></div>}
 
-          <div className={dashboard.upcomingTasks.length ? "dashboard-grid has-upcoming" : "dashboard-grid"}>
+          <div className={`dashboard-grid${dashboard.upcomingTasks.length ? " has-upcoming" : ""}`}>
             <div className="dashboard-project-column">
               <ProjectList onCreateProject={dashboard.openProjectDialog} onSelectProject={dashboard.selectProject} projects={dashboard.projectStats} selectedProjectId={dashboard.selectedProjectId} />
             </div>
@@ -93,6 +83,7 @@ export default function DashboardView({ theme, onToggleTheme, themeController, u
               <TaskList
                 activeFilter={dashboard.activeFilter}
                 asOfDate={dashboard.asOfDate}
+                filterCounts={dashboard.filterCounts}
                 isPending={dashboard.isMutating}
                 onAddTask={() => dashboard.openTaskDialog(dashboard.selectedProjectId)}
                 onAddSubtask={dashboard.addSubtask}

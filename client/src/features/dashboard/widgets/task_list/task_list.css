@@ -1,5 +1,7 @@
 .task-list { display: flex; width: 100%; flex-wrap: wrap; align-items: flex-start; align-content: flex-start; gap: 12px; margin: 0; padding: 0; list-style: none; }
 .task-filters { display: flex; flex-wrap: wrap; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-subtle); }
+.task-filters .app-button { gap: 4px; white-space: nowrap; }
+.task-filter-count { font-family: var(--font-mono); font-size: 10px; font-variant-numeric: tabular-nums; }
 .empty-state { display: grid; justify-items: center; padding: 30px 18px; border: 1px dashed var(--line-strong); border-radius: 6px; background: var(--surface-raised); text-align: center; }
 .empty-state-icon { width: 36px; height: 36px; padding: 5px; border: 1px solid var(--line); border-radius: 50%; background: var(--success-surface); color: var(--green); }
 .empty-state h3 { margin: 12px 0 5px; font-family: var(--font-display); font-size: 18px; font-weight: 700; }
@@ -23,7 +25,7 @@
 .task-list-toolbar { display: flex; min-width: 0; align-items: center; justify-content: flex-end; gap: 7px; }
 .task-filter-icon { flex: 0 0 auto; align-self: center; margin: 0 5px; color: var(--muted); }
 .task-add-button { min-height: 34px; flex: 0 0 auto; gap: 6px; padding: 0 11px; white-space: nowrap; }
-@container (max-width: 760px) {
+@container (max-width: 900px) {
 	.task-title-toolbar { grid-template-columns: minmax(0, 1fr) auto; }
 	.task-title-toolbar > .task-filters { grid-column: 1 / -1; grid-row: 2; }
 	.task-list-toolbar { grid-column: 2; grid-row: 1; }

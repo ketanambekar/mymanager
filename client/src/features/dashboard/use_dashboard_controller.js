@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { TASK_FILTER_IDS } from "@/features/dashboard/widgets/task_list/constants/task_filters.js";
+import { TASK_FILTER_IDS, TASK_FILTERS } from "@/features/dashboard/widgets/task_list/constants/task_filters.js";
 import { getApiErrorMessage, isVersionConflict } from "@/services/api_client.js";
 import * as repository from "./dashboard_repository.js";
 import { resolveProjectColor } from "./project_color_utils.js";
@@ -111,16 +111,24 @@ export function useDashboardController() {
   const selectedProjectIds = selectedProjectId
     ? [selectedProjectId, ...getDescendantProjectIds(projects, selectedProjectId)]
     : null;
-  const visibleTasks = (filteredTasks ?? tasks).filter((task) => {
+  const matchesTaskScope = (task) => {
     const matchesDate = !task.dueDate || task.dueDate <= today;
+    const matchesProject = !selectedProjectIds || selectedProjectIds.includes(task.projectId);
+    const matchesSearch = !normalizedSearch || task.title.toLowerCase().includes(normalizedSearch);
+    return matchesDate && matchesProject && matchesSearch;
+  };
+  const filterCounts = Object.fromEntries(TASK_FILTERS.map(({ id }) => [id, 0]));
+  for (const task of tasks.filter(matchesTaskScope)) {
+    filterCounts[TASK_FILTER_IDS.ALL] += 1;
+    filterCounts[getTaskStatus(task).toLowerCase()] += 1;
+  }
+  const visibleTasks = (filteredTasks ?? tasks).filter((task) => {
     const matchesFilter = activeFilter === TASK_FILTER_IDS.ALL
       || (activeFilter === TASK_FILTER_IDS.OPEN && getTaskStatus(task) === TASK_STATUSES.OPEN)
       || (activeFilter === TASK_FILTER_IDS.COMPLETED && getTaskStatus(task) === TASK_STATUSES.COMPLETED)
       || (activeFilter === TASK_FILTER_IDS.SKIPPED && getTaskStatus(task) === TASK_STATUSES.SKIPPED)
       || (activeFilter === TASK_FILTER_IDS.MISSED && getTaskStatus(task) === TASK_STATUSES.MISSED);
-    const matchesProject = !selectedProjectIds || selectedProjectIds.includes(task.projectId);
-    const matchesSearch = !normalizedSearch || task.title.toLowerCase().includes(normalizedSearch);
-    return matchesDate && matchesFilter && matchesProject && matchesSearch;
+    return matchesTaskScope(task) && matchesFilter;
   });
 
   const projectStats = projects;
@@ -532,6 +540,7 @@ export function useDashboardController() {
     setActiveFilter,
     setSearchTerm,
     tasks: visibleTasks,
+    filterCounts,
     upcomingTasks,
     toggleTask,
     toggleSubtask,
