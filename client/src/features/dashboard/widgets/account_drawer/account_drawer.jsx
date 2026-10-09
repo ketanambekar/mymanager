@@ -51,7 +51,7 @@ export default function AccountDrawer({ user, theme, themeController, onToggleTh
               <h3 id="account-workspace-title">Workspace</h3>
               <button className="account-drawer-action" onClick={() => { drawer.close(); onOpenHabits(); }} type="button">
                 <CalendarDays aria-hidden="true" size={19} />
-                <span><strong>Habits</strong><small>Explore your daily task history</small></span>
+                <span><strong>Habits</strong><small>Explore your recurring task history</small></span>
                 <ChevronRight aria-hidden="true" size={16} />
               </button>
             </section>

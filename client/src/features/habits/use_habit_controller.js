@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { getApiErrorMessage } from "@/services/api_client.js";
 import * as repository from "./habit_repository.js";
-import { shiftHabitMonth } from "./habit_calendar_utils.js";
+import { adjacentHabitMonths, adjacentHabitYears, isHabitHistoryDate, nearestHabitMonth } from "./habit_calendar_utils.js";
 
 export function useHabitController() {
   const [search, setSearch] = useState("");
@@ -15,6 +15,8 @@ export function useHabitController() {
   const [pageError, setPageError] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [requestedMonth, setRequestedMonth] = useState(null);
+  const [requestedYear, setRequestedYear] = useState(null);
+  const [preferNearestHistory, setPreferNearestHistory] = useState(true);
   const [calendarResult, setCalendarResult] = useState(null);
   const [calendarError, setCalendarError] = useState("");
   const [calendarPending, setCalendarPending] = useState(false);
@@ -31,10 +33,13 @@ export function useHabitController() {
   const listPanelRef = useRef(null);
   const previousMobileList = useRef(true);
   const scope = JSON.stringify([search.trim(), projectId, listRevision]);
-  const calendarKey = JSON.stringify([selectedId, requestedMonth, calendarRevision]);
+  const calendarKey = JSON.stringify([selectedId, requestedMonth, requestedYear, preferNearestHistory, calendarRevision]);
   const calendar = calendarResult?.key === calendarKey ? calendarResult.data : null;
   const currentList = list?.scope === scope ? list.data : null;
   const listReady = Boolean(currentList);
+  const selectedHabit = currentList?.items.find((habit) => habit.id === selectedId);
+  const periodUnit = selectedHabit?.periodUnit;
+  const isPeriodHistory = periodUnit && periodUnit !== "day";
 
   useLayoutEffect(() => {
     if (previousMobileList.current !== showMobileList && window.matchMedia("(max-width: 760px)").matches) {
@@ -83,11 +88,27 @@ export function useHabitController() {
     const request = new AbortController();
     setCalendarPending(true);
     setCalendarError("");
-    repository.getHabitCalendar(selectedId, requestedMonth, request.signal)
-      .then((data) => {
+    const fetchHistory = requestedYear !== null && isPeriodHistory
+      ? repository.getHabitHistory(selectedId, requestedYear, request.signal)
+      : repository.getHabitCalendar(selectedId, requestedMonth, request.signal);
+    fetchHistory
+      .then(async (initialData) => {
+        let data = initialData;
+        if (!request.signal.aborted && !data.periods) {
+          const targetMonth = requestedMonth === null && preferNearestHistory
+            && data.availableMonths.length > 0 && !data.availableMonths.includes(data.month)
+            ? nearestHabitMonth(data.availableMonths, data.asOfDate.slice(0, 7)) : data.month;
+          if (data.habit.periodUnit !== "day") {
+            data = await repository.getHabitHistory(selectedId, Number(targetMonth.slice(0, 4)), request.signal);
+          } else if (targetMonth !== data.month) {
+            data = await repository.getHabitCalendar(selectedId, targetMonth, request.signal);
+          }
+        }
         if (request.signal.aborted) return;
         setCalendarResult({ key: calendarKey, data });
-        setSelectedDate(data.days.find((day) => day.isToday)?.date ?? data.days.find((day) => day.occurrence)?.date ?? data.days[0].date);
+        const visibleDays = data.periods ? data.periods.flatMap((period) => period.occurrences)
+          : data.days.filter((day) => isHabitHistoryDate(day.date, data));
+        setSelectedDate(visibleDays.find((day) => day.isToday)?.date ?? visibleDays.find((day) => day.occurrence)?.date ?? visibleDays[0]?.date ?? "");
       })
       .catch((error) => {
         if (request.signal.aborted) return;
@@ -104,7 +125,7 @@ export function useHabitController() {
       })
       .finally(() => { if (!request.signal.aborted) setCalendarPending(false); });
     return () => request.abort();
-  }, [calendarKey, selectedId, requestedMonth, listReady, scope]);
+  }, [calendarKey, selectedId, requestedMonth, requestedYear, preferNearestHistory, isPeriodHistory, listReady, scope]);
 
   async function loadMore() {
     if (!currentList?.nextCursor || pageRequest.current) return;
@@ -134,6 +155,8 @@ export function useHabitController() {
     autoSelect.current = true;
     setSelectedId("");
     setRequestedMonth(null);
+    setRequestedYear(null);
+    setPreferNearestHistory(true);
     setCalendarError("");
     setSelectionNotice("");
     setter(value);
@@ -142,6 +165,8 @@ export function useHabitController() {
   function selectHabit(id) {
     setSelectedId(id);
     setRequestedMonth(null);
+    setRequestedYear(null);
+    setPreferNearestHistory(true);
     setCalendarError("");
     setSelectionNotice("");
     setShowMobileList(false);
@@ -155,14 +180,36 @@ export function useHabitController() {
     listPending: listPending || !currentList && !listError,
     listError,
     calendarPending: Boolean(selectedId) && (calendarPending || !calendar && !calendarError),
-    selectedDay: calendar?.days.find((day) => day.date === selectedDate),
-    setSearch: (value) => changeScope(setSearch, value),
+    selectedDay: (calendar?.periods ? calendar.periods.flatMap((period) => period.occurrences) : calendar?.days)?.find((day) => day.date === selectedDate),
+    setSearch: (value) => { changeScope(setSearch, value); setShowMobileList(true); },
     setProjectId: (value) => changeScope(setProjectId, value),
     selectHabit, loadMore, setSelectedDate, setShowMobileList,
-    changeMonth: (offset) => { if (calendar) { setCalendarError(""); setRequestedMonth(shiftHabitMonth(calendar.month, offset)); } },
-    thisMonth: () => { setRequestedMonth(null); setCalendarRevision((value) => value + 1); },
+    changeMonth: (offset) => {
+      if (!calendar) return;
+      const adjacent = adjacentHabitMonths(calendar.availableMonths, calendar.month);
+      const month = offset < 0 ? adjacent.previous : adjacent.next;
+      if (!month) return;
+      setCalendarError("");
+      setPreferNearestHistory(false);
+      setRequestedMonth(month);
+    },
+    thisMonth: () => {
+      setPreferNearestHistory(false);
+      setRequestedMonth(null);
+      setRequestedYear(null);
+      setCalendarRevision((value) => value + 1);
+    },
+    changeYear: (offset) => {
+      if (!calendar?.periods) return;
+      const adjacent = adjacentHabitYears(calendar.availableMonths, calendar.year);
+      const year = offset < 0 ? adjacent.previous : adjacent.next;
+      if (year === null) return;
+      setCalendarError("");
+      setPreferNearestHistory(false);
+      setRequestedYear(year);
+    },
     retryCalendar: () => setCalendarRevision((value) => value + 1),
-    retryList: () => { setRequestedMonth(null); setListRevision((value) => value + 1); },
+    retryList: () => { setRequestedMonth(null); setRequestedYear(null); setPreferNearestHistory(true); setListRevision((value) => value + 1); },
     retryProjects: () => setProjectRevision((value) => value + 1),
   };
 }

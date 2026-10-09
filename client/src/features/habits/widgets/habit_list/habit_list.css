@@ -2,8 +2,6 @@
 .habit-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .habit-list-heading h2 { margin: 0; font-size: 17px; }
 .habit-list-heading p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
-.habit-search { display: flex; align-items: center; gap: 8px; color: var(--muted); }
-.habit-search .app-input { min-width: 0; width: 100%; }
 .habit-project-filter { display: grid; gap: 5px; color: var(--muted); font-size: 11px; }
 .habit-list { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
 .habit-list-item { display: flex; width: 100%; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-subtle); color: var(--ink); cursor: pointer; text-align: left; }

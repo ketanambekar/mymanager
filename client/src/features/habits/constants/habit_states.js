@@ -6,7 +6,7 @@ export const HABIT_STATES = Object.freeze([
   { id: "OVERDUE", label: "Overdue", symbol: "overdue" },
   { id: "SCHEDULED", label: "Scheduled", symbol: "scheduled" },
   { id: "NOT_RECORDED", label: "Not recorded", symbol: "empty" },
-  { id: "NOT_DAILY", label: "Not a daily occurrence", symbol: "other" },
+  { id: "NOT_DAILY", label: "Non-recurring occurrence", symbol: "other" },
 ]);
 
 export const HABIT_WEEKDAYS = Object.freeze(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]);

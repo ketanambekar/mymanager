@@ -9,7 +9,7 @@
 .habit-month-toolbar .app-button { min-height: 38px; font-size: 11px; }
 .habit-month-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
 .habit-month-totals > div { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-subtle); }
-.habit-month-totals dt { font-size: 12px; color: var(--muted); }
+.habit-month-totals dt { min-width: 0; font-size: 12px; line-height: 1.4; color: var(--muted); }
 .habit-month-totals dd { margin: 0; font-family: var(--font-mono); font-size: 22px; }
 .habit-month-totals > div:nth-child(1) dd { color: var(--green); }
 .habit-month-totals > div:nth-child(2) dd { color: var(--lime); }
@@ -17,6 +17,7 @@
 .habit-coverage { margin: 12px 0 18px; color: var(--muted); font-size: 11px; }
 .habit-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
 .habit-weekday { padding: 0 0 5px; color: var(--muted); font-size: 11px; text-align: center; }
+.habit-day-blank { min-height: 48px; }
 .habit-day { position: relative; display: flex; min-width: 0; min-height: 62px; flex-direction: column; align-items: center; justify-content: center; gap: 7px; padding: 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-subtle); color: var(--ink); cursor: pointer; font-size: 13px; }
 .habit-day--completed { background: var(--success-surface); }
 .habit-day--missed, .habit-day--overdue { background: color-mix(in srgb, var(--orange) 9%, var(--surface-raised)); }

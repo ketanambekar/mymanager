@@ -21,3 +21,10 @@ export async function getHabitProjects(signal) {
   const response = await apiClient.get(API_PATHS.PROJECTS, { signal });
   return response.data.data;
 }
+
+export async function getHabitHistory(habitId, year, signal) {
+  const response = await apiClient.get(`${API_PATHS.HABITS}/${encodeURIComponent(habitId)}/history`, {
+    params: { year }, signal,
+  });
+  return response.data.data;
+}

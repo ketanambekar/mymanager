@@ -1,5 +1,6 @@
 import { formatHabitDate, formatHabitTimestamp } from "@/features/habits/habit_calendar_utils.js";
 import HabitState from "../habit_state/habit_state.jsx";
+import { getRecurrenceLabel } from "@/features/dashboard/task_recurrence.js";
 import "./habit_day_details.css";
 
 export default function HabitDayDetails({ day, timezone }) {
@@ -13,11 +14,12 @@ export default function HabitDayDetails({ day, timezone }) {
         <dl>
           <div><dt>Recorded task</dt><dd>{occurrence.title}</dd></div>
           <div><dt>Task status</dt><dd>{occurrence.status.toLowerCase()}</dd></div>
+          <div><dt>Recorded cadence</dt><dd>{getRecurrenceLabel(occurrence.recurrence) || "One time"}</dd></div>
           <div><dt>Due date</dt><dd>{formatHabitDate(day.date)}</dd></div>
           {occurrence.completedAt && <div><dt>Completed at</dt><dd>{formatHabitTimestamp(occurrence.completedAt, timezone)}</dd></div>}
           {occurrence.closedAt && <div><dt>Closed at</dt><dd>{formatHabitTimestamp(occurrence.closedAt, timezone)}</dd></div>}
         </dl>
-        {day.state === "NOT_DAILY" && <p>This saved task used a different cadence and does not count as a daily habit result.</p>}
+        {day.state === "NOT_DAILY" && <p>This saved occurrence is non-recurring and remains visible as historical context.</p>}
         <p>Timestamps shown in {timezone}. Results belong to the due date, not the submission date.</p>
       </> : <p>No saved occurrence for this day.</p>}
     </section>
