@@ -42,3 +42,5 @@ Postman: [postman/mymanager_phase_1.postman_collection.json](postman/mymanager_p
 Authentication contracts: [Google/session authentication](../docs/ben/api-contracts/auth.md) and [QR login, device management, and Adam/Dartji integration](../docs/ben/api-contracts/qr_sessions.md). QR login needs explicit approval from a signed-in device; device logout invalidates both access and refresh credentials.
 
 Habits: [recurring-task calendar/period history and page handoff](../docs/ben/api-contracts/habits.md). All recurring cadences are supported, with populated week/month/year history and exact occurrence counts; missing history is not inferred as missed or skipped.
+
+Reports: [profile-only Reports API and page handoff](../docs/ben/api-contracts/reports.md). Selected-year due/activity analytics are separate from all-time current workload and direct project outcomes.

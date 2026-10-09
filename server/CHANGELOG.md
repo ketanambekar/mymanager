@@ -8,6 +8,13 @@ All notable backend changes are recorded here. The version in `package.json` is 
 
 Each deployed release is tagged `server-v<version>`. Check the running version with `GET /health` or the `x-api-version` response header.
 
+## 1.6.0 - 2026-10-09
+
+### Added
+
+- Read-only `GET /reports?year=YYYY` with due-year outcomes, on-time/late/unknown timing, timezone-aware recorded activity, twelve monthly trends, current workload, direct project outcomes, top recurring series, and recorded Skip/Miss reasons.
+- Profile-only separate-route Adam/Dartji handoff, explicit null-rate/coverage limits and unit/database/API tests. No new migration or synthetic history.
+
 ## 1.5.0 - 2026-10-09
 
 ### Added

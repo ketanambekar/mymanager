@@ -14,6 +14,7 @@ import { habitRouter } from "./features/habits/habit_routes.js";
 import { preferenceRouter } from "./features/preferences/preference_routes.js";
 import { projectRouter } from "./features/projects/project_routes.js";
 import { taskRouter } from "./features/tasks/task_routes.js";
+import { reportRouter } from "./features/reports/report_routes.js";
 import { errorMiddleware } from "./shared/error_middleware.js";
 
 export const app = express();
@@ -44,6 +45,7 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1", requireAuth);
 app.use("/api/v1/dashboard", dashboardRouter);
 app.use("/api/v1/habits", habitRouter);
+app.use("/api/v1/reports", reportRouter);
 app.use("/api/v1/projects", projectRouter);
 app.use("/api/v1/tasks", taskRouter);
 app.use("/api/v1/me/preferences", preferenceRouter);

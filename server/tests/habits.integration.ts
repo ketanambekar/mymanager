@@ -377,6 +377,42 @@ test("habit APIs on disposable local MySQL", async (t) => {
         assert.equal(data.periods[0].occurrences.length, 3);
         assert.deepEqual((await habitService.history(user.id, workspaceId, weeklySeries, 2025)).periods, []);
       });
+
+      await t.test("reports are snapshot-consistent, tenant-scoped, read-only and query validated", async () => {
+        const { reportService } = await import("../src/features/reports/report_service.js");
+        const before = await prisma.task.count({ where: { workspaceId } });
+        const report = await reportService.get(user.id, workspaceId, 2026);
+        assert.equal(report.monthly.length, 12);
+        assert.equal(report.year, 2026);
+        assert.equal(report.timezone, "Pacific/Kiritimati");
+        assert.equal(report.currentInventory.total, before);
+        assert.equal(report.projects.totalProjects, 1);
+        assert.equal(report.projects.items[0].id, project.id);
+        assert.equal(report.habits.items.some((habit) => habit.title === "Private habit"), false);
+        const counted = await prisma.task.count({ where: { workspaceId, dueDate: { gte: new Date("2026-01-01"), lt: new Date("2027-01-01") } } });
+        assert.equal(report.dueSummary.total, counted);
+        assert.equal(report.monthly.reduce((sum, month) => sum + month.due.total, 0), counted);
+        for (const status of ["completed", "skipped", "missed"] as const) {
+          assert.equal(report.activityDays.reduce((sum, day) => sum + day[status], 0), report.activitySummary[status]);
+        }
+        assert.equal(await prisma.task.count({ where: { workspaceId } }), before);
+        const url = `http://127.0.0.1:${address.port}/api/v1/reports`;
+        const response = await fetch(`${url}?year=2026`, { headers: { authorization: `Bearer ${session.accessToken}` } });
+        assert.equal(response.status, 200);
+        assert.equal(response.headers.get("cache-control"), "no-store");
+        const data = z.object({ data: z.object({ year: z.number(), monthly: z.array(z.object({ month: z.string() })) }) }).parse(await response.json()).data;
+        assert.equal(data.year, 2026);
+        assert.equal(data.monthly.length, 12);
+        assert.equal((await fetch(url)).status, 401);
+        for (const query of ["year=2200", "year=2026.5", "unexpected=1"]) {
+          assert.equal((await fetch(`${url}?${query}`, { headers: { authorization: `Bearer ${session.accessToken}` } })).status, 400);
+        }
+        assert.ok(other.workspace);
+        const empty = await reportService.get(other.id, other.workspace.id, 2199);
+        assert.equal(empty.dueSummary.total, 0);
+        assert.equal(empty.dueSummary.completionRate, null);
+        assert.equal(empty.activityDays.length, 0);
+      });
     } finally {
       await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     }
