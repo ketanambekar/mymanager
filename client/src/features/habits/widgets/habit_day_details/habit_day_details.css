@@ -1,0 +1,19 @@
+.habit-day-details { padding: 18px 22px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-raised); }
+.habit-day-details-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.habit-day-details h3 { margin: 0; font-size: 15px; }
+.habit-day-details dl { display: grid; gap: 10px; margin: 18px 0; }
+.habit-day-details dl > div { display: grid; grid-template-columns: 115px minmax(0, 1fr); gap: 10px; font-size: 12px; }
+.habit-day-details dt { color: var(--muted); }
+.habit-day-details dd { margin: 0; overflow-wrap: anywhere; }
+.habit-reason-callout { margin-top: 16px; padding: 14px; border: 1px solid var(--line); border-left: 3px solid var(--orange); border-radius: 6px; background: var(--surface-subtle); }
+.habit-reason-callout h4 { margin: 0; color: var(--ink); font-size: 12px; }
+.habit-day-details .habit-reason-callout p { margin-top: 8px; color: var(--ink); font-size: 13px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.habit-day-details p { margin: 12px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+@media (min-width: 1101px) {
+  .habit-day-details { padding: 18px; }
+  .habit-day-details dl > div { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+}
+@media (max-width: 520px) {
+  .habit-day-details { padding: 16px; }
+  .habit-day-details dl > div { grid-template-columns: 85px minmax(0, 1fr); }
+}

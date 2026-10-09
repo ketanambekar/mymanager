@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { ChevronRight, LogOut, MonitorSmartphone, Moon, Sun, X } from "lucide-react";
+import { CalendarDays, ChevronRight, LogOut, MonitorSmartphone, Moon, Sun, X } from "lucide-react";
 import { APP_VERSION } from "@/constants/app_constants.js";
 import AppButton from "@/shared/widgets/app_button/app_button.jsx";
 import AppIconButton from "@/shared/widgets/app_icon_button/app_icon_button.jsx";
@@ -18,7 +18,7 @@ function formatAccountDate(value, timezone) {
   }).format(new Date(value));
 }
 
-export default function AccountDrawer({ user, theme, themeController, onToggleTheme, onOpenDevices, onLogout, isLoggingOut }) {
+export default function AccountDrawer({ user, theme, themeController, onToggleTheme, onOpenDevices, onOpenHabits, onLogout, isLoggingOut }) {
   const drawer = useAccountDrawerController();
   const timezone = user.preference?.timezone;
 
@@ -46,6 +46,14 @@ export default function AccountDrawer({ user, theme, themeController, onToggleTh
                 <p>{user.email}</p>
                 {user.status && <span className={`account-profile-status ${user.status === "ACTIVE" ? "is-active" : ""}`}>{user.status.toLowerCase().replace(/_/g, " ")}</span>}
               </div>
+            </section>
+            <section aria-labelledby="account-workspace-title" className="account-drawer-section">
+              <h3 id="account-workspace-title">Workspace</h3>
+              <button className="account-drawer-action" onClick={() => { drawer.close(); onOpenHabits(); }} type="button">
+                <CalendarDays aria-hidden="true" size={19} />
+                <span><strong>Habits</strong><small>Explore your daily task history</small></span>
+                <ChevronRight aria-hidden="true" size={16} />
+              </button>
             </section>
             <section aria-labelledby="account-preferences-title" className="account-drawer-section">
               <h3 id="account-preferences-title">Preferences</h3>

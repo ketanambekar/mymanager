@@ -2,7 +2,8 @@
 .projects-section .section-heading { display: flex; width: 100%; min-height: 34px; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
 .projects-section .section-heading h2 { margin: 0; font-family: var(--font-body); font-size: 14px; }
 .project-create-button { width: 30px; min-height: 34px; flex: 0 0 auto; padding: 0; }
-.project-list { display: grid; width: 100%; min-height: 0; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 7px; overflow-y: auto; border: 0; }
+.project-list { display: grid; width: 100%; min-height: 0; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 7px; overflow-y: auto; scrollbar-width: none; border: 0; }
+.project-list::-webkit-scrollbar { display: none; }
 .project-branch { position: relative; display: grid; min-width: 0; gap: 5px; }
 .project-children { display: grid; min-width: 0; gap: 5px; margin-left: 14px; }
 .project-children[hidden] { display: none; }

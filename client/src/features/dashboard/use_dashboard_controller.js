@@ -433,8 +433,8 @@ export function useDashboardController() {
     if (await deleteProject(projectPendingDeletionId)) setProjectPendingDeletionId(null);
   }
 
-  function selectProject(projectId) {
-    setSelectedProjectId((currentProjectId) => currentProjectId === projectId ? null : projectId);
+  function selectProject(projectId, { toggle = true } = {}) {
+    setSelectedProjectId((currentProjectId) => toggle && currentProjectId === projectId ? null : projectId);
   }
 
   return {

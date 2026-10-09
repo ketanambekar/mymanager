@@ -1,0 +1,6 @@
+.habit-state { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 11px; }
+.habit-state--completed { color: var(--green); }
+.habit-state--skipped, .habit-state--pending { color: var(--lime); }
+.habit-state--missed, .habit-state--overdue { color: var(--orange); }
+.habit-state--scheduled { color: var(--project-blue); }
+.habit-state svg { flex: 0 0 auto; }

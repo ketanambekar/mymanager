@@ -1,0 +1,16 @@
+.habit-list-panel { display: flex; min-width: 0; flex-direction: column; gap: 14px; padding: 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-raised); }
+.habit-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.habit-list-heading h2 { margin: 0; font-size: 17px; }
+.habit-list-heading p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+.habit-search { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.habit-search .app-input { min-width: 0; width: 100%; }
+.habit-project-filter { display: grid; gap: 5px; color: var(--muted); font-size: 11px; }
+.habit-list { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.habit-list-item { display: flex; width: 100%; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-subtle); color: var(--ink); cursor: pointer; text-align: left; }
+.habit-list-item:hover, .habit-list-item[aria-pressed="true"] { border-color: var(--green); background: var(--surface-selected); }
+.habit-list-item > span:last-child { display: grid; min-width: 0; gap: 5px; }
+.habit-list-item strong { font-size: 13px; overflow-wrap: anywhere; }
+.habit-list-item small { color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+.habit-project-dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: var(--habit-project-color); }
+.habit-load-more { width: 100%; }
+.habit-list-coverage { margin: 0; color: var(--muted); font-family: var(--font-mono); font-size: 10px; text-align: center; }

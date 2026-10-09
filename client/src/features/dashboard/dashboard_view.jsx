@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { ArrowLeft, Plus, Search } from "lucide-react";
 import AppFooter from "@/shared/widgets/app_footer/app_footer.jsx";
 import AppButton from "@/shared/widgets/app_button/app_button.jsx";
 import AppIconButton from "@/shared/widgets/app_icon_button/app_icon_button.jsx";
@@ -11,6 +11,9 @@ import CreateTaskDialog from "./widgets/create_task_dialog/create_task_dialog.js
 import DeleteProjectDialog from "./widgets/delete_project_dialog/delete_project_dialog.jsx";
 import DeleteTaskDialog from "./widgets/delete_task_dialog/delete_task_dialog.jsx";
 import ProjectList from "./widgets/project_list/project_list.jsx";
+import MobileWorkspaceNavigation from "./widgets/mobile_workspace_navigation/mobile_workspace_navigation.jsx";
+import { useMobileWorkspaceController } from "./widgets/mobile_workspace_navigation/use_mobile_workspace_controller.js";
+import { WORKSPACE_VIEWS } from "./widgets/mobile_workspace_navigation/constants/workspace_views.js";
 import SkipTaskDialog from "./widgets/skip_task_dialog/skip_task_dialog.jsx";
 import SummaryStrip from "./widgets/summary_strip/summary_strip.jsx";
 import TaskList from "./widgets/task_list/task_list.jsx";
@@ -18,8 +21,9 @@ import UpcomingTaskList from "./widgets/upcoming_task_list/upcoming_task_list.js
 import { useDashboardController } from "./use_dashboard_controller.js";
 import "./dashboard_layout.css";
 
-export default function DashboardView({ theme, onToggleTheme, themeController, user, onLogout, onOpenDevices, isLoggingOut }) {
+export default function DashboardView({ theme, onToggleTheme, themeController, user, onLogout, onOpenDevices, onOpenHabits, isLoggingOut }) {
   const dashboard = useDashboardController();
+  const mobileWorkspace = useMobileWorkspaceController({ selectProject: dashboard.selectProject, upcomingCount: dashboard.upcomingTasks.length });
   const [currentTime, setCurrentTime] = useState(() => new Date());
 
   useEffect(() => {
@@ -59,7 +63,7 @@ export default function DashboardView({ theme, onToggleTheme, themeController, u
           </label>
           <SummaryStrip className="summary-strip--topbar" completedCount={dashboard.completedCount} completedTodayCount={dashboard.completedTodayCount} completionRate={dashboard.completionRate} dueTodayCount={dashboard.dueTodayCount} missedCount={dashboard.missedCount} openCount={dashboard.openCount} overdueCount={dashboard.overdueCount} pendingTodayCount={dashboard.pendingTodayCount} skippedCount={dashboard.skippedCount} totalCount={dashboard.totalCount} />
         </div>
-        <AccountDrawer isLoggingOut={isLoggingOut} onLogout={onLogout} onOpenDevices={onOpenDevices} onToggleTheme={onToggleTheme} theme={theme} themeController={themeController} user={user} />
+        <AccountDrawer isLoggingOut={isLoggingOut} onLogout={onLogout} onOpenDevices={onOpenDevices} onOpenHabits={onOpenHabits} onToggleTheme={onToggleTheme} theme={theme} themeController={themeController} user={user} />
       </aside>
 
       <main className="workspace">
@@ -73,11 +77,16 @@ export default function DashboardView({ theme, onToggleTheme, themeController, u
           {themeController.error && <p className="dashboard-preference-error" role="alert">{themeController.error}</p>}
           {themeController.timezoneMismatch && <div className="dashboard-timezone-notice"><span>Use {themeController.browserTimezone} for task dates?</span><AppButton disabled={themeController.isSaving} onClick={() => { void themeController.saveTimezone().then((saved) => { if (saved) return dashboard.retryLoad(); return undefined; }); }} variant="secondary">Use timezone</AppButton><AppButton onClick={themeController.dismissTimezone} variant="secondary">Not now</AppButton></div>}
 
+          <MobileWorkspaceNavigation activeView={mobileWorkspace.activeView} onChangeView={mobileWorkspace.changeView} projectCount={dashboard.projectStats.length} upcomingCount={dashboard.upcomingTasks.length} />
           <div className={`dashboard-grid${dashboard.upcomingTasks.length ? " has-upcoming" : ""}`}>
-            <div className="dashboard-project-column">
-              <ProjectList onCreateProject={dashboard.openProjectDialog} onSelectProject={dashboard.selectProject} projects={dashboard.projectStats} selectedProjectId={dashboard.selectedProjectId} />
+            <div className="dashboard-project-column" hidden={mobileWorkspace.isPanelHidden(WORKSPACE_VIEWS.PROJECTS)} id="workspace-projects">
+              <ProjectList onCreateProject={dashboard.openProjectDialog} onSelectProject={mobileWorkspace.openProject} projects={dashboard.projectStats} selectedProjectId={dashboard.selectedProjectId} />
             </div>
-            <aside className="dashboard-task-column">
+            <aside aria-label={dashboard.selectedProject ? `${dashboard.selectedProject.name} tasks and details` : "Task List"} className="dashboard-task-column" hidden={mobileWorkspace.isPanelHidden(WORKSPACE_VIEWS.TASKS)} id="workspace-tasks" ref={mobileWorkspace.taskPanelRef} tabIndex={-1}>
+              {dashboard.selectedProject && <div className="mobile-project-navigation">
+                <AppButton leadingIcon={<ArrowLeft aria-hidden="true" size={15} />} onClick={() => mobileWorkspace.changeView(WORKSPACE_VIEWS.PROJECTS)} variant="secondary">Projects</AppButton>
+                <span>Project details & tasks</span>
+              </div>}
               {dashboard.filterError && <div className="dashboard-filter-error" role="alert">{dashboard.filterError}<AppButton onClick={dashboard.retryFilter} variant="secondary">Retry</AppButton></div>}
               {dashboard.isFiltering && <span className="dashboard-filter-loading" role="status">Updating tasks...</span>}
               <TaskList
@@ -105,7 +114,7 @@ export default function DashboardView({ theme, onToggleTheme, themeController, u
               />
             </aside>
             {dashboard.upcomingTasks.length > 0 && (
-              <aside className="dashboard-upcoming-column">
+              <aside className="dashboard-upcoming-column" hidden={mobileWorkspace.isPanelHidden(WORKSPACE_VIEWS.UPCOMING)} id="workspace-upcoming">
                 <UpcomingTaskList onEditTask={dashboard.openEditTaskDialog} projectColor={dashboard.projectColor} projectName={dashboard.projectName} tasks={dashboard.upcomingTasks} />
               </aside>
             )}

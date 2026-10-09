@@ -1,0 +1,13 @@
+.mobile-workspace-navigation, .mobile-project-navigation { display: none; }
+@media (max-width: 760px) {
+  .mobile-workspace-navigation { display: flex; gap: 4px; padding: 4px; margin-bottom: 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-subtle); }
+  .mobile-workspace-tab { min-width: 0; min-height: 44px; flex: 1; gap: 5px; padding: 0 5px; border-color: transparent; background: transparent; font-size: 11px; }
+  .mobile-workspace-tab[aria-pressed="true"] { border-color: var(--line-strong); background: var(--surface-selected); color: var(--green); }
+  .mobile-workspace-tab:hover { transform: none; }
+  .mobile-workspace-count { font-family: var(--font-mono); font-size: 9px; color: var(--muted); }
+  .mobile-project-navigation { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+  .mobile-project-navigation .app-button { min-height: 40px; gap: 5px; padding: 0 8px; font-size: 11px; }
+  .mobile-project-navigation > span { color: var(--muted); font-size: 10px; }
+  .dashboard-task-column:focus { outline: none; }
+  .dashboard-task-column:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
+}

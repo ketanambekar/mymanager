@@ -164,7 +164,7 @@ export function useLoginController() {
         const session = await getSession();
         if (mounted) {
           setUser(session);
-          navigate("/");
+          navigate(window.location.pathname === "/habits" ? "/habits" : "/");
         }
       } catch {
         setAccessToken(null);
