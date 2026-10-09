@@ -65,9 +65,46 @@ model User {
   workspace       Workspace?
   preference      UserPreference?
   sessions        RefreshSession[]
+  devices         DeviceSession[]
+  approvedLogins  LoginChallenge[]
   imports         DataImport[]
 
   @@map("user")
+}
+
+model DeviceSession {
+  id           String    @id @db.VarChar(64)
+  userId       Int
+  deviceName   String    @db.VarChar(120)
+  userAgent    String?   @db.VarChar(512)
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime  @default(now())
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  revokeReason String?   @db.VarChar(40)
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt, expiresAt])
+  @@map("devicesession")
+}
+
+model LoginChallenge {
+  id               String    @id @db.Char(36)
+  codeHash         String    @unique @db.Char(64)
+  pollTokenHash    String    @db.Char(64)
+  deviceName       String    @db.VarChar(120)
+  userAgent        String?   @db.VarChar(512)
+  createdAt        DateTime  @default(now())
+  expiresAt        DateTime
+  approvedByUserId Int?
+  approvedDeviceId String?   @db.VarChar(64)
+  approvedAt       DateTime?
+  deniedAt         DateTime?
+  consumedAt       DateTime?
+  approvedBy       User?     @relation(fields: [approvedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@map("loginchallenge")
 }
 
 model RefreshSession {

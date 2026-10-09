@@ -23,6 +23,9 @@ app.use((request, response, next) => {
   request.requestId = request.header("x-request-id")?.slice(0, 100) || crypto.randomUUID();
   response.setHeader("x-request-id", request.requestId);
   response.setHeader("x-api-version", buildInfo.version);
+  if (request.path === "/api/v1/auth" || request.path.startsWith("/api/v1/auth/")) {
+    response.setHeader("Cache-Control", "no-store");
+  }
   next();
 });
 app.use(helmet());

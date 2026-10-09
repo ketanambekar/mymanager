@@ -92,6 +92,27 @@ sudo bash deploy/verify_backup.sh
 
 Daily compressed MySQL backups run at 02:15 UTC and are retained for 14 days in `/var/backups/mymanager`. Hetzner automated backups or another off-server destination must also be enabled; same-disk backups do not protect against server loss.
 
+### QR login retention (1.2.0+)
+
+After deploying 1.2.0, install the supplied daily 02:30 UTC cron job:
+
+```bash
+cd /opt/mymanager/server
+sudo install -m 644 -o root -g root deploy/auth_cleanup.cron /etc/cron.d/mymanager-auth-cleanup
+sudo bash deploy/cleanup_auth.sh
+```
+
+The job appends output to `/var/log/mymanager-auth-cleanup.log` and records failures in syslog with tag `mymanager-auth-cleanup`; monitor these using the host's operations tooling. To invoke the container command directly:
+
+```bash
+cd /opt/mymanager/server
+docker compose --env-file .env.production -f compose.production.yml exec -T api npm run cleanup:auth
+```
+
+The job deletes QR login requests only when they expired more than 24 hours ago, in batches of 1,000. It never deletes live challenges or user/device sessions. Packaging the code does not install the host scheduler; perform the installation step above.
+
+The additive QR/device migration preserves existing refresh families. Old access tokens without device binding require one normal refresh; verify existing-cookie bootstrap and remote revocation after rollout. See the [QR/device contract](../../docs/ben/api-contracts/qr_sessions.md) for complete client checks.
+
 ## Security
 
 - UFW allows only SSH, HTTP, HTTPS, and HTTP/3.

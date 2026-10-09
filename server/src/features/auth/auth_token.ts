@@ -7,6 +7,7 @@ export type AccessTokenPayload = {
   email: string;
   displayName: string;
   workspaceId: number;
+  deviceId?: string;
 };
 
 export function signAccessToken(payload: AccessTokenPayload): string {
@@ -30,10 +31,11 @@ export function verifyAccessToken(token: string): AccessTokenPayload {
     || typeof payload.email !== "string"
     || typeof payload.displayName !== "string"
     || typeof payload.workspaceId !== "number"
+    || (payload.deviceId !== undefined && typeof payload.deviceId !== "string")
   ) {
     throw new Error("Invalid access token payload");
   }
-  return { sub: payload.sub, email: payload.email, displayName: payload.displayName, workspaceId: payload.workspaceId };
+  return { sub: payload.sub, email: payload.email, displayName: payload.displayName, workspaceId: payload.workspaceId, deviceId: payload.deviceId };
 }
 
 export function generateRefreshToken(): string {
