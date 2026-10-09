@@ -140,3 +140,5 @@ Verify phone/tablet, light/dark themes, text scaling, period counts, null/empty 
 No new migration. Standard build and unit suite; report HTTP/database scenarios run inside `npm --prefix server run test:habits:integration` alongside the tightly coupled recurrence data tests.
 
 Deployment uses a committed, tagged 1.6.0 bundle after a verified backup. Production verification must check release health, authentication boundary and read-only report identities; do not log user report contents or tokens.
+
+Verified live on 2026-10-09: **1.6.0**, commit `fd43bffee06a`, local tag `server-v1.6.0`. Production build and healthy containers, eight current migrations, public health/auth boundary, and read-only report identities for two saved accounts passed. Local checks passed 30 unit/regression tests and twelve MySQL scenarios. Adam's UI is not included in this backend release.
