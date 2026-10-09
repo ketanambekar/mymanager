@@ -2,7 +2,7 @@
 
 Base URL: `VITE_API_BASE_URL`. All requests require a bearer access token.
 
-Daily task series also appear in the read-only [Habits calendar API](habits.md). Its cells use saved occurrence due dates; gaps are not inferred misses. Existing task edits/deletion and commands remain authoritative for habit history.
+All recurring task series also appear in the read-only [Habits calendar and period-history API](habits.md). Its entries use saved occurrence due dates; gaps are not inferred misses. Existing task edits/deletion and commands remain authoritative for habit history.
 
 ## Task Endpoints
 

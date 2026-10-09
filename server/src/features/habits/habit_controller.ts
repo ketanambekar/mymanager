@@ -15,4 +15,10 @@ export const habitController = {
     const { month } = request.validatedQuery as { month?: string };
     response.json({ success: true, data: await habitService.calendar(auth.sub, auth.workspaceId, habitId, month) });
   }),
+  history: asyncHandler(async (request, response) => {
+    const auth = authenticatedUser(request);
+    const { habitId } = request.validatedParams as { habitId: string };
+    const { year } = request.validatedQuery as { year?: number };
+    response.json({ success: true, data: await habitService.history(auth.sub, auth.workspaceId, habitId, year) });
+  }),
 };

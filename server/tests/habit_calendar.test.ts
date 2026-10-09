@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { buildHabitCalendar, monthBounds } from "../src/features/habits/habit_calendar.js";
 import { habitCalendarSchema, habitListSchema, habitParamsSchema } from "../src/features/habits/habit_schema.js";
-import { habitIdFor, isDailyHabit, type habitRepository } from "../src/features/habits/habit_repository.js";
+import { habitIdFor, isRecurringHabit, type habitRepository } from "../src/features/habits/habit_repository.js";
+import { buildHabitPeriods, habitPeriodUnit } from "../src/features/habits/habit_periods.js";
 
 type Occurrence = Awaited<ReturnType<typeof habitRepository.history>>[number];
 function occurrence(day: number, status: Occurrence["status"] = "OPEN"): Occurrence {
@@ -24,14 +25,14 @@ test("calendar states and exact totals come from recorded due dates, never inven
   assert.equal(calendar.days.length, 31);
   assert.deepEqual(calendar.summary, {
     daysInMonth: 31, recordedDays: 7, completedDays: 1, skippedDays: 1, missedDays: 1,
-    pendingDays: 1, overdueDays: 1, scheduledDays: 1, notRecordedDays: 24, notDailyDays: 1,
+    pendingDays: 1, overdueDays: 2, scheduledDays: 1, notRecordedDays: 24, notDailyDays: 0,
   });
   assert.equal(calendar.days[0].state, "COMPLETED");
   assert.equal(calendar.days[1].occurrence?.closeReason, "Rest day");
   assert.equal(calendar.days[3].state, "OVERDUE");
   assert.equal(calendar.days[4].state, "NOT_RECORDED");
   assert.equal(calendar.days[4].occurrence, null);
-  assert.equal(calendar.days[5].state, "NOT_DAILY");
+  assert.equal(calendar.days[5].state, "OVERDUE");
   assert.equal(calendar.days[8].isToday, true);
   assert.equal(calendar.days[9].state, "SCHEDULED");
 });
@@ -47,13 +48,39 @@ test("calendar returns real month lengths, leap years, and full empty grids", ()
   }
 });
 
-test("daily habits include custom every-one-day only and stable series identifiers", () => {
-  assert.equal(isDailyHabit(occurrence(1)), true);
-  assert.equal(isDailyHabit({ recurrenceFrequency: "CUSTOM", recurrenceInterval: 1, recurrenceUnit: "DAY" }), true);
-  assert.equal(isDailyHabit({ recurrenceFrequency: "CUSTOM", recurrenceInterval: 2, recurrenceUnit: "DAY" }), false);
-  assert.equal(isDailyHabit({ recurrenceFrequency: "WEEKLY", recurrenceInterval: null, recurrenceUnit: null }), false);
+test("all recurring cadences are habits, but one-time tasks are not", () => {
+  for (const recurrenceFrequency of ["DAILY", "WEEKLY", "MONTHLY", "YEARLY", "CUSTOM"] as const) {
+    assert.equal(isRecurringHabit({ recurrenceFrequency }), true);
+  }
+  assert.equal(isRecurringHabit({ recurrenceFrequency: "ONE_TIME" }), false);
   assert.equal(habitIdFor({ id: 1, recurrenceSeriesId: "series" }), "series");
   assert.equal(habitIdFor({ id: 1, recurrenceSeriesId: null }), "task-1");
+});
+
+test("weekly history groups Monday-Sunday without fabricating empty periods or merging outcomes", () => {
+  const data = [occurrence(1, "COMPLETED"), occurrence(2, "SKIPPED"), occurrence(15, "MISSED")];
+  const history = buildHabitPeriods(2026, "2026-10-09", "week", data);
+  assert.equal(history.periods.length, 2);
+  assert.equal(history.periods[0].startDate, "2026-09-28");
+  assert.equal(history.periods[0].endDate, "2026-10-04");
+  assert.equal(history.periods[0].summary.completedOccurrences, 1);
+  assert.equal(history.periods[0].summary.skippedOccurrences, 1);
+  assert.equal(history.summary.recordedOccurrences, 3);
+});
+
+test("monthly/yearly/custom history keeps exact dates and year-boundary periods", () => {
+  const data = [occurrence(1, "COMPLETED"), occurrence(15)];
+  assert.equal(buildHabitPeriods(2026, "2026-10-09", "month", data).periods[0].endDate, "2026-10-31");
+  const yearly = buildHabitPeriods(2026, "2026-10-09", "year", data);
+  assert.equal(yearly.periods[0].startDate, "2026-01-01");
+  assert.equal(yearly.periods[0].endDate, "2026-12-31");
+  assert.equal(yearly.periods[0].summary.scheduledOccurrences, 1);
+  assert.deepEqual(buildHabitPeriods(2026, "2026-10-09", "year", []).periods, []);
+  assert.equal(habitPeriodUnit({ recurrenceFrequency: "CUSTOM", recurrenceInterval: 3, recurrenceUnit: "MONTH" }), "month");
+  const january = { ...occurrence(1), dueDate: new Date("2027-01-01T00:00:00Z") };
+  const week = buildHabitPeriods(2027, "2026-10-09", "week", [january]).periods[0];
+  assert.equal(week.startDate, "2026-12-28");
+  assert.equal(week.endDate, "2027-01-03");
 });
 
 test("habit boundary rejects invalid months, identifiers and unbounded list queries", () => {

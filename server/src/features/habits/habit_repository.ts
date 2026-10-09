@@ -10,9 +10,8 @@ export const habitSelect = {
 
 export type HabitTask = Prisma.TaskGetPayload<{ select: typeof habitSelect }>;
 
-export function isDailyHabit(task: Pick<HabitTask, "recurrenceFrequency" | "recurrenceInterval" | "recurrenceUnit">) {
-  return task.recurrenceFrequency === "DAILY"
-    || (task.recurrenceFrequency === "CUSTOM" && task.recurrenceInterval === 1 && task.recurrenceUnit === "DAY");
+export function isRecurringHabit(task: Pick<HabitTask, "recurrenceFrequency">) {
+  return task.recurrenceFrequency !== "ONE_TIME";
 }
 
 export function habitIdFor(task: Pick<HabitTask, "id" | "recurrenceSeriesId">) {
@@ -31,8 +30,7 @@ export const habitRepository = {
     const ids = await db.$queryRaw<Array<{ id: number }>>(Prisma.sql`
       SELECT t.id FROM task t
       WHERE t.workspaceId = ${workspaceId}
-        AND (t.recurrenceFrequency = 'DAILY'
-          OR (t.recurrenceFrequency = 'CUSTOM' AND t.recurrenceInterval = 1 AND t.recurrenceUnit = 'DAY'))
+        AND t.recurrenceFrequency <> 'ONE_TIME'
         AND (t.recurrenceSeriesId IS NULL OR NOT EXISTS (
           SELECT 1 FROM task newer
           WHERE newer.workspaceId = ${workspaceId} AND newer.recurrenceSeriesId = t.recurrenceSeriesId
@@ -75,6 +73,24 @@ export const habitRepository = {
     ] },
     _min: { dueDate: true },
   }),
+  async recordedHistory(db: Prisma.TransactionClient, workspaceId: number, habitId: string) {
+    const identity = habitId.startsWith("task-")
+      ? Prisma.sql`id = ${Number(habitId.slice(5))} AND recurrenceSeriesId IS NULL`
+      : Prisma.sql`recurrenceSeriesId = ${habitId}`;
+    const months = await db.$queryRaw<Array<{ month: string; firstDate: Date; lastDate: Date }>>(Prisma.sql`
+      SELECT DATE_FORMAT(dueDate, '%Y-%m') AS month,
+        MIN(dueDate) AS firstDate, MAX(dueDate) AS lastDate
+      FROM task
+      WHERE workspaceId = ${workspaceId} AND ${identity} AND dueDate IS NOT NULL
+      GROUP BY DATE_FORMAT(dueDate, '%Y-%m')
+      ORDER BY month ASC
+    `);
+    return {
+      firstRecordedDate: months[0]?.firstDate.toISOString().slice(0, 10) ?? null,
+      lastRecordedDate: months.at(-1)?.lastDate.toISOString().slice(0, 10) ?? null,
+      availableMonths: months.map((row) => row.month),
+    };
+  },
   undatedCount: (db: Prisma.TransactionClient, workspaceId: number, habitId: string) => db.task.count({
     where: { ...habitWhere(workspaceId, habitId), dueDate: null },
   }),

@@ -1,4 +1,5 @@
-import { isDailyHabit, type habitRepository } from "./habit_repository.js";
+import { isRecurringHabit, type habitRepository } from "./habit_repository.js";
+import { recurrenceFromTask } from "../tasks/task_service.js";
 
 type Occurrence = Awaited<ReturnType<typeof habitRepository.history>>[number];
 export type HabitDayState = "COMPLETED" | "SKIPPED" | "MISSED" | "PENDING" | "OVERDUE" | "SCHEDULED" | "NOT_RECORDED" | "NOT_DAILY";
@@ -11,7 +12,7 @@ export function monthBounds(month: string) {
 }
 
 function dayState(task: Occurrence, date: string, today: string): HabitDayState {
-  if (!isDailyHabit(task)) return "NOT_DAILY";
+  if (!isRecurringHabit(task)) return "NOT_DAILY";
   if (task.status !== "OPEN") return task.status;
   return date < today ? "OVERDUE" : date === today ? "PENDING" : "SCHEDULED";
 }
@@ -32,6 +33,7 @@ export function buildHabitCalendar(month: string, today: string, occurrences: Oc
       occurrence: task ? {
         taskId: task.id, title: task.title, status: task.status, version: task.version,
         completedAt: task.completedAt, closedAt: task.closedAt, closeReason: task.closeReason,
+        recurrence: recurrenceFromTask(task),
       } : null,
     };
   });

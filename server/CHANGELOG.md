@@ -8,6 +8,26 @@ All notable backend changes are recorded here. The version in `package.json` is 
 
 Each deployed release is tagged `server-v<version>`. Check the running version with `GET /health` or the `x-api-version` response header.
 
+## 1.5.0 - 2026-10-09
+
+### Added
+
+- All recurring task cadences in Habits: daily, weekly, monthly, yearly, and every custom interval/unit.
+- Recurrence and display `periodUnit` metadata on habits and historical recurrence on occurrences.
+- `GET /habits/:habitId/history?year=YYYY` with populated day/week/month/year buckets and exact per-period/year occurrence outcomes. Monday-Sunday weeks retain dates and partial year-boundary semantics.
+
+### Changed
+
+- Non-daily recurring history now reports actual outcomes instead of `NOT_DAILY`; legacy calendar counters remain compatible and one-time tasks remain excluded.
+- Cadence-specific Adam/Dartji handoff; no synthetic schedules, failed periods, or new database migration.
+
+## 1.4.0 - 2026-10-09
+
+### Added
+
+- Calendar `firstRecordedDate`, `lastRecordedDate`, and sorted unique `availableMonths` from all saved dated series occurrences, including non-daily and future history. Undated-only histories return null bounds and an empty month list.
+- Client guidance for bounded, gap-skipping history navigation and initial nearest-populated-month selection; existing month grids, summaries, and default-month behavior are unchanged.
+
 ## 1.3.0 - 2026-10-09
 
 ### Added

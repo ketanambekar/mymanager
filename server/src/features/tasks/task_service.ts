@@ -36,7 +36,7 @@ function asDateString(value: Date | null): string | null {
   return value?.toISOString().slice(0, 10) ?? null;
 }
 
-function recurrenceFromTask(task: { recurrenceFrequency: RecurrenceFrequency; recurrenceInterval: number | null; recurrenceUnit: RecurrenceUnit | null }): RecurrenceRule {
+export function recurrenceFromTask(task: { recurrenceFrequency: RecurrenceFrequency; recurrenceInterval: number | null; recurrenceUnit: RecurrenceUnit | null }): RecurrenceRule {
   return { frequency: frequencyFromDb[task.recurrenceFrequency], interval: task.recurrenceInterval, unit: task.recurrenceUnit ? unitFromDb[task.recurrenceUnit] : null };
 }
 

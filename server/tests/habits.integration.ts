@@ -73,6 +73,8 @@ test("habit APIs on disposable local MySQL", async (t) => {
     const undated = await prisma.task.create({ data: { workspaceId, title: "Undated habit", recurrenceFrequency: "DAILY" } });
     await taskService.create(user.id, workspaceId, { title: "Every two days", recurrence: { frequency: "custom", interval: 2, unit: "day" } });
     await taskService.create(user.id, workspaceId, { title: "Weekly", recurrence: { frequency: "weekly" } });
+    await taskService.create(user.id, workspaceId, { title: "Monthly", recurrence: { frequency: "monthly" } });
+    await taskService.create(user.id, workspaceId, { title: "Yearly", recurrence: { frequency: "yearly" } });
     await taskService.create(user.id, workspaceId, { title: "One time" });
     const changedSeries = crypto.randomUUID();
     await prisma.task.create({ data: { workspaceId, title: "Stopped daily", recurrenceSeriesId: changedSeries, recurrenceFrequency: "DAILY", occurrenceNumber: 1, dueDate: new Date("2026-10-01") } });
@@ -92,6 +94,8 @@ test("habit APIs on disposable local MySQL", async (t) => {
         asOfDate: z.string(), timezone: z.string(), nextCursor: z.string().nullable(),
         items: z.array(z.object({
           id: z.string(), title: z.string(), project: z.object({ id: z.number(), name: z.string(), color: z.string() }).nullable(),
+          recurrence: z.object({ frequency: z.string(), interval: z.number().nullable(), unit: z.string().nullable() }),
+          periodUnit: z.enum(["day", "week", "month", "year"]),
           latestOccurrence: z.object({ taskId: z.number(), dueDate: z.string().nullable(), status: z.string(), version: z.number() }),
         }).strict()),
       }).strict();
@@ -110,11 +114,15 @@ test("habit APIs on disposable local MySQL", async (t) => {
         assert.equal(indexes.length, 4);
       });
 
-      await t.test("one list row per series; custom one-day included, other cadences excluded", async () => {
+      await t.test("one list row per recurring series across all cadences", async () => {
         const response = await get();
         assert.equal(response.headers.get("cache-control"), "no-store");
         const list = await readList();
-        assert.equal(list.items.length, 3);
+        assert.equal(list.items.length, 8);
+        assert.equal(list.items.some((item) => item.title === "One time"), false);
+        assert.equal(list.items.find((item) => item.title === "Yearly")?.periodUnit, "year");
+        assert.equal(list.items.find((item) => item.title === "Monthly")?.periodUnit, "month");
+        assert.equal(list.items.find((item) => item.title === "Every two days")?.recurrence.interval, 2);
         assert.equal(list.timezone, "Pacific/Kiritimati");
         assert.equal(list.asOfDate, dateInTimeZone(new Date(), list.timezone));
         const walk = list.items.find((habit) => habit.id === series)!;
@@ -149,6 +157,9 @@ test("habit APIs on disposable local MySQL", async (t) => {
         const calendar = await habitService.calendar(user.id, workspaceId, series, "2026-10");
         assert.equal(calendar.days.length, 31);
         assert.equal(calendar.firstRecordedDueDate, "2026-10-01");
+        assert.equal(calendar.firstRecordedDate, "2026-10-01");
+        assert.equal(calendar.lastRecordedDate, "2026-10-04");
+        assert.deepEqual(calendar.availableMonths, ["2026-10"]);
         assert.equal(calendar.undatedOccurrencesCount, 0);
         assert.equal(calendar.days[0].state, "COMPLETED");
         assert.equal(calendar.days[0].occurrence?.completedAt?.toISOString(), "2026-10-05T12:00:00.000Z");
@@ -175,6 +186,9 @@ test("habit APIs on disposable local MySQL", async (t) => {
         const empty = await habitService.calendar(user.id, workspaceId, `task-${undated.id}`, "2026-10");
         assert.equal(empty.undatedOccurrencesCount, 1);
         assert.equal(empty.firstRecordedDueDate, null);
+        assert.equal(empty.firstRecordedDate, null);
+        assert.equal(empty.lastRecordedDate, null);
+        assert.deepEqual(empty.availableMonths, []);
         assert.equal(empty.summary.recordedDays, 0);
         const current = await habitService.calendar(user.id, workspaceId, series);
         assert.equal(current.month, current.asOfDate.slice(0, 7));
@@ -208,6 +222,53 @@ test("habit APIs on disposable local MySQL", async (t) => {
         assert.equal((await habitService.calendar(user.id, workspaceId, missed.recurrenceSeriesId, date.slice(0, 7))).days.find((day) => day.date === date)?.state, "MISSED");
       });
 
+      await t.test("navigation includes mixed cadence, gaps and future history regardless of representative date", async () => {
+        const historySeries = crypto.randomUUID();
+        const fixture = [
+          { date: "2024-02-29", frequency: "WEEKLY", number: 1 },
+          { date: "2099-12-20", frequency: "MONTHLY", number: 2 },
+          { date: "2026-08-03", frequency: "DAILY", number: 3 },
+          { date: "2026-08-05", frequency: "DAILY", number: 4 },
+          { date: "2026-06-12", frequency: "DAILY", number: 5 },
+        ] as const;
+        for (const item of fixture) {
+          await prisma.task.create({ data: {
+            workspaceId, title: "Navigation fixture", recurrenceSeriesId: historySeries,
+            recurrenceFrequency: item.frequency, occurrenceNumber: item.number, dueDate: new Date(`${item.date}T00:00:00Z`),
+          } });
+        }
+        await prisma.task.create({ data: {
+          workspaceId, title: "Undated history", recurrenceSeriesId: historySeries,
+          recurrenceFrequency: "WEEKLY", occurrenceNumber: 0,
+        } });
+        const calendar = await habitService.calendar(user.id, workspaceId, historySeries, "2026-08");
+        assert.equal(calendar.firstRecordedDate, "2024-02-29");
+        assert.equal(calendar.lastRecordedDate, "2099-12-20");
+        assert.deepEqual(calendar.availableMonths, ["2024-02", "2026-06", "2026-08", "2099-12"]);
+        assert.equal(calendar.habit.latestOccurrence.dueDate, "2026-06-12");
+        assert.equal(calendar.firstRecordedDueDate, "2026-06-12", "Legacy daily-only field stays unchanged");
+        assert.equal(calendar.undatedOccurrencesCount, 1);
+        assert.equal(calendar.days[3].state, "NOT_RECORDED");
+        const gap = await habitService.calendar(user.id, workspaceId, historySeries, "2026-07");
+        assert.equal(gap.summary.recordedDays, 0);
+        assert.deepEqual(gap.availableMonths, calendar.availableMonths);
+        const future = await habitService.calendar(user.id, workspaceId, historySeries, "2099-12");
+        assert.equal(future.days[19].state, "SCHEDULED");
+        const response = await get(`/${historySeries}/calendar?month=2026-08`);
+        assert.equal(response.status, 200);
+        const metadata = z.object({ data: z.object({
+          firstRecordedDate: z.string().nullable(), lastRecordedDate: z.string().nullable(),
+          availableMonths: z.array(z.string()),
+        }) }).parse(await response.json()).data;
+        assert.deepEqual(metadata, {
+          firstRecordedDate: calendar.firstRecordedDate, lastRecordedDate: calendar.lastRecordedDate,
+          availableMonths: calendar.availableMonths,
+        });
+        assert.ok(other.workspace);
+        await taskService.create(other.id, other.workspace.id, { title: "Unrelated dated habit", dueDate: "1900-01-01", recurrence: { frequency: "daily" } });
+        assert.equal((await habitService.calendar(user.id, workspaceId, historySeries)).firstRecordedDate, "2024-02-29");
+      });
+
       await t.test("latest-cadence eligibility, tied occurrence ordering and completed habits", async () => {
         const tiedSeries = crypto.randomUUID();
         await prisma.task.create({ data: {
@@ -225,16 +286,16 @@ test("habit APIs on disposable local MySQL", async (t) => {
         assert.equal(calendar.days[1].state, "COMPLETED");
         assert.equal(calendar.days[1].occurrence?.completedAt, null, "Legacy completion without timestamp remains recorded");
         await taskService.update(workspaceId, latest.id, { version: latest.version, recurrence: { frequency: "weekly" } });
-        assert.equal((await habitService.list(user.id, workspaceId, { limit: 100, search: "Tied" })).items.length, 0);
-        await assert.rejects(habitService.calendar(user.id, workspaceId, tiedSeries, "2026-10"), { code: "HABIT_NOT_FOUND" });
+        assert.equal((await habitService.list(user.id, workspaceId, { limit: 100, search: "Tied" })).items[0].periodUnit, "week");
+        assert.equal((await habitService.calendar(user.id, workspaceId, tiedSeries, "2026-10")).days[1].state, "COMPLETED");
       });
 
       await t.test("mixed historical cadence and title/date edits do not invent history", async () => {
         await prisma.task.update({ where: { id: records[1].id }, data: { recurrenceFrequency: "WEEKLY" } });
         let calendar = await habitService.calendar(user.id, workspaceId, series, "2026-10");
-        assert.equal(calendar.days[1].state, "NOT_DAILY");
-        assert.equal(calendar.summary.skippedDays, 0);
-        assert.equal(calendar.summary.notDailyDays, 1);
+        assert.equal(calendar.days[1].state, "SKIPPED");
+        assert.equal(calendar.summary.skippedDays, 1);
+        assert.equal(calendar.summary.notDailyDays, 0);
         await taskService.update(workspaceId, records[0].id, { version: 1, dueDate: "2026-10-07", title: "Moved history" });
         calendar = await habitService.calendar(user.id, workspaceId, series, "2026-10");
         assert.equal(calendar.days[0].state, "NOT_RECORDED");
@@ -243,13 +304,16 @@ test("habit APIs on disposable local MySQL", async (t) => {
         await taskService.remove(workspaceId, records[2].id);
         calendar = await habitService.calendar(user.id, workspaceId, series, "2026-10");
         assert.equal(calendar.days[2].state, "NOT_RECORDED");
+        assert.equal(calendar.firstRecordedDate, "2026-10-02");
+        assert.equal(calendar.lastRecordedDate, "2026-10-07");
+        assert.deepEqual(calendar.availableMonths, ["2026-10"]);
       });
 
       await t.test("tenant boundaries, auth and query validation apply to every surface", async () => {
         assert.equal((await get("", false)).status, 401);
         assert.equal((await get(`/${series}/calendar`, false)).status, 401);
         assert.equal((await get(`/${otherHabit.recurrenceSeriesId}/calendar`)).status, 404);
-        assert.equal((await get(`/${changedSeries}/calendar`)).status, 404);
+        assert.equal((await get(`/${changedSeries}/calendar`)).status, 200);
         assert.equal((await get(`/${crypto.randomUUID()}/calendar`)).status, 404);
         assert.equal((await get("/not-valid/calendar")).status, 400);
         for (const query of ["month=2026-13", "month=2026-02-31", "month=2026-1", "month=2200-01"]) {
@@ -259,6 +323,59 @@ test("habit APIs on disposable local MySQL", async (t) => {
           assert.equal((await get(`?${query}`)).status, 400);
         }
         assert.equal((await get("/task-9999999999/calendar")).status, 400);
+      });
+
+      await t.test("cadence-specific yearly history returns real period counts and protected validated HTTP", async () => {
+        const list = await habitService.list(user.id, workspaceId, { limit: 100 });
+        for (const [title, unit] of [["Weekly", "week"], ["Monthly", "month"], ["Yearly", "year"], ["Every two days", "day"]] as const) {
+          const habit = list.items.find((item) => item.title === title)!;
+          const year = Number(habit.latestOccurrence.dueDate!.slice(0, 4));
+          const history = await habitService.history(user.id, workspaceId, habit.id, year);
+          assert.equal(history.periodUnit, unit);
+          assert.equal(history.summary.recordedOccurrences, 1);
+          assert.equal(history.periods.length, 1);
+          assert.equal(history.periods[0].occurrences[0].date, habit.latestOccurrence.dueDate);
+          assert.equal(history.periods[0].occurrences[0].occurrence?.recurrence.frequency, habit.recurrence.frequency);
+          assert.equal((await get(`/${habit.id}/history?year=${year}`)).status, 200);
+        }
+        assert.equal((await get(`/${series}/history`, false)).status, 401);
+        assert.equal((await get(`/${otherHabit.recurrenceSeriesId}/history`)).status, 404);
+        for (const query of ["year=0", "year=2200", "year=2026.5", "year=bad", "unexpected=1"]) {
+          assert.equal((await get(`/${series}/history?${query}`)).status, 400);
+        }
+        assert.deepEqual((await habitService.history(user.id, workspaceId, `task-${undated.id}`, 2026)).periods, []);
+        const defaultHistory = await habitService.history(user.id, workspaceId, series);
+        assert.equal(defaultHistory.year, Number(defaultHistory.asOfDate.slice(0, 4)));
+        for (const unit of ["day", "week", "month", "year"] as const) {
+          const created = await taskService.create(user.id, workspaceId, {
+            title: `Custom ${unit}`, dueDate: "2026-10-01", recurrence: { frequency: "custom", interval: 365, unit },
+          });
+          assert.ok(created.recurrenceSeriesId);
+          const history = await habitService.history(user.id, workspaceId, created.recurrenceSeriesId, 2026);
+          assert.equal(history.periodUnit, unit);
+          assert.deepEqual(history.habit.recurrence, { frequency: "custom", interval: 365, unit });
+          assert.equal(history.summary.recordedOccurrences, 1);
+        }
+        const weeklySeries = crypto.randomUUID();
+        for (const [day, status] of [[5, "COMPLETED"], [6, "SKIPPED"], [7, "MISSED"]] as const) {
+          await prisma.task.create({ data: {
+            workspaceId, title: "Mixed week", recurrenceSeriesId: weeklySeries, recurrenceFrequency: "WEEKLY",
+            dueDate: new Date(`2026-10-${String(day).padStart(2, "0")}T00:00:00Z`), occurrenceNumber: day, status,
+          } });
+        }
+        const response = await get(`/${weeklySeries}/history?year=2026`);
+        assert.equal(response.status, 200);
+        const data = z.object({ data: z.object({
+          periodUnit: z.literal("week"),
+          summary: z.object({ recordedOccurrences: z.number(), completedOccurrences: z.number(), skippedOccurrences: z.number(), missedOccurrences: z.number() }),
+          periods: z.array(z.object({ startDate: z.string(), endDate: z.string(), occurrences: z.array(z.object({ date: z.string() })) })),
+        }) }).parse(await response.json()).data;
+        assert.deepEqual(data.summary, { recordedOccurrences: 3, completedOccurrences: 1, skippedOccurrences: 1, missedOccurrences: 1 });
+        assert.equal(data.periods.length, 1);
+        assert.equal(data.periods[0].startDate, "2026-10-05");
+        assert.equal(data.periods[0].endDate, "2026-10-11");
+        assert.equal(data.periods[0].occurrences.length, 3);
+        assert.deepEqual((await habitService.history(user.id, workspaceId, weeklySeries, 2025)).periods, []);
       });
     } finally {
       await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));

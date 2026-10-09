@@ -14,5 +14,8 @@ export const habitListSchema = z.object({
 export const habitCalendarSchema = z.object({
   month: z.string().regex(/^(?:19|20|21)\d{2}-(?:0[1-9]|1[0-2])$/).optional(),
 }).strict();
+export const habitHistorySchema = z.object({
+  year: z.coerce.number().int().min(1900).max(2199).optional(),
+}).strict();
 
 export type HabitListInput = z.infer<typeof habitListSchema>;
