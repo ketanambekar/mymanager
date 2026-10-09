@@ -1,0 +1,64 @@
+.device-sessions-page { min-height: 100vh; min-height: 100dvh; background: var(--surface); color: var(--ink); }
+.device-page-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px clamp(18px, 5vw, 72px); border-bottom: 1px solid var(--line); background: var(--surface-raised); }
+.device-page-brand { display: flex; align-items: center; gap: 8px; color: var(--ink); font-family: var(--font-display); font-size: 17px; font-weight: 700; }
+.device-page-brand > span:last-child { color: var(--muted); font-weight: 500; }
+.device-page-brand .brand-mark { display: flex; width: 24px; height: 24px; align-items: end; gap: 3px; padding: 4px; border-radius: 4px 8px; background: var(--green); }
+.device-page-brand .brand-mark i { width: 4px; border-radius: 4px; background: var(--button-primary-text); }
+.device-page-brand .brand-mark i:nth-child(1) { height: 7px; }.device-page-brand .brand-mark i:nth-child(2) { height: 12px; }.device-page-brand .brand-mark i:nth-child(3) { height: 9px; }
+.device-page-content { width: min(960px, calc(100% - 40px)); margin: 0 auto; padding: clamp(25px, 5vw, 54px) 0 60px; }
+.device-eyebrow { margin: 0 0 8px; color: var(--green); font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: .08em; }
+.device-page-content > h1 { margin: 0; font-family: var(--font-display); font-size: clamp(32px, 5vw, 44px); line-height: 1.1; }
+.device-page-intro { max-width: 690px; margin: 13px 0 27px; color: var(--text-secondary); font-size: 14px; line-height: 1.65; }
+.device-section { margin-top: 22px; padding: clamp(16px, 3vw, 24px); border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--surface-raised); }
+.device-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+.device-section-heading h2 { margin: 0; font-family: var(--font-display); font-size: 20px; }
+.device-section-heading p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+.device-list-state { margin: 22px 0 2px; color: var(--muted); font-size: 13px; }
+.device-list-error { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 18px; color: var(--orange); font-size: 13px; }
+.device-session-list { display: grid; gap: 1px; margin: 18px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.device-session-item { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: start; gap: 13px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.device-session-icon { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 10px; background: var(--surface-subtle); color: var(--green); }
+.device-session-info { min-width: 0; }
+.device-session-title { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
+.device-session-title > strong { overflow-wrap: anywhere; font-size: 14px; }
+.device-current-badge { padding: 4px 7px; border-radius: 99px; background: var(--success-surface); color: var(--green); font-size: 10px; font-weight: 700; }
+.device-session-dates { display: flex; flex-wrap: wrap; gap: 5px 18px; margin-top: 9px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.device-session-dates b { color: var(--text-secondary); font-weight: 600; }
+.device-session-agent { display: block; overflow-wrap: anywhere; margin-top: 7px; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.device-revoke-button { min-height: 34px; padding: 0 10px; font-size: 11px; }
+.device-link-section { margin-top: 18px; }
+.device-link-icon { color: var(--green); }
+.device-mode-tabs { display: flex; gap: 7px; margin-top: 19px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.device-mode-tabs button { display: inline-flex; min-height: 36px; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid transparent; border-radius: var(--radius-control); background: transparent; color: var(--muted); font: inherit; font-size: 12px; cursor: pointer; }
+.device-mode-tabs button:hover, .device-mode-tabs button.is-selected { border-color: var(--line); background: var(--surface-subtle); color: var(--ink); }
+.device-mode-tabs button:focus-visible, .device-dialog-close:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.device-scan-content { display: grid; justify-items: start; gap: 12px; padding-top: 14px; }
+.device-scan-content > p, .device-code-form > p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.device-code-form { display: grid; gap: 8px; padding-top: 15px; }
+.device-code-form label { color: var(--ink); font-size: 12px; font-weight: 700; }
+.device-code-entry { display: flex; max-width: 520px; gap: 9px; }
+.device-code-entry .app-input { min-width: 0; flex: 1; font-family: var(--font-mono); letter-spacing: .07em; }
+.device-inline-error, .device-inline-status, .device-inline-success { margin: 12px 0 0; font-size: 12px; line-height: 1.5; }
+.device-inline-error { color: var(--orange); }.device-inline-status { color: var(--muted); }.device-inline-success { color: var(--green); }
+.device-dialog { position: fixed; inset: 50% auto auto 50%; width: min(520px, calc(100% - 30px)); max-height: min(90vh, 720px); overflow: auto; transform: translate(-50%, -50%); padding: 24px; border: 1px solid var(--line-strong); border-radius: var(--radius-panel); background: var(--surface-raised); color: var(--ink); box-shadow: var(--dialog-shadow); }
+.device-dialog::backdrop { background: var(--backdrop); }
+.device-dialog-heading { display: flex; align-items: center; gap: 12px; }
+.device-dialog-icon { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; border-radius: 12px; background: var(--success-surface); color: var(--green); }
+.device-dialog-icon--warning { background: color-mix(in srgb, var(--orange) 13%, var(--surface-raised)); color: var(--orange); }
+.device-dialog-heading .device-eyebrow { margin-bottom: 4px; }.device-dialog-heading h2 { margin: 0; font-family: var(--font-display); font-size: 22px; }
+.device-dialog-copy { margin: 18px 0; color: var(--text-secondary); font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.device-request-details { display: grid; gap: 11px; margin: 0; padding: 15px; border-radius: var(--radius-control); background: var(--surface-subtle); }
+.device-request-details > div { display: grid; gap: 3px; }
+.device-request-details dt { color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.device-request-details dd { overflow-wrap: anywhere; margin: 0; color: var(--ink); font-size: 12px; line-height: 1.5; }
+.device-security-warning { margin: 15px 0; padding: 12px; border-left: 3px solid var(--orange); background: color-mix(in srgb, var(--orange) 9%, var(--surface-raised)); color: var(--ink); font-size: 12px; font-weight: 600; line-height: 1.55; }
+.device-dialog-status, .device-dialog-error { font-size: 12px; line-height: 1.5; }.device-dialog-status { color: var(--muted); }.device-dialog-error { color: var(--orange); }
+.device-dialog-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 9px; margin-top: 20px; }
+.device-dialog-close { display: block; margin: 12px auto 0; padding: 6px 10px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 11px; cursor: pointer; }
+.device-toast { position: fixed; z-index: 20; right: 22px; bottom: 22px; display: flex; max-width: min(460px, calc(100% - 32px)); align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--surface-raised); color: var(--ink); box-shadow: var(--dialog-shadow); font-size: 12px; }
+.device-toast.is-error { border-color: color-mix(in srgb, var(--orange) 50%, var(--line)); color: var(--orange); }
+@media (max-width: 620px) {
+  .device-page-header { padding: 14px 16px; }.device-page-header > .app-button { font-size: 11px; }.device-page-content { width: calc(100% - 28px); padding-top: 27px; }
+  .device-session-item { grid-template-columns: 34px minmax(0, 1fr); gap: 10px; }.device-session-icon { width: 32px; height: 32px; }.device-revoke-button { grid-column: 2; justify-self: start; }
+  .device-session-dates { display: grid; gap: 5px; }.device-code-entry { flex-wrap: wrap; }.device-code-entry .app-input { flex-basis: 100%; }.device-dialog { padding: 18px; }
+}

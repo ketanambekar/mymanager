@@ -20,7 +20,23 @@
 .login-google-mark { color: var(--project-blue); font-size: 20px; font-weight: 700; }
 .login-action p { margin: 0; color: var(--muted); font-size: 11px; }
 .login-action .login-error { color: var(--orange); }
+.login-device-divider { display: flex; align-items: center; gap: 12px; margin: 4px 0; color: var(--muted); font-family: var(--font-mono); font-size: 9px; }
+.login-device-divider::before, .login-device-divider::after { height: 1px; flex: 1; background: var(--line); content: ""; }
+.login-device-panel { display: grid; gap: 13px; max-height: min(56vh, 500px); overflow: auto; padding: 15px; border: 1px solid var(--line); border-radius: var(--radius-panel); background: color-mix(in srgb, var(--surface-raised) 94%, transparent); }
+.login-device-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.login-device-heading .login-kicker { margin: 0 0 4px; font-size: 9px; }
+.login-device-heading h2 { margin: 0; font-family: var(--font-display); font-size: 18px; }
+.login-device-countdown { color: var(--orange); font-family: var(--font-mono); font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.login-device-content { display: flex; align-items: center; gap: 18px; }
+.login-device-qr { display: grid; min-width: 150px; place-items: center; }
+.login-device-qr .qr-code-image { width: 150px; }
+.login-device-qr .qr-code-placeholder, .login-device-qr .qr-code-error { width: 150px; min-height: 130px; }
+.login-device-code { display: grid; gap: 7px; min-width: 0; }
+.login-device-code > span, .login-device-code small, .login-device-state { color: var(--muted); font-size: 11px; line-height: 1.5; }
+.login-device-code strong { color: var(--ink); font-family: var(--font-mono); font-size: clamp(21px, 5vw, 27px); letter-spacing: .08em; font-variant-numeric: tabular-nums; }
+.login-device-state { margin: 0; }
+.login-device-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .login-footer { margin: 0 clamp(20px, 6vw, 90px); padding: 16px 0 20px; }
 @media (max-width: 900px) { .login-backdrop { background: linear-gradient(90deg, var(--surface) 10%, color-mix(in srgb, var(--surface) 84%, transparent)), url('./dashboard_preview.png') center / cover no-repeat; }.login-footer { grid-template-columns: minmax(0, 1fr) auto; }.login-footer small { grid-column: 1 / -1; grid-row: 2; } }
 @media (max-width: 760px) { .login-content h1 { font-size: 56px; } }
-@media (max-width: 520px) { .login-header { padding-top: 19px; padding-bottom: 10px; }.login-header-label { font-size: 8px; }.login-content { padding-bottom: 16px; }.login-content h1 { font-size: 44px; }.login-subtitle { margin: 11px 0 24px; font-size: 15px; }.login-footer { padding: 12px 0 14px; } }
+@media (max-width: 520px) { .login-header { padding-top: 19px; padding-bottom: 10px; }.login-header-label { font-size: 8px; }.login-content { padding-bottom: 16px; }.login-content h1 { font-size: 44px; }.login-subtitle { margin: 11px 0 24px; font-size: 15px; }.login-footer { padding: 12px 0 14px; }.login-device-panel { max-height: 46vh; padding: 11px; }.login-device-content { gap: 11px; }.login-device-qr { min-width: 104px; }.login-device-qr .qr-code-image { width: 104px; border-width: 5px; }.login-device-qr .qr-code-placeholder, .login-device-qr .qr-code-error { width: 104px; min-height: 95px; padding: 8px; font-size: 10px; }.login-device-heading h2 { font-size: 16px; } }

@@ -14,3 +14,35 @@ export async function getSession() {
 export async function logoutSession() {
   await apiClient.post(API_PATHS.LOGOUT, null, { skipAuthRefresh: true });
 }
+
+export async function createQrChallenge() {
+  const { data } = await apiClient.post(API_PATHS.QR_CHALLENGES, {}, { skipAuthRefresh: true });
+  return data.data;
+}
+
+export async function getQrChallengeStatus(challengeId, pollToken) {
+  const { data } = await apiClient.post(
+    `${API_PATHS.QR_CHALLENGES}/${challengeId}/status`,
+    { pollToken },
+    { skipAuthRefresh: true },
+  );
+  return data.data;
+}
+
+export async function consumeQrChallenge(challengeId, pollToken) {
+  const { data } = await apiClient.post(
+    `${API_PATHS.QR_CHALLENGES}/${challengeId}/consume`,
+    { pollToken },
+    { skipAuthRefresh: true },
+  );
+  return data.data;
+}
+
+export async function cancelQrChallenge(challengeId, pollToken) {
+  const { data } = await apiClient.post(
+    `${API_PATHS.QR_CHALLENGES}/${challengeId}/cancel`,
+    { pollToken },
+    { skipAuthRefresh: true },
+  );
+  return data.data;
+}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CalendarDays, LogOut, Moon, Plus, Search, Sun } from "lucide-react";
+import { CalendarDays, LogOut, Moon, MonitorSmartphone, Plus, Search, Sun } from "lucide-react";
 import AppFooter from "@/shared/widgets/app_footer/app_footer.jsx";
 import AppButton from "@/shared/widgets/app_button/app_button.jsx";
 import AppIconButton from "@/shared/widgets/app_icon_button/app_icon_button.jsx";
@@ -17,7 +17,7 @@ import UpcomingTaskList from "./widgets/upcoming_task_list/upcoming_task_list.js
 import { useDashboardController } from "./use_dashboard_controller.js";
 import "./dashboard_layout.css";
 
-export default function DashboardView({ theme, onToggleTheme, themeController, user, onLogout, isLoggingOut }) {
+export default function DashboardView({ theme, onToggleTheme, themeController, user, onLogout, onOpenDevices, isLoggingOut }) {
   const dashboard = useDashboardController();
   const [currentTime, setCurrentTime] = useState(() => new Date());
 
@@ -40,6 +40,7 @@ export default function DashboardView({ theme, onToggleTheme, themeController, u
           </a>
         </div>
         <div className="topbar-actions">
+          <AppIconButton aria-label="Devices and sessions" className="device-sessions-shortcut" onClick={onOpenDevices} title="Devices & sessions" variant="theme"><MonitorSmartphone aria-hidden="true" size={16} /></AppIconButton>
           <label className="search-box">
             <Search aria-hidden="true" size={17} strokeWidth={2} />
             <span className="visually-hidden">Search tasks</span>
@@ -51,6 +52,7 @@ export default function DashboardView({ theme, onToggleTheme, themeController, u
         <div className="sidebar-bottom">
           {user?.avatarUrl ? <img alt="" className="account-avatar" referrerPolicy="no-referrer" src={user.avatarUrl} /> : <span className="account-avatar" aria-hidden="true">{(user?.displayName ?? user?.email ?? "M").charAt(0).toUpperCase()}</span>}
           <span className="account-copy"><strong>{user?.displayName ?? "My workspace"}</strong><small>{user?.email}</small></span>
+          <AppIconButton aria-label="Devices and sessions" onClick={onOpenDevices} title="Devices & sessions" variant="theme"><MonitorSmartphone aria-hidden="true" size={16} /></AppIconButton>
           <AppIconButton aria-label="Sign out" disabled={isLoggingOut} onClick={onLogout} title="Sign out" variant="theme"><LogOut aria-hidden="true" size={16} /></AppIconButton>
         </div>
       </aside>
