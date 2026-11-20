@@ -4,7 +4,9 @@ import "./app.css";
 import DashboardView from "@/features/dashboard/dashboard_view.jsx";
 import DeviceSessionView from "@/features/account/device_sessions/device_session_view.jsx";
 import HabitView from "@/features/habits/habit_view.jsx";
+import LandingView from "@/features/onboarding/landing/landing_view.jsx";
 import LoginView from "@/features/onboarding/login/login_view.jsx";
+import "@/features/onboarding/landing/landing.css";
 import { useLoginController } from "@/features/onboarding/login/use_login_controller.js";
 import { useThemeController } from "@/styles/controller/use_theme_controller.js";
 
@@ -14,6 +16,7 @@ export default function App() {
   const login = useLoginController();
   const themeController = useThemeController(login.user?.preference, login.onPreferenceUpdated);
   if (login.isBootstrapping) return <div className="app-loading" role="status">Loading your workspace...</div>;
+  if (!login.user && login.path === "/") return <LandingView />;
   if (login.user && login.path === "/devices") {
     return <DeviceSessionView onBack={() => login.navigate("/")} onCurrentDeviceRevoked={login.clearSession} user={login.user} />;
   }

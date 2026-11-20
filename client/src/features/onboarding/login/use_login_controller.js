@@ -168,7 +168,7 @@ export function useLoginController() {
         }
       } catch {
         setAccessToken(null);
-        if (mounted) navigate("/login");
+        if (mounted && window.location.pathname !== "/") navigate("/login");
       } finally {
         if (mounted) setIsBootstrapping(false);
       }

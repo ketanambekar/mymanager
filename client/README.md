@@ -1,6 +1,8 @@
 # MyManger
 
-A React task workspace built with Vite. Tasks are currently saved in this browser; account sync and a backend are not connected yet.
+A React task workspace built with Vite, with account-aware API integration.
+
+The public homepage introduces task management, recurring tasks, and project planning. Its content is included in the generated HTML for search engines, while its sign-up links lead to the existing sign-in page at `/login`. Signed-in users continue to reach their workspace at `/`.
 
 ## Run locally
 
