@@ -1,2 +1,48 @@
 .github/
 /docs/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+
+# Node.js dependencies and build output
+node_modules/
+dist/
+coverage/
+*.log
+
+# Local environment files; keep example templates
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Dart and Flutter generated files
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+**/build/
+**/doc/api/
+**/Flutter/ephemeral/
+**/Flutter/Generated.xcconfig
+**/Flutter/flutter_export_environment.sh
+**/Flutter/.last_build_id
+**/Pods/
+**/.symlinks/
+**/GeneratedPluginRegistrant.*
+**/ios/ServiceDefinitions.json
+**/android/local.properties
+**/android/gradlew
+**/android/gradlew.bat
+**/android/gradle/wrapper/gradle-wrapper.jar
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/key.properties
+**/*.keystore
+**/*.jks
