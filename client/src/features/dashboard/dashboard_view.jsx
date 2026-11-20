@@ -21,7 +21,7 @@ import UpcomingTaskList from "./widgets/upcoming_task_list/upcoming_task_list.js
 import { useDashboardController } from "./use_dashboard_controller.js";
 import "./dashboard_layout.css";
 
-export default function DashboardView({ theme, onToggleTheme, themeController, user, onLogout, onOpenDevices, onOpenHabits, isLoggingOut }) {
+export default function DashboardView({ theme, onToggleTheme, themeController, user, onLogout, onOpenDevices, onOpenHabits, onOpenReports, isLoggingOut }) {
   const dashboard = useDashboardController();
   const mobileWorkspace = useMobileWorkspaceController({ selectProject: dashboard.selectProject, upcomingCount: dashboard.upcomingTasks.length });
   const [currentTime, setCurrentTime] = useState(() => new Date());
@@ -63,7 +63,7 @@ export default function DashboardView({ theme, onToggleTheme, themeController, u
           </label>
           <SummaryStrip className="summary-strip--topbar" completedCount={dashboard.completedCount} completedTodayCount={dashboard.completedTodayCount} completionRate={dashboard.completionRate} dueTodayCount={dashboard.dueTodayCount} missedCount={dashboard.missedCount} openCount={dashboard.openCount} overdueCount={dashboard.overdueCount} pendingTodayCount={dashboard.pendingTodayCount} skippedCount={dashboard.skippedCount} totalCount={dashboard.totalCount} />
         </div>
-        <AccountDrawer isLoggingOut={isLoggingOut} onLogout={onLogout} onOpenDevices={onOpenDevices} onOpenHabits={onOpenHabits} onToggleTheme={onToggleTheme} theme={theme} themeController={themeController} user={user} />
+        <AccountDrawer isLoggingOut={isLoggingOut} onLogout={onLogout} onOpenDevices={onOpenDevices} onOpenHabits={onOpenHabits} onOpenReports={onOpenReports} onToggleTheme={onToggleTheme} theme={theme} themeController={themeController} user={user} />
       </aside>
 
       <main className="workspace">

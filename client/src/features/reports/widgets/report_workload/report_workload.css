@@ -1,0 +1,18 @@
+.report-inventory { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 12px; margin: 0 0 26px; }
+.report-inventory > div { padding: 12px; border-radius: 10px; background: var(--surface-subtle); min-width: 0; }
+.report-inventory dt { color: var(--muted); font-size: 11px; }
+.report-inventory dd { margin: 8px 0 0; font: 24px var(--font-display); }
+.report-inventory .report-inventory-rate { font-size: 16px; line-height: 1.6; }
+.report-project-heading { margin: 0; font: 17px var(--font-display); }
+.report-project-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.report-project-card { padding: 16px; border: 1px solid var(--line); border-radius: 12px; min-width: 0; }
+.report-project-card h4 { margin: 0 0 5px; font-size: 14px; font-weight: 500; overflow-wrap: anywhere; }
+.report-project-card p, .report-unassigned p { font-size: 11px; line-height: 1.8; color: var(--muted); margin: 8px 0 0; overflow-wrap: anywhere; }
+.report-project-card .report-project-hierarchy { font-size: 10px; margin: 0 0 12px; }
+.report-project-total { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 12px; }
+.report-project-total > span { color: var(--green); }
+.report-unassigned { margin-top: 18px; padding: 16px; background: var(--surface-subtle); border-radius: 12px; }
+.report-unassigned h3 { font-size: 13px; margin: 0 0 10px; }
+.report-unassigned > strong { font-size: 12px; font-weight: 500; }
+@media (max-width: 1100px) { .report-inventory { grid-template-columns: repeat(4, minmax(0, 1fr)); } .report-project-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .report-inventory { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } .report-project-grid { grid-template-columns: minmax(0, 1fr); } }

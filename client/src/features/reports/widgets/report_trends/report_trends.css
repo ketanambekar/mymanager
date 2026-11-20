@@ -1,0 +1,4 @@
+.report-trends { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.report-trend > .report-scope { min-height: 3.2em; }
+.report-chart { height: 230px; width: 100%; min-width: 0; margin: 8px 0 14px; }
+@media (max-width: 900px) { .report-trends { grid-template-columns: minmax(0, 1fr); gap: 16px; } }

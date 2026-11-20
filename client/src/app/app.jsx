@@ -8,6 +8,8 @@ import LoginView from "@/features/onboarding/login/login_view.jsx";
 import { useLoginController } from "@/features/onboarding/login/use_login_controller.js";
 import { useThemeController } from "@/styles/controller/use_theme_controller.js";
 
+const ReportView = lazy(() => import("@/features/reports/report_view.jsx"));
+
 export default function App() {
   const login = useLoginController();
   const themeController = useThemeController(login.user?.preference, login.onPreferenceUpdated);
@@ -18,8 +20,11 @@ export default function App() {
   if (login.user && login.path === "/habits") {
     return <HabitView onBack={() => login.navigate("/")} />;
   }
+  if (login.user && login.path === "/profile/reports") {
+    return <Suspense fallback={<div className="app-loading" role="status">Loading reports...</div>}><ReportView onBack={() => login.navigate("/")} /></Suspense>;
+  }
   return login.user && login.path !== "/login"
-    ? <DashboardView isLoggingOut={login.isLoggingOut} onLogout={login.logout} onOpenDevices={() => login.navigate("/devices")} onOpenHabits={() => login.navigate("/habits")} theme={themeController.theme} themeController={themeController} user={login.user} onToggleTheme={themeController.toggleTheme} />
+    ? <DashboardView isLoggingOut={login.isLoggingOut} onLogout={login.logout} onOpenDevices={() => login.navigate("/devices")} onOpenHabits={() => login.navigate("/habits")} onOpenReports={() => login.navigate("/profile/reports")} theme={themeController.theme} themeController={themeController} user={login.user} onToggleTheme={themeController.toggleTheme} />
     : <LoginView
       error={login.error}
       isAuthenticating={login.isAuthenticating}
@@ -34,3 +39,4 @@ export default function App() {
       qrSecondsRemaining={login.qrSecondsRemaining}
     />;
 }
+import { lazy, Suspense } from "react";

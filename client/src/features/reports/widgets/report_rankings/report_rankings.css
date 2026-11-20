@@ -1,0 +1,17 @@
+.report-rankings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; align-items: start; }
+.report-recurring-summary { display: grid; gap: 7px; padding: 14px; background: var(--surface-subtle); border-radius: 10px; font-size: 12px; }
+.report-recurring-summary strong { font: 22px var(--font-display); }
+.report-recurring-summary span { color: var(--muted); line-height: 1.6; }
+.report-ranking-limit { font: 11px var(--font-mono); color: var(--muted); line-height: 1.7; }
+.report-ranked-list { list-style: none; margin: 0 0 16px; padding: 0; }
+.report-ranked-list li { padding: 15px 0; border-top: 1px solid var(--line); }
+.report-ranked-title { display: flex; align-items: start; justify-content: space-between; gap: 12px; font-size: 12px; }
+.report-ranked-title h3 { font-size: 14px; font-weight: 500; line-height: 1.5; margin: 0; overflow-wrap: anywhere; }
+.report-ranked-rate { flex-shrink: 0; color: var(--green); font: 12px var(--font-mono); }
+.report-cadence { font-size: 11px; color: var(--green); margin: 5px 0; }
+.report-ranked-counts { font-size: 11px; line-height: 1.8; color: var(--muted); margin: 6px 0 0; }
+.report-reasons li > p { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.7; margin: 10px 0 0; }
+.report-reason-status { font-size: 11px; font-weight: 600; }
+.report-reason-status--skipped { color: var(--report-skipped); }
+.report-reason-status--missed { color: var(--report-missed); }
+@media (max-width: 900px) { .report-rankings { grid-template-columns: minmax(0, 1fr); gap: 16px; } }

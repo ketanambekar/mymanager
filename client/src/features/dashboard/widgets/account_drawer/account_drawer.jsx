@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { CalendarDays, ChevronRight, LogOut, MonitorSmartphone, Moon, Sun, X } from "lucide-react";
+import { BarChart3, CalendarDays, ChevronRight, LogOut, MonitorSmartphone, Moon, Sun, X } from "lucide-react";
 import { APP_VERSION } from "@/constants/app_constants.js";
 import AppButton from "@/shared/widgets/app_button/app_button.jsx";
 import AppIconButton from "@/shared/widgets/app_icon_button/app_icon_button.jsx";
@@ -18,7 +18,7 @@ function formatAccountDate(value, timezone) {
   }).format(new Date(value));
 }
 
-export default function AccountDrawer({ user, theme, themeController, onToggleTheme, onOpenDevices, onOpenHabits, onLogout, isLoggingOut }) {
+export default function AccountDrawer({ user, theme, themeController, onToggleTheme, onOpenDevices, onOpenHabits, onOpenReports, onLogout, isLoggingOut }) {
   const drawer = useAccountDrawerController();
   const timezone = user.preference?.timezone;
 
@@ -52,6 +52,11 @@ export default function AccountDrawer({ user, theme, themeController, onToggleTh
               <button className="account-drawer-action" onClick={() => { drawer.close(); onOpenHabits(); }} type="button">
                 <CalendarDays aria-hidden="true" size={19} />
                 <span><strong>Habits</strong><small>Explore your recurring task history</small></span>
+                <ChevronRight aria-hidden="true" size={16} />
+              </button>
+              <button className="account-drawer-action" onClick={() => { drawer.close(); onOpenReports(); }} type="button">
+                <BarChart3 aria-hidden="true" size={19} />
+                <span><strong>Reports</strong><small>Yearly outcomes, activity &amp; current workload</small></span>
                 <ChevronRight aria-hidden="true" size={16} />
               </button>
             </section>

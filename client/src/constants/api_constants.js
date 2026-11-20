@@ -10,5 +10,6 @@ export const API_PATHS = Object.freeze({
   PROJECTS: "/projects",
   TASKS: "/tasks",
   HABITS: "/habits",
+  REPORTS: "/reports",
   PREFERENCES: "/me/preferences",
 });

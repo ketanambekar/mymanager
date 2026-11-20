@@ -1,0 +1,23 @@
+.report-section-eyebrow { margin: 0 0 8px; font: 10px var(--font-mono); letter-spacing: .12em; color: var(--green); }
+.report-overview-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.report-total { font: 12px var(--font-mono); color: var(--muted); }
+.report-kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin: 0 0 22px; }
+.report-kpi { background: var(--surface-subtle); border-radius: 12px; padding: 16px; min-width: 0; }
+.report-kpi dt { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
+.report-kpi dd { margin: 10px 0 0; font: 32px var(--font-display); }
+.report-kpi small { display: block; margin-top: 6px; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.report-kpi--completed dd, .report-kpi--completed svg { color: var(--report-completed); }
+.report-kpi--skipped dd, .report-kpi--skipped svg { color: var(--report-skipped); }
+.report-kpi--missed dd, .report-kpi--missed svg { color: var(--report-missed); }
+.report-kpi--open dd, .report-kpi--open svg { color: var(--report-open); }
+.report-kpi .report-no-rate { font: 16px var(--font-body); line-height: 1.6; }
+.report-distribution { display: flex; height: 12px; gap: 3px; border-radius: 8px; overflow: hidden; margin-bottom: 14px; }
+.report-distribution > span { flex-basis: 0; }
+.report-distribution--completed { background: var(--report-completed); }
+.report-distribution--skipped { background: var(--report-skipped); }
+.report-distribution--missed { background: var(--report-missed); }
+.report-distribution--open { background: var(--report-open); }
+.report-timing { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+.report-timing strong { color: var(--ink); }
+@media (max-width: 1100px) { .report-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .report-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } .report-kpi { padding: 12px; } }
